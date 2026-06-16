@@ -71,10 +71,11 @@ function RankCard({
           <div
             style={{
               display: "flex",
-              width: 200,
-              height: 200,
+              width: 170,
+              height: 170,
               alignItems: "center",
               justifyContent: "center",
+              overflow: "hidden",
               marginRight: 16,
             }}
           >
@@ -82,10 +83,10 @@ function RankCard({
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={emblemUrl}
-                width={200}
-                height={200}
+                width={170}
+                height={170}
                 alt=""
-                style={{ objectFit: "contain" }}
+                style={{ objectFit: "contain", transform: "scale(1.7)" }}
               />
             )}
           </div>
@@ -108,15 +109,15 @@ function RankCard({
           </div>
         </div>
       ) : (
-        <div style={{ display: "flex", alignItems: "center", height: 200 }}>
+        <div style={{ display: "flex", alignItems: "center", height: 170 }}>
           <div
             style={{
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
-              width: 200,
-              height: 200,
+              width: 170,
+              height: 170,
               background: "#1f2230",
               borderRadius: 12,
               marginRight: 14,
@@ -252,10 +253,13 @@ export async function generateProfileImage(input: ProfileImageInput): Promise<Bu
                 style={{
                   display: "flex",
                   position: "absolute",
-                  top: -14,
-                  right: -22,
+                  top: -18,
+                  right: -26,
                   width: 56,
                   height: 56,
+                  overflow: "hidden",
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -264,7 +268,7 @@ export async function generateProfileImage(input: ProfileImageInput): Promise<Bu
                   width={56}
                   height={56}
                   alt=""
-                  style={{ objectFit: "contain" }}
+                  style={{ objectFit: "contain", transform: "scale(1.7)" }}
                 />
               </div>
             )}
@@ -339,7 +343,7 @@ export async function generateProfileImage(input: ProfileImageInput): Promise<Bu
     ),
     {
       width: 1100,
-      height: 700,
+      height: 660,
       fonts: thaiFont
         ? [{ name: "Noto Sans Thai", data: thaiFont, weight: 600, style: "normal" }]
         : undefined,
