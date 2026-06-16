@@ -1,7 +1,13 @@
 import { Jimp, loadFont } from "jimp";
 import { SANS_16_WHITE } from "jimp/fonts";
+import { pathToFileURL } from "node:url";
 import { getChampionIconUrl, getItemIconUrl, getRuneIconUrl } from "./ddragon";
 import { BuildRecommendation } from "./gemini";
+
+function toFontUrl(p: string): string {
+  if (/^[a-z]+:\/\//i.test(p)) return p;
+  return pathToFileURL(p).href;
+}
 
 async function readImageSafely(url: string | null): Promise<any | null> {
   if (!url) return null;
@@ -38,7 +44,7 @@ export async function generateBuildImage(buildInfo: BuildRecommendation): Promis
   const image = new Jimp({ width: 600, height: 440, color: 0x111217ff });
 
   // Load white font for row titles
-  const font = await loadFont(SANS_16_WHITE);
+  const font = await loadFont(toFontUrl(SANS_16_WHITE));
 
   // Draw English Row Titles
   image.print({ font, x: 20, y: 32, text: "STARTER" });
