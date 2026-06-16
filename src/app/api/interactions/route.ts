@@ -15,7 +15,7 @@ import { getAiCoachingReport, MatchSummary, getAiBuildRecommendation } from "@/l
 import { generateBuildImage } from "@/lib/imageGenerator";
 import { generateProfileImage } from "@/lib/profileImage";
 import { generateHistoryImage, HistoryMatchEntry } from "@/lib/historyImage";
-import { generateDetailGameImage } from "@/lib/detailGameImage";
+import { generateDetailGameImage, DetailPlayerEntry } from "@/lib/detailGameImage";
 
 const DISCORD_PUBLIC_KEY = process.env.DISCORD_PUBLIC_KEY || "";
 const DISCORD_APP_ID = process.env.DISCORD_APP_ID || "";
@@ -606,21 +606,37 @@ async function handleDetailGameCommand(summonerInput: string, matchId: string, t
   const internalId = await getChampionInternalId(playerStats.championId);
   const durationMin = match.info.gameDuration / 60;
 
-  const teamBlue: { name: string; championDisplayName: string; kills: number; deaths: number; assists: number; isMe: boolean }[] = [];
-  const teamRed: typeof teamBlue = [];
+  const teamBlue: DetailPlayerEntry[] = [];
+  const teamRed: DetailPlayerEntry[] = [];
 
   for (const part of match.info.participants) {
     const partChampName = await getChampionName(part.championId);
-    const displayName = part.riotIdGameName
-      ? `${part.riotIdGameName}`
-      : part.summonerId;
-    const row = {
+    const partChampIdName = await getChampionInternalId(part.championId);
+    const displayName = part.riotIdGameName ? part.riotIdGameName : part.summonerId;
+    const primaryStyle = part.perks?.styles?.find(s => s.description === "primaryStyle");
+    const subStyle = part.perks?.styles?.find(s => s.description === "subStyle");
+
+    const row: DetailPlayerEntry = {
       name: displayName,
       championDisplayName: partChampName,
+      championIdName: partChampIdName,
       kills: part.kills,
       deaths: part.deaths,
       assists: part.assists,
+      champLevel: part.champLevel ?? 1,
+      cs: part.totalMinionsKilled + part.neutralMinionsKilled,
       isMe: part.puuid === account.puuid,
+      item0: part.item0,
+      item1: part.item1,
+      item2: part.item2,
+      item3: part.item3,
+      item4: part.item4,
+      item5: part.item5,
+      item6: part.item6,
+      summoner1Id: part.summoner1Id,
+      summoner2Id: part.summoner2Id,
+      keystoneId: primaryStyle?.selections?.[0]?.perk ?? null,
+      subStyleId: subStyle?.style ?? null,
     };
     if (part.teamId === 100) teamBlue.push(row);
     else teamRed.push(row);
