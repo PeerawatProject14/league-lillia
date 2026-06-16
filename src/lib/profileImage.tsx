@@ -71,8 +71,8 @@ function RankCard({
           <div
             style={{
               display: "flex",
-              width: 160,
-              height: 160,
+              width: 200,
+              height: 200,
               alignItems: "center",
               justifyContent: "center",
               marginRight: 16,
@@ -82,8 +82,8 @@ function RankCard({
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={emblemUrl}
-                width={160}
-                height={160}
+                width={200}
+                height={200}
                 alt=""
                 style={{ objectFit: "contain" }}
               />
@@ -108,15 +108,15 @@ function RankCard({
           </div>
         </div>
       ) : (
-        <div style={{ display: "flex", alignItems: "center", height: 160 }}>
+        <div style={{ display: "flex", alignItems: "center", height: 200 }}>
           <div
             style={{
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
-              width: 160,
-              height: 160,
+              width: 200,
+              height: 200,
               background: "#1f2230",
               borderRadius: 12,
               marginRight: 14,
@@ -339,7 +339,7 @@ export async function generateProfileImage(input: ProfileImageInput): Promise<Bu
     ),
     {
       width: 1100,
-      height: 640,
+      height: 700,
       fonts: thaiFont
         ? [{ name: "Noto Sans Thai", data: thaiFont, weight: 600, style: "normal" }]
         : undefined,
