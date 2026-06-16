@@ -53,6 +53,19 @@ export interface ChampionMastery {
   championPointsUntilNextLevel: number;
 }
 
+export interface PerkStyleSelection {
+  perk: number;
+  var1: number;
+  var2: number;
+  var3: number;
+}
+
+export interface PerkStyle {
+  description: string; // "primaryStyle" | "subStyle"
+  style: number; // tree id
+  selections: PerkStyleSelection[];
+}
+
 export interface MatchParticipant {
   puuid: string;
   summonerId: string;
@@ -60,6 +73,7 @@ export interface MatchParticipant {
   riotIdTagline: string;
   championId: number;
   championName: string;
+  champLevel: number;
   kills: number;
   deaths: number;
   assists: number;
@@ -71,6 +85,19 @@ export interface MatchParticipant {
   goldEarned: number;
   individualPosition: string; // TOP, JUNGLE, MIDDLE, BOTTOM, UTILITY
   teamId: number;
+  item0: number;
+  item1: number;
+  item2: number;
+  item3: number;
+  item4: number;
+  item5: number;
+  item6: number; // trinket
+  summoner1Id: number;
+  summoner2Id: number;
+  perks: {
+    styles: PerkStyle[];
+    statPerks?: { defense: number; flex: number; offense: number };
+  };
 }
 
 export interface MatchDetail {

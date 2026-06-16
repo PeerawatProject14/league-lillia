@@ -5,6 +5,8 @@ let itemByNameMap: Record<string, string> = {};
 let runeByNameMap: Record<string, string> = {};
 let runeTreeByNameMap: Record<string, string> = {};
 let summonerSpellByNameMap: Record<string, string> = {};
+let summonerSpellByKeyMap: Record<string, string> = {}; // numeric id (key) -> image file
+let runeByIdMap: Record<string, string> = {}; // perk id -> icon path
 
 // Strips special characters, spaces, and lowercases for fuzzy match
 function cleanName(name: string): string {
@@ -63,14 +65,16 @@ async function loadDataDragonCache(): Promise<void> {
       if (res.ok) {
         const data = await res.json();
         const map: Record<string, string> = {};
+        const byKey: Record<string, string> = {};
         for (const key of Object.keys(data.data)) {
           const spell = data.data[key];
           map[cleanName(spell.name)] = spell.image.full;
           map[cleanName(spell.id)] = spell.image.full;
-          // also strip "Summoner" prefix from id (e.g. SummonerFlash -> Flash)
           map[cleanName(spell.id.replace(/^Summoner/, ""))] = spell.image.full;
+          if (spell.key) byKey[String(spell.key)] = spell.image.full;
         }
         summonerSpellByNameMap = map;
+        summonerSpellByKeyMap = byKey;
       }
     } catch (e) {
       console.error("Failed to cache summoner spells from DDragon:", e);
@@ -85,20 +89,24 @@ async function loadDataDragonCache(): Promise<void> {
         const data = await res.json();
         const rMap: Record<string, string> = {};
         const tMap: Record<string, string> = {};
+        const idMap: Record<string, string> = {};
         for (const tree of data) {
           // Map rune tree icons
           tMap[cleanName(tree.name)] = tree.icon;
           tMap[cleanName(tree.key)] = tree.icon;
-          
+          if (tree.id) idMap[String(tree.id)] = tree.icon;
+
           for (const slot of tree.slots) {
             for (const rune of slot.runes) {
               rMap[cleanName(rune.name)] = rune.icon;
               rMap[cleanName(rune.key)] = rune.icon;
+              if (rune.id) idMap[String(rune.id)] = rune.icon;
             }
           }
         }
         runeByNameMap = rMap;
         runeTreeByNameMap = tMap;
+        runeByIdMap = idMap;
       }
     } catch (e) {
       console.error("Failed to cache runes from DDragon:", e);
@@ -128,6 +136,27 @@ export async function getSummonerSpellIcon(name: string): Promise<string | null>
   const file = summonerSpellByNameMap[cleanName(name)];
   if (!file) return null;
   return `https://ddragon.leagueoflegends.com/cdn/${version}/img/spell/${file}`;
+}
+
+export async function getSummonerSpellIconById(id: number): Promise<string | null> {
+  await loadDataDragonCache();
+  const version = await getLatestVersion();
+  const file = summonerSpellByKeyMap[String(id)];
+  if (!file) return null;
+  return `https://ddragon.leagueoflegends.com/cdn/${version}/img/spell/${file}`;
+}
+
+export async function getItemIconById(id: number): Promise<string | null> {
+  if (!id) return null;
+  const version = await getLatestVersion();
+  return `https://ddragon.leagueoflegends.com/cdn/${version}/img/item/${id}.png`;
+}
+
+export async function getRuneIconById(id: number): Promise<string | null> {
+  await loadDataDragonCache();
+  const path = runeByIdMap[String(id)];
+  if (!path) return null;
+  return `https://ddragon.leagueoflegends.com/cdn/img/${path}`;
 }
 
 export async function getRuneIconUrl(name: string): Promise<string | null> {

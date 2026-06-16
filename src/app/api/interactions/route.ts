@@ -10,11 +10,12 @@ import {
   getActiveGame,
   LeagueEntry
 } from "@/lib/riot";
-import { getChampionName, getLatestVersion, getChampionInternalId } from "@/lib/champions";
+import { getChampionName, getChampionInternalId } from "@/lib/champions";
 import { getAiCoachingReport, MatchSummary, getAiBuildRecommendation } from "@/lib/gemini";
 import { generateBuildImage } from "@/lib/imageGenerator";
 import { generateProfileImage } from "@/lib/profileImage";
 import { generateHistoryImage, HistoryMatchEntry } from "@/lib/historyImage";
+import { generateDetailGameImage } from "@/lib/detailGameImage";
 
 const DISCORD_PUBLIC_KEY = process.env.DISCORD_PUBLIC_KEY || "";
 const DISCORD_APP_ID = process.env.DISCORD_APP_ID || "";
@@ -590,11 +591,8 @@ async function handleHistoryCommand(summonerInput: string, token: string) {
 // Handler for showing detailed game info with champion image
 async function handleDetailGameCommand(summonerInput: string, matchId: string, token: string) {
   const { gameName, tagLine } = parseRiotId(summonerInput);
-  
-  // A: Fetch Riot account details
+
   const account = await getRiotAccount(gameName, tagLine);
-  
-  // B: Fetch match detail
   const match = await getMatchDetail(matchId);
   const playerStats = match.info.participants.find(p => p.puuid === account.puuid);
   if (!playerStats) {
@@ -606,72 +604,71 @@ async function handleDetailGameCommand(summonerInput: string, matchId: string, t
 
   const champName = await getChampionName(playerStats.championId);
   const internalId = await getChampionInternalId(playerStats.championId);
-  const latestVersion = await getLatestVersion();
-
-  // Calculate stats
-  const totalCs = playerStats.totalMinionsKilled + playerStats.neutralMinionsKilled;
   const durationMin = match.info.gameDuration / 60;
-  const csPerMin = durationMin > 0 ? totalCs / durationMin : 0;
-  const kdaVal = playerStats.deaths === 0
-    ? "Perfect"
-    : ((playerStats.kills + playerStats.assists) / playerStats.deaths).toFixed(2);
 
-  // Group participants into Blue (100) and Red (200) teams
-  const blueTeam = [];
-  const redTeam = [];
+  const teamBlue: { name: string; championDisplayName: string; kills: number; deaths: number; assists: number; isMe: boolean }[] = [];
+  const teamRed: typeof teamBlue = [];
 
   for (const part of match.info.participants) {
     const partChampName = await getChampionName(part.championId);
-    const displayName = part.riotIdGameName 
-      ? `${part.riotIdGameName}#${part.riotIdTagline}` 
-      : part.summonerId; // Fallback
-    
-    const kdaStr = `${part.kills}/${part.deaths}/${part.assists}`;
-    const line = `• **${displayName}** - **${partChampName}** (${kdaStr})`;
-    
-    if (part.teamId === 100) {
-      blueTeam.push(line);
-    } else {
-      redTeam.push(line);
-    }
+    const displayName = part.riotIdGameName
+      ? `${part.riotIdGameName}`
+      : part.summonerId;
+    const row = {
+      name: displayName,
+      championDisplayName: partChampName,
+      kills: part.kills,
+      deaths: part.deaths,
+      assists: part.assists,
+      isMe: part.puuid === account.puuid,
+    };
+    if (part.teamId === 100) teamBlue.push(row);
+    else teamRed.push(row);
   }
 
-  const embed = {
-    title: `🎮 รายละเอียดเกม: ${account.gameName}#${account.tagLine} (${playerStats.win ? "🟢 ชนะ" : "🔴 แพ้"})`,
-    description: `• **โหมดเกม:** ${match.info.gameMode}\n• **ระยะเวลา:** ${Math.floor(durationMin)} นาที`,
-    color: playerStats.win ? 0x2ECC71 : 0xE74C3C, // Green for Win, Red for Loss
-    thumbnail: {
-      url: `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/champion/${internalId}.png`,
-    },
-    image: {
-      url: `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${internalId}_0.jpg`,
-    },
-    fields: [
-      {
-        name: "📊 สถิติส่วนตัว",
-        value: `• **เล่นแชมเปี้ยน:** ${champName}\n• **KDA:** ${playerStats.kills}/${playerStats.deaths}/${playerStats.assists} (${kdaVal}:1)\n• **CS:** ${totalCs} (${csPerMin.toFixed(1)}/นาที)\n• **Vision Score:** ${playerStats.visionScore}\n• **สร้างความเสียหาย:** ${playerStats.totalDamageDealtToChampions.toLocaleString()}\n• **เงินที่ได้รับ:** ${playerStats.goldEarned.toLocaleString()} Gold`,
-        inline: false,
-      },
-      {
-        name: "🔵 ทีมสีฟ้า (Blue Team)",
-        value: blueTeam.length > 0 ? safeTruncate(blueTeam.join("\n"), 1024) : "ไม่มีข้อมูล",
-        inline: false,
-      },
-      {
-        name: "🔴 ทีมสีแดง (Red Team)",
-        value: redTeam.length > 0 ? safeTruncate(redTeam.join("\n"), 1024) : "ไม่มีข้อมูล",
-        inline: false,
-      },
-    ],
-    footer: {
-      text: `Riot Match ID: ${matchId}`,
-    },
+  let imageBuffer: Buffer | undefined;
+  try {
+    imageBuffer = await generateDetailGameImage({
+      gameName: account.gameName,
+      tagLine: account.tagLine,
+      matchId,
+      gameMode: match.info.gameMode,
+      gameDurationMinutes: durationMin,
+      player: { ...playerStats, championDisplayName: champName, championIdName: internalId },
+      teamBlue,
+      teamRed,
+    });
+  } catch (e) {
+    console.error("Failed to generate detail game image:", e);
+  }
+
+  const embed: any = {
+    title: `🎮 รายละเอียดเกม: ${champName} (${playerStats.win ? "🟢 ชนะ" : "🔴 แพ้"})`,
+    color: playerStats.win ? 0x2ECC71 : 0xE74C3C,
+    image: imageBuffer ? { url: "attachment://detail.png" } : undefined,
+    footer: { text: `Match ID: ${matchId}` },
     timestamp: new Date().toISOString(),
   };
 
-  await updateInteractionResponse(token, {
-    embeds: [embed],
-  });
+  if (!imageBuffer) {
+    const totalCs = playerStats.totalMinionsKilled + playerStats.neutralMinionsKilled;
+    const csPerMin = durationMin > 0 ? totalCs / durationMin : 0;
+    const kdaVal = playerStats.deaths === 0 ? "Perfect" : ((playerStats.kills + playerStats.assists) / playerStats.deaths).toFixed(2);
+    embed.fields = [
+      {
+        name: "📊 สถิติ",
+        value: `**${champName}** · ${playerStats.kills}/${playerStats.deaths}/${playerStats.assists} (${kdaVal}) · ${totalCs} CS (${csPerMin.toFixed(1)}/min) · Vision ${playerStats.visionScore}`,
+        inline: false,
+      },
+    ];
+  }
+
+  await updateInteractionResponse(
+    token,
+    { embeds: [embed] },
+    imageBuffer,
+    "detail.png"
+  );
 }
 
 // Handler for `/build`
