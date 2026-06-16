@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { getChampionIconUrl } from "./ddragon";
 import { getLatestVersion } from "./champions";
-import { fetchThaiFont, getRankedEmblemUrl, getRankedBannerUrl } from "./imageCommon";
+import { fetchThaiFont, getRankedEmblemUrl, getTierStyle } from "./imageCommon";
 import { LeagueEntry } from "./riot";
 
 export interface ProfileImageInput {
@@ -71,8 +71,8 @@ function RankCard({
           <div
             style={{
               display: "flex",
-              width: 110,
-              height: 110,
+              width: 140,
+              height: 140,
               alignItems: "center",
               justifyContent: "center",
               marginRight: 14,
@@ -80,7 +80,7 @@ function RankCard({
           >
             {emblemUrl && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={emblemUrl} width={110} height={110} alt="" />
+              <img src={emblemUrl} width={140} height={140} alt="" />
             )}
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>
@@ -102,15 +102,15 @@ function RankCard({
           </div>
         </div>
       ) : (
-        <div style={{ display: "flex", alignItems: "center", height: 110 }}>
+        <div style={{ display: "flex", alignItems: "center", height: 140 }}>
           <div
             style={{
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
-              width: 110,
-              height: 110,
+              width: 140,
+              height: 140,
               background: "#1f2230",
               borderRadius: 12,
               marginRight: 14,
@@ -198,7 +198,8 @@ function MasteryCard({
 export async function generateProfileImage(input: ProfileImageInput): Promise<Buffer> {
   const version = await getLatestVersion();
   const profileIconUrl = `https://ddragon.leagueoflegends.com/cdn/${version}/img/profileicon/${input.profileIconId}.png`;
-  const bannerUrl = getRankedBannerUrl(input.soloDuo?.tier);
+  const soloTierStyle = getTierStyle(input.soloDuo?.tier);
+  const soloEmblemUrl = getRankedEmblemUrl(input.soloDuo?.tier);
 
   const masteryIcons = await Promise.all(input.masteries.map(m => getChampionIconUrl(m.championName)));
   const thaiFont = await fetchThaiFont();
@@ -221,49 +222,52 @@ export async function generateProfileImage(input: ProfileImageInput): Promise<Bu
             style={{
               display: "flex",
               position: "relative",
-              width: 130,
-              height: 150,
               alignItems: "center",
               justifyContent: "center",
-              marginRight: 12,
+              marginRight: 20,
             }}
           >
-            {bannerUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={bannerUrl}
-                width={130}
-                height={150}
-                alt=""
-                style={{ position: "absolute", top: 0, left: 0 }}
-              />
+            <div
+              style={{
+                display: "flex",
+                width: 104,
+                height: 104,
+                borderRadius: 18,
+                overflow: "hidden",
+                border: `3px solid ${soloTierStyle.bg}`,
+                background: "#0f1117",
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={profileIconUrl} width={104} height={104} alt="" />
+            </div>
+            {soloEmblemUrl && (
+              <div
+                style={{
+                  display: "flex",
+                  position: "absolute",
+                  top: -10,
+                  right: -18,
+                  width: 48,
+                  height: 48,
+                }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={soloEmblemUrl} width={48} height={48} alt="" />
+              </div>
             )}
             <div
               style={{
                 display: "flex",
-                width: 72,
-                height: 72,
-                borderRadius: 8,
-                overflow: "hidden",
-                position: "relative",
-                marginTop: 8,
-              }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={profileIconUrl} width={72} height={72} alt="" />
-            </div>
-            <div
-              style={{
-                display: "flex",
                 position: "absolute",
-                bottom: 14,
-                background: "#0f1117",
-                border: "1px solid #2b2d35",
-                color: "#ffffff",
-                fontSize: 12,
+                bottom: -10,
+                background: soloTierStyle.bg,
+                color: soloTierStyle.text,
+                fontSize: 13,
                 fontWeight: 700,
-                padding: "2px 8px",
-                borderRadius: 10,
+                padding: "2px 12px",
+                borderRadius: 12,
+                border: "2px solid #0f1117",
               }}
             >
               {input.summonerLevel}
@@ -323,7 +327,7 @@ export async function generateProfileImage(input: ProfileImageInput): Promise<Bu
     ),
     {
       width: 1100,
-      height: 580,
+      height: 620,
       fonts: thaiFont
         ? [{ name: "Noto Sans Thai", data: thaiFont, weight: 600, style: "normal" }]
         : undefined,
