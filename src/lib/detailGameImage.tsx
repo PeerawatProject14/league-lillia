@@ -326,7 +326,7 @@ async function buildPlayerRows(players: DetailPlayerEntry[], version: string): P
 
 export async function generateDetailGameImage(input: DetailGameImageInput): Promise<Buffer> {
   const version = await getLatestVersion();
-  const champSplashUrl = `https://ddragon.leagueoflegends.com/cdn/img/champion/centered/${input.player.championIdName}_0.jpg`;
+  const champSplashUrl = `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${input.player.championIdName}_0.jpg`;
   const champIconUrl = `https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${input.player.championIdName}.png`;
 
   const p = input.player;
@@ -381,49 +381,21 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
             fontFamily: "Noto Sans Thai, sans-serif",
           }}
         >
-          {/* Header banner */}
+          {/* Header banner with champion splash as background */}
           <div
             style={{
               display: "flex",
-              position: "relative",
               alignItems: "center",
               borderRadius: 14,
-              overflow: "hidden",
               padding: "16px 20px",
               marginBottom: 14,
               border: `2px solid ${resultColor}`,
-              background: "#0f1117",
+              backgroundColor: "#0f1117",
+              backgroundImage: `linear-gradient(90deg, rgba(15,17,23,0.95) 0%, rgba(15,17,23,0.65) 60%, rgba(15,17,23,0.3) 100%), url(${champSplashUrl})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
             }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={champSplashUrl}
-              alt=""
-              width={1100}
-              height={140}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                opacity: 0.5,
-              }}
-            />
-            <div
-              style={{
-                display: "flex",
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: "100%",
-                background:
-                  "linear-gradient(90deg, rgba(15,17,23,0.95) 0%, rgba(15,17,23,0.7) 60%, rgba(15,17,23,0.3) 100%)",
-              }}
-            />
-
             <div
               style={{
                 display: "flex",
@@ -433,14 +405,13 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
                 overflow: "hidden",
                 border: `2px solid ${resultColor}`,
                 marginRight: 18,
-                zIndex: 1,
               }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={champIconUrl} width={84} height={84} alt="" />
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", zIndex: 1 }}>
+            <div style={{ display: "flex", flexDirection: "column" }}>
               <div style={{ display: "flex", color: resultColor, fontSize: 14, fontWeight: 700, letterSpacing: 2 }}>
                 {`${resultLabel} · ${resultLabelTh.toUpperCase()}`}
               </div>
@@ -459,7 +430,7 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
 
             <div style={{ display: "flex", flex: 1 }} />
 
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", zIndex: 1 }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
               <div style={{ display: "flex", color: "#cbd0db", fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>KDA</div>
               <div style={{ display: "flex", color: "#ffffff", fontSize: 22, fontWeight: 700, marginTop: 2, alignItems: "baseline" }}>
                 <div style={{ display: "flex" }}>{p.kills}</div>
