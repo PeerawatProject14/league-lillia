@@ -71,16 +71,22 @@ function RankCard({
           <div
             style={{
               display: "flex",
-              width: 140,
-              height: 140,
+              width: 160,
+              height: 160,
               alignItems: "center",
               justifyContent: "center",
-              marginRight: 14,
+              marginRight: 16,
             }}
           >
             {emblemUrl && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={emblemUrl} width={140} height={140} alt="" />
+              <img
+                src={emblemUrl}
+                width={160}
+                height={160}
+                alt=""
+                style={{ objectFit: "contain" }}
+              />
             )}
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>
@@ -102,15 +108,15 @@ function RankCard({
           </div>
         </div>
       ) : (
-        <div style={{ display: "flex", alignItems: "center", height: 140 }}>
+        <div style={{ display: "flex", alignItems: "center", height: 160 }}>
           <div
             style={{
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
-              width: 140,
-              height: 140,
+              width: 160,
+              height: 160,
               background: "#1f2230",
               borderRadius: 12,
               marginRight: 14,
@@ -246,14 +252,20 @@ export async function generateProfileImage(input: ProfileImageInput): Promise<Bu
                 style={{
                   display: "flex",
                   position: "absolute",
-                  top: -10,
-                  right: -18,
-                  width: 48,
-                  height: 48,
+                  top: -14,
+                  right: -22,
+                  width: 56,
+                  height: 56,
                 }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={soloEmblemUrl} width={48} height={48} alt="" />
+                <img
+                  src={soloEmblemUrl}
+                  width={56}
+                  height={56}
+                  alt=""
+                  style={{ objectFit: "contain" }}
+                />
               </div>
             )}
             <div
@@ -327,7 +339,7 @@ export async function generateProfileImage(input: ProfileImageInput): Promise<Bu
     ),
     {
       width: 1100,
-      height: 620,
+      height: 640,
       fonts: thaiFont
         ? [{ name: "Noto Sans Thai", data: thaiFont, weight: 600, style: "normal" }]
         : undefined,
