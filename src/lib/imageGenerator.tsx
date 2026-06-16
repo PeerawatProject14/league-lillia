@@ -1,5 +1,10 @@
 import { ImageResponse } from "next/og";
-import { getChampionIconUrl, getItemIconUrl, getRuneIconUrl } from "./ddragon";
+import {
+  getChampionIconUrl,
+  getItemIconUrl,
+  getRuneIconUrl,
+  getChampionSpellIcons,
+} from "./ddragon";
 import { BuildRecommendation } from "./gemini";
 import { getLatestVersion } from "./champions";
 
@@ -9,6 +14,7 @@ const SECTIONS = {
   situational: { label: "SITUATIONAL", sub: "ช่อง 4-6 ตามรูปเกม", color: "#fbbf24" },
   optional: { label: "OPTIONAL", sub: "ทางเลือกสำรอง", color: "#2dd4bf" },
   runes: { label: "RUNES", sub: "รูนแนะนำ", color: "#a78bfa" },
+  skills: { label: "SKILL ORDER", sub: "ลำดับการอัพสกิล", color: "#f472b6" },
   strong: { label: "STRONG VS", sub: "ชนะทาง", color: "#22c55e" },
   weak: { label: "WEAK VS", sub: "แพ้ทาง", color: "#ef4444" },
 };
@@ -216,6 +222,128 @@ function SplitRow({
   );
 }
 
+function SkillIcon({ url, letter }: { url: string | null; letter: string }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        marginRight: 10,
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          width: 48,
+          height: 48,
+          borderRadius: 8,
+          overflow: "hidden",
+          background: "#1f2230",
+          border: "1px solid #2b2d35",
+          position: "relative",
+        }}
+      >
+        {url && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={url} width={48} height={48} alt="" />
+        )}
+        <div
+          style={{
+            display: "flex",
+            position: "absolute",
+            bottom: 0,
+            right: 0,
+            width: 16,
+            height: 16,
+            background: "#000000cc",
+            color: "#ffffff",
+            fontSize: 11,
+            fontWeight: 700,
+            alignItems: "center",
+            justifyContent: "center",
+            borderTopLeftRadius: 4,
+          }}
+        >
+          {letter}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SkillOrderRow({
+  section,
+  spellUrls,
+  priority,
+}: {
+  section: Section;
+  spellUrls: (string | null)[];
+  priority: string[];
+}) {
+  const KEYS = ["Q", "W", "E", "R"] as const;
+  const urlByKey: Record<string, string | null> = {
+    Q: spellUrls[0] ?? null,
+    W: spellUrls[1] ?? null,
+    E: spellUrls[2] ?? null,
+    R: spellUrls[3] ?? null,
+  };
+  const safePriority = priority.length === 4 ? priority : ["R", "Q", "E", "W"];
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        padding: "10px 0",
+        borderBottom: "1px solid #1f222b",
+      }}
+    >
+      <SectionLabel section={section} />
+      <div style={{ display: "flex", alignItems: "center" }}>
+        {KEYS.map((k) => (
+          <SkillIcon key={k} url={urlByKey[k]} letter={k} />
+        ))}
+      </div>
+      <div style={{ display: "flex", width: 1, height: 44, background: "#2b2d35", marginRight: 14 }} />
+      <div style={{ display: "flex", alignItems: "center" }}>
+        {safePriority.map((k, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center" }}>
+            {i > 0 && (
+              <div
+                style={{
+                  display: "flex",
+                  color: "#4b5563",
+                  fontSize: 20,
+                  margin: "0 6px",
+                }}
+              >
+                ›
+              </div>
+            )}
+            <div
+              style={{
+                display: "flex",
+                width: 32,
+                height: 32,
+                borderRadius: 16,
+                background: i === 0 ? section.color : "#1f2230",
+                color: i === 0 ? "#0f1117" : "#ffffff",
+                fontSize: 14,
+                fontWeight: 700,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {k}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function RuneRow({
   section,
   keystone,
@@ -299,6 +427,7 @@ export async function generateBuildImage(buildInfo: BuildRecommendation): Promis
     optionalUrls,
     strongUrls,
     weakUrls,
+    spellUrls,
     runeKey,
     runePrim,
     runeSec,
@@ -310,11 +439,14 @@ export async function generateBuildImage(buildInfo: BuildRecommendation): Promis
     Promise.all(optionalItems.map(getItemIconUrl)),
     Promise.all(buildInfo.strongAgainst.map(getChampionIconUrl)),
     Promise.all(buildInfo.weakAgainst.map(getChampionIconUrl)),
+    getChampionSpellIcons(buildInfo.championIdName),
     getRuneIconUrl(buildInfo.runes.keystone),
     getRuneIconUrl(buildInfo.runes.primaryTree),
     getRuneIconUrl(buildInfo.runes.secondaryTree),
     ...buildInfo.runes.details.map(getRuneIconUrl),
   ]);
+
+  const skillPriority = buildInfo.skillPriority ?? ["R", "Q", "E", "W"];
 
   const thaiFont = await fetchThaiFont();
 
@@ -389,6 +521,11 @@ export async function generateBuildImage(buildInfo: BuildRecommendation): Promis
           secondary={runeSec}
           details={runeDetails}
         />
+        <SkillOrderRow
+          section={SECTIONS.skills}
+          spellUrls={spellUrls}
+          priority={skillPriority}
+        />
         <SplitRow
           left={SECTIONS.strong}
           right={SECTIONS.weak}
@@ -399,7 +536,7 @@ export async function generateBuildImage(buildInfo: BuildRecommendation): Promis
     ),
     {
       width: 1100,
-      height: 500,
+      height: 580,
       fonts: thaiFont
         ? [{ name: "Noto Sans Thai", data: thaiFont, weight: 600, style: "normal" }]
         : undefined,

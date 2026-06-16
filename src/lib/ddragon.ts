@@ -106,3 +106,36 @@ export async function getRuneIconUrl(name: string): Promise<string | null> {
   if (!path) return null;
   return `https://ddragon.leagueoflegends.com/cdn/img/${path}`;
 }
+
+const championSpellsCache: Record<string, (string | null)[]> = {};
+
+export async function getChampionSpellIcons(championIdName: string): Promise<(string | null)[]> {
+  if (championSpellsCache[championIdName]) return championSpellsCache[championIdName];
+  const version = await getLatestVersion();
+  try {
+    const res = await fetch(
+      `https://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/champion/${championIdName}.json`
+    );
+    if (!res.ok) return [null, null, null, null];
+    const data = await res.json();
+    const champData = data.data?.[championIdName];
+    if (!champData) return [null, null, null, null];
+    const spells = champData.spells ?? [];
+    const passive = champData.passive;
+    const urls: (string | null)[] = [];
+    for (let i = 0; i < 3; i++) {
+      const file = spells[i]?.image?.full;
+      urls.push(file ? `https://ddragon.leagueoflegends.com/cdn/${version}/img/spell/${file}` : null);
+    }
+    const rFile = spells[3]?.image?.full;
+    urls.push(rFile ? `https://ddragon.leagueoflegends.com/cdn/${version}/img/spell/${rFile}` : null);
+    // also expose passive at index 4 in case we want it later
+    const pFile = passive?.image?.full;
+    urls.push(pFile ? `https://ddragon.leagueoflegends.com/cdn/${version}/img/passive/${pFile}` : null);
+    championSpellsCache[championIdName] = urls;
+    return urls;
+  } catch (e) {
+    console.warn(`Failed to fetch spells for ${championIdName}:`, e);
+    return [null, null, null, null];
+  }
+}
