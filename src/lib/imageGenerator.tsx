@@ -50,19 +50,19 @@ function IconCell({ url, size = 56 }: { url: string | null; size?: number }) {
   );
 }
 
-function Row({
+function RowShell({
   section,
-  urls,
+  children,
 }: {
   section: { label: string; sub: string; color: string };
-  urls: (string | null)[];
+  children: React.ReactNode;
 }) {
   return (
     <div
       style={{
         display: "flex",
         alignItems: "center",
-        padding: "12px 0",
+        padding: "10px 0",
         borderBottom: "1px solid #1f222b",
       }}
     >
@@ -70,7 +70,7 @@ function Row({
         style={{
           display: "flex",
           width: 6,
-          height: 56,
+          height: 52,
           background: section.color,
           borderRadius: 3,
           marginRight: 16,
@@ -81,23 +81,98 @@ function Row({
           style={{
             display: "flex",
             color: "#ffffff",
-            fontSize: 20,
+            fontSize: 19,
             fontWeight: 700,
             letterSpacing: 1,
           }}
         >
           {section.label}
         </div>
-        <div style={{ display: "flex", color: "#9aa0b4", fontSize: 14, marginTop: 2 }}>
+        <div style={{ display: "flex", color: "#9aa0b4", fontSize: 13, marginTop: 2 }}>
           {section.sub}
         </div>
       </div>
-      <div style={{ display: "flex", flex: 1, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", flex: 1, alignItems: "center" }}>{children}</div>
+    </div>
+  );
+}
+
+function Row({
+  section,
+  urls,
+}: {
+  section: { label: string; sub: string; color: string };
+  urls: (string | null)[];
+}) {
+  return (
+    <RowShell section={section}>
+      <div style={{ display: "flex", flexWrap: "wrap" }}>
         {urls.filter(Boolean).map((u, i) => (
           <IconCell key={i} url={u} />
         ))}
       </div>
-    </div>
+    </RowShell>
+  );
+}
+
+function RuneRow({
+  section,
+  keystone,
+  primary,
+  secondary,
+  details,
+}: {
+  section: { label: string; sub: string; color: string };
+  keystone: string | null;
+  primary: string | null;
+  secondary: string | null;
+  details: (string | null)[];
+}) {
+  return (
+    <RowShell section={section}>
+      {keystone && (
+        <div
+          style={{
+            display: "flex",
+            width: 60,
+            height: 60,
+            borderRadius: 30,
+            overflow: "hidden",
+            background: "#1f2230",
+            border: `2px solid ${section.color}`,
+            marginRight: 14,
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={keystone} width={60} height={60} alt="" />
+        </div>
+      )}
+      <div style={{ display: "flex", flexDirection: "column", marginRight: 14 }}>
+        {[primary, secondary].filter(Boolean).map((u, i) => (
+          <div
+            key={i}
+            style={{
+              display: "flex",
+              width: 26,
+              height: 26,
+              borderRadius: 13,
+              overflow: "hidden",
+              background: "#1f2230",
+              marginBottom: i === 0 ? 4 : 0,
+            }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={u!} width={26} height={26} alt="" />
+          </div>
+        ))}
+      </div>
+      <div style={{ display: "flex", width: 1, height: 44, background: "#2b2d35", marginRight: 14 }} />
+      <div style={{ display: "flex", flexWrap: "wrap" }}>
+        {details.filter(Boolean).map((u, i) => (
+          <IconCell key={i} url={u} size={44} />
+        ))}
+      </div>
+    </RowShell>
   );
 }
 
@@ -117,8 +192,6 @@ export async function generateBuildImage(buildInfo: BuildRecommendation): Promis
       getRuneIconUrl(buildInfo.runes.secondaryTree),
       ...buildInfo.runes.details.map(getRuneIconUrl),
     ]);
-
-  const runeUrls = [runeKey, runePrim, runeSec, ...runeDetails];
 
   const thaiFont = await fetchThaiFont();
 
@@ -181,14 +254,20 @@ export async function generateBuildImage(buildInfo: BuildRecommendation): Promis
         <Row section={SECTIONS.starter} urls={starter} />
         <Row section={SECTIONS.core} urls={core} />
         <Row section={SECTIONS.situational} urls={situational} />
-        <Row section={SECTIONS.runes} urls={runeUrls} />
+        <RuneRow
+          section={SECTIONS.runes}
+          keystone={runeKey}
+          primary={runePrim}
+          secondary={runeSec}
+          details={runeDetails}
+        />
         <Row section={SECTIONS.strong} urls={strong} />
         <Row section={SECTIONS.weak} urls={weak} />
       </div>
     ),
     {
       width: 1000,
-      height: 760,
+      height: 580,
       fonts: thaiFont
         ? [{ name: "Noto Sans Thai", data: thaiFont, weight: 600, style: "normal" }]
         : undefined,

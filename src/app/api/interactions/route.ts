@@ -644,7 +644,6 @@ async function handleDetailGameCommand(summonerInput: string, matchId: string, t
 // Handler for `/build`
 async function handleBuildCommand(championQuery: string, token: string) {
   const buildInfo = await getAiBuildRecommendation(championQuery);
-  const latestVersion = await getLatestVersion();
 
   let imageBuffer: Buffer | undefined;
   try {
@@ -656,9 +655,6 @@ async function handleBuildCommand(championQuery: string, token: string) {
   const embed: any = {
     title: `🛡️ Build แนะนำสำหรับแชมเปี้ยน: ${buildInfo.displayName}`,
     color: 0xF1C40F,
-    thumbnail: {
-      url: `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/champion/${buildInfo.championIdName}.png`,
-    },
     image: imageBuffer
       ? { url: "attachment://build.png" }
       : { url: `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${buildInfo.championIdName}_0.jpg` },
