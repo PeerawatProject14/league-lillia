@@ -675,6 +675,7 @@ async function handleBuildCommand(championQuery: string, token: string) {
           `**💡 Optional:** ${(buildInfo.optionalItems ?? []).join(", ")}\n` +
           `**🔮 Runes:** ${buildInfo.runes.keystone} (${buildInfo.runes.primaryTree}/${buildInfo.runes.secondaryTree})\n` +
           `**🎯 Skill Order:** ${(buildInfo.skillPriority ?? []).join(" › ")}\n` +
+          `**✨ Summoner Spells:** ${(buildInfo.summonerSpells ?? []).join(", ")}\n` +
           `**🟢 Strong vs:** ${buildInfo.strongAgainst.join(", ")}\n` +
           `**🔴 Weak vs:** ${buildInfo.weakAgainst.join(", ")}`,
         inline: false,

@@ -4,6 +4,7 @@ let championByNameMap: Record<string, string> = {};
 let itemByNameMap: Record<string, string> = {};
 let runeByNameMap: Record<string, string> = {};
 let runeTreeByNameMap: Record<string, string> = {};
+let summonerSpellByNameMap: Record<string, string> = {};
 
 // Strips special characters, spaces, and lowercases for fuzzy match
 function cleanName(name: string): string {
@@ -55,6 +56,27 @@ async function loadDataDragonCache(): Promise<void> {
     }
   }
 
+  // 2b. Load Summoner Spells
+  if (Object.keys(summonerSpellByNameMap).length === 0) {
+    try {
+      const res = await fetch(`https://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/summoner.json`);
+      if (res.ok) {
+        const data = await res.json();
+        const map: Record<string, string> = {};
+        for (const key of Object.keys(data.data)) {
+          const spell = data.data[key];
+          map[cleanName(spell.name)] = spell.image.full;
+          map[cleanName(spell.id)] = spell.image.full;
+          // also strip "Summoner" prefix from id (e.g. SummonerFlash -> Flash)
+          map[cleanName(spell.id.replace(/^Summoner/, ""))] = spell.image.full;
+        }
+        summonerSpellByNameMap = map;
+      }
+    } catch (e) {
+      console.error("Failed to cache summoner spells from DDragon:", e);
+    }
+  }
+
   // 3. Load Runes
   if (Object.keys(runeByNameMap).length === 0) {
     try {
@@ -98,6 +120,14 @@ export async function getItemIconUrl(name: string): Promise<string | null> {
   const id = itemByNameMap[cleanName(name)];
   if (!id) return null;
   return `https://ddragon.leagueoflegends.com/cdn/${version}/img/item/${id}.png`;
+}
+
+export async function getSummonerSpellIcon(name: string): Promise<string | null> {
+  await loadDataDragonCache();
+  const version = await getLatestVersion();
+  const file = summonerSpellByNameMap[cleanName(name)];
+  if (!file) return null;
+  return `https://ddragon.leagueoflegends.com/cdn/${version}/img/spell/${file}`;
 }
 
 export async function getRuneIconUrl(name: string): Promise<string | null> {

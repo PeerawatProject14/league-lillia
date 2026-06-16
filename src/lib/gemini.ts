@@ -101,6 +101,7 @@ export interface BuildRecommendation {
     details: string[];
   };
   skillPriority: string[];
+  summonerSpells: string[];
   strongAgainst: string[];
   weakAgainst: string[];
 }
@@ -141,12 +142,16 @@ export async function getAiBuildRecommendation(championQuery: string): Promise<B
       "details": ["Rune detail 1", "Rune detail 2", "Rune detail 3", "Rune detail 4", "Rune detail 5"]
     },
     "skillPriority": ["R", "Q", "E", "W"],
+    "summonerSpells": ["Flash", "Ignite"],
     "strongAgainst": ["Champ 1", "Champ 2", "Champ 3"],
     "weakAgainst": ["Champ 1", "Champ 2", "Champ 3"]
   }
 
   Skill order rules:
   - "skillPriority" is the order to level up abilities. Always start with "R", then the next 3 entries are Q/W/E in priority order (highest priority first). Example for an AP mage who maxes Q first: ["R","Q","E","W"]. Exactly 4 entries.
+
+  Summoner spells:
+  - "summonerSpells" contains exactly 2 summoner spell names (English) appropriate for this champion's role. Use simple names from this set: Flash, Ignite, Teleport, Heal, Barrier, Exhaust, Cleanse, Ghost, Smite, Snowball. Flash is almost always one of the two.
 
   CRITICAL rules for items (LoL has 6 item slots total, excluding starter/trinket):
   - "coreItems" represents slots 1-3 (the fixed early build path). Provide EXACTLY 3 items in build order: a big item, then boots, then a big item.

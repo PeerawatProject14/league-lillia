@@ -4,6 +4,7 @@ import {
   getItemIconUrl,
   getRuneIconUrl,
   getChampionSpellIcons,
+  getSummonerSpellIcon,
 } from "./ddragon";
 import { BuildRecommendation } from "./gemini";
 import { getLatestVersion } from "./champions";
@@ -428,6 +429,7 @@ export async function generateBuildImage(buildInfo: BuildRecommendation): Promis
     strongUrls,
     weakUrls,
     spellUrls,
+    summonerUrls,
     runeKey,
     runePrim,
     runeSec,
@@ -440,6 +442,7 @@ export async function generateBuildImage(buildInfo: BuildRecommendation): Promis
     Promise.all(buildInfo.strongAgainst.map(getChampionIconUrl)),
     Promise.all(buildInfo.weakAgainst.map(getChampionIconUrl)),
     getChampionSpellIcons(buildInfo.championIdName),
+    Promise.all((buildInfo.summonerSpells ?? []).map(getSummonerSpellIcon)),
     getRuneIconUrl(buildInfo.runes.keystone),
     getRuneIconUrl(buildInfo.runes.primaryTree),
     getRuneIconUrl(buildInfo.runes.secondaryTree),
@@ -503,6 +506,40 @@ export async function generateBuildImage(buildInfo: BuildRecommendation): Promis
             </div>
           </div>
           <div style={{ display: "flex", flex: 1 }} />
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", marginRight: 16 }}>
+            <div
+              style={{
+                display: "flex",
+                color: "#9aa0b4",
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: 1,
+                marginBottom: 4,
+              }}
+            >
+              SUMMONER SPELLS
+            </div>
+            <div style={{ display: "flex" }}>
+              {summonerUrls.filter(Boolean).map((u, i) => (
+                <div
+                  key={i}
+                  style={{
+                    display: "flex",
+                    width: 40,
+                    height: 40,
+                    borderRadius: 6,
+                    overflow: "hidden",
+                    background: "#1f2230",
+                    border: "1px solid #2b2d35",
+                    marginLeft: i === 0 ? 0 : 6,
+                  }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={u!} width={40} height={40} alt="" />
+                </div>
+              ))}
+            </div>
+          </div>
           <div style={{ display: "flex", color: "#6b7280", fontSize: 13 }}>by Gemini AI</div>
         </div>
 
