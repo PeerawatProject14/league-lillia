@@ -235,7 +235,11 @@ function PlayerRow({ data }: { data: PlayerRowData }) {
           {p.name.length > 13 ? p.name.slice(0, 12) + "…" : p.name}
         </div>
         <div style={{ display: "flex", color: "#ffffff", fontSize: 11, fontWeight: 700, marginTop: 2 }}>
-          {p.kills}/<span style={{ color: "#ef4444" }}>{p.deaths}</span>/{p.assists}
+          <div style={{ display: "flex" }}>{p.kills}</div>
+          <div style={{ display: "flex", color: "#9aa0b4", margin: "0 2px" }}>/</div>
+          <div style={{ display: "flex", color: "#ef4444" }}>{p.deaths}</div>
+          <div style={{ display: "flex", color: "#9aa0b4", margin: "0 2px" }}>/</div>
+          <div style={{ display: "flex" }}>{p.assists}</div>
         </div>
       </div>
 
@@ -377,20 +381,49 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
             fontFamily: "Noto Sans Thai, sans-serif",
           }}
         >
-          {/* Header with splash bg */}
+          {/* Header banner */}
           <div
             style={{
               display: "flex",
+              position: "relative",
               alignItems: "center",
               borderRadius: 14,
-              background: `linear-gradient(90deg, rgba(15,17,23,0.95) 0%, rgba(15,17,23,0.6) 60%, rgba(15,17,23,0.2) 100%), url(${champSplashUrl})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
+              overflow: "hidden",
               padding: "16px 20px",
               marginBottom: 14,
               border: `2px solid ${resultColor}`,
+              background: "#0f1117",
             }}
           >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={champSplashUrl}
+              alt=""
+              width={1100}
+              height={140}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                opacity: 0.5,
+              }}
+            />
+            <div
+              style={{
+                display: "flex",
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                background:
+                  "linear-gradient(90deg, rgba(15,17,23,0.95) 0%, rgba(15,17,23,0.7) 60%, rgba(15,17,23,0.3) 100%)",
+              }}
+            />
+
             <div
               style={{
                 display: "flex",
@@ -400,37 +433,42 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
                 overflow: "hidden",
                 border: `2px solid ${resultColor}`,
                 marginRight: 18,
+                zIndex: 1,
               }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={champIconUrl} width={84} height={84} alt="" />
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", flexDirection: "column", zIndex: 1 }}>
               <div style={{ display: "flex", color: resultColor, fontSize: 14, fontWeight: 700, letterSpacing: 2 }}>
-                {resultLabel} · {resultLabelTh.toUpperCase()}
+                {`${resultLabel} · ${resultLabelTh.toUpperCase()}`}
               </div>
               <div style={{ display: "flex", alignItems: "baseline", marginTop: 2 }}>
                 <div style={{ display: "flex", color: "#ffffff", fontSize: 26, fontWeight: 700 }}>
                   {input.gameName}
                 </div>
                 <div style={{ display: "flex", color: "#cbd0db", fontSize: 18, marginLeft: 4 }}>
-                  #{input.tagLine}
+                  {`#${input.tagLine}`}
                 </div>
               </div>
               <div style={{ display: "flex", color: "#cbd0db", fontSize: 13, marginTop: 3 }}>
-                เล่น {input.player.championDisplayName} · {ROLE_LABEL[p.individualPosition] ?? p.individualPosition} · {input.gameMode} · {Math.floor(input.gameDurationMinutes)} นาที
+                {`เล่น ${input.player.championDisplayName} · ${ROLE_LABEL[p.individualPosition] ?? p.individualPosition} · ${input.gameMode} · ${Math.floor(input.gameDurationMinutes)} นาที`}
               </div>
             </div>
 
             <div style={{ display: "flex", flex: 1 }} />
 
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", zIndex: 1 }}>
               <div style={{ display: "flex", color: "#cbd0db", fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>KDA</div>
-              <div style={{ display: "flex", color: "#ffffff", fontSize: 22, fontWeight: 700, marginTop: 2 }}>
-                {p.kills} / <span style={{ color: "#ef4444" }}>{p.deaths}</span> / {p.assists}
+              <div style={{ display: "flex", color: "#ffffff", fontSize: 22, fontWeight: 700, marginTop: 2, alignItems: "baseline" }}>
+                <div style={{ display: "flex" }}>{p.kills}</div>
+                <div style={{ display: "flex", color: "#9aa0b4", margin: "0 4px" }}>/</div>
+                <div style={{ display: "flex", color: "#ef4444" }}>{p.deaths}</div>
+                <div style={{ display: "flex", color: "#9aa0b4", margin: "0 4px" }}>/</div>
+                <div style={{ display: "flex" }}>{p.assists}</div>
               </div>
-              <div style={{ display: "flex", color: "#cbd0db", fontSize: 12, marginTop: 2 }}>{kda}:1</div>
+              <div style={{ display: "flex", color: "#cbd0db", fontSize: 12, marginTop: 2 }}>{`${kda}:1`}</div>
             </div>
           </div>
 
@@ -480,7 +518,7 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
             <div style={{ display: "flex", flexDirection: "column", marginRight: 16, alignItems: "flex-end" }}>
               <div style={{ display: "flex", color: "#9aa0b4", fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>CS</div>
               <div style={{ display: "flex", color: "#ffffff", fontSize: 16, fontWeight: 700 }}>{totalCs}</div>
-              <div style={{ display: "flex", color: "#9aa0b4", fontSize: 11 }}>{csPerMin.toFixed(1)}/min</div>
+              <div style={{ display: "flex", color: "#9aa0b4", fontSize: 11 }}>{`${csPerMin.toFixed(1)}/min`}</div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", marginRight: 16, alignItems: "flex-end" }}>
               <div style={{ display: "flex", color: "#9aa0b4", fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>VISION</div>
@@ -489,13 +527,13 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
             <div style={{ display: "flex", flexDirection: "column", marginRight: 16, alignItems: "flex-end" }}>
               <div style={{ display: "flex", color: "#9aa0b4", fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>DMG</div>
               <div style={{ display: "flex", color: "#ffffff", fontSize: 16, fontWeight: 700 }}>
-                {(p.totalDamageDealtToChampions / 1000).toFixed(1)}k
+                {`${(p.totalDamageDealtToChampions / 1000).toFixed(1)}k`}
               </div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
               <div style={{ display: "flex", color: "#9aa0b4", fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>GOLD</div>
               <div style={{ display: "flex", color: "#ffffff", fontSize: 16, fontWeight: 700 }}>
-                {(p.goldEarned / 1000).toFixed(1)}k
+                {`${(p.goldEarned / 1000).toFixed(1)}k`}
               </div>
             </div>
           </div>
