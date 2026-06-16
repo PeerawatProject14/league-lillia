@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
     return new NextResponse("Internal server config error", { status: 500 });
   }
 
-  const isValidRequest = verifyKey(body, signature, timestamp, DISCORD_PUBLIC_KEY);
+  const isValidRequest = await verifyKey(body, signature, timestamp, DISCORD_PUBLIC_KEY);
   if (!isValidRequest) {
     return new NextResponse("Invalid request signature", { status: 401 });
   }
