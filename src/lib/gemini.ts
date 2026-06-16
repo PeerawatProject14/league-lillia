@@ -91,7 +91,9 @@ export interface BuildRecommendation {
   displayName: string;
   starterItems: string[];
   coreItems: string[];
+  boots: string[];
   situationalItems: string[];
+  optionalItems: string[];
   runes: {
     keystone: string;
     primaryTree: string;
@@ -128,7 +130,9 @@ export async function getAiBuildRecommendation(championQuery: string): Promise<B
     "displayName": "Readable display name of champion",
     "starterItems": ["Starter Item 1 (Thai/Eng translation)", "Starter Item 2"],
     "coreItems": ["Core Item 1", "Core Item 2", "Core Item 3"],
+    "boots": ["Recommended boots (e.g. Sorcerer's Shoes, Plated Steelcaps) - 1 to 2 items"],
     "situationalItems": ["Situational Item 1", "Situational Item 2", "Situational Item 3"],
+    "optionalItems": ["Optional/alternative Item 1", "Optional Item 2", "Optional Item 3"],
     "runes": {
       "keystone": "Keystone name",
       "primaryTree": "Primary tree name (e.g. Precision)",
@@ -138,6 +142,10 @@ export async function getAiBuildRecommendation(championQuery: string): Promise<B
     "strongAgainst": ["Champ 1", "Champ 2", "Champ 3"],
     "weakAgainst": ["Champ 1", "Champ 2", "Champ 3"]
   }
+
+  Notes:
+  - "boots" should be the boots recommended for this champion (e.g. Sorcerer's Shoes for AP carries). Provide 1-2 items.
+  - "optionalItems" are alternative/flex picks the player can consider instead of core or situational depending on playstyle. Provide 3 items. Do NOT repeat items from coreItems or situationalItems.
   `;
 
   try {

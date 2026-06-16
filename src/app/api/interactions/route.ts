@@ -671,7 +671,9 @@ async function handleBuildCommand(championQuery: string, token: string) {
         value: "แสดงข้อมูลแบบข้อความแทน:\n\n" +
           `**⚔️ Starter:** ${buildInfo.starterItems.join(", ")}\n` +
           `**📦 Core:** ${buildInfo.coreItems.join(", ")}\n` +
+          `**👟 Boots:** ${(buildInfo.boots ?? []).join(", ")}\n` +
           `**🌟 Situational:** ${buildInfo.situationalItems.join(", ")}\n` +
+          `**💡 Optional:** ${(buildInfo.optionalItems ?? []).join(", ")}\n` +
           `**🔮 Runes:** ${buildInfo.runes.keystone} (${buildInfo.runes.primaryTree}/${buildInfo.runes.secondaryTree})\n` +
           `**🟢 Strong vs:** ${buildInfo.strongAgainst.join(", ")}\n` +
           `**🔴 Weak vs:** ${buildInfo.weakAgainst.join(", ")}`,
