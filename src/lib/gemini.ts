@@ -141,14 +141,14 @@ export async function getAiBuildRecommendation(championQuery: string): Promise<B
       "secondaryTree": "Secondary tree name (e.g. Inspiration)",
       "details": ["Rune detail 1", "Rune detail 2", "Rune detail 3", "Rune detail 4", "Rune detail 5"]
     },
-    "skillPriority": ["R", "Q", "E", "W"],
+    "skillPriority": ["Q", "E", "W"],
     "summonerSpells": ["Flash", "Ignite"],
     "strongAgainst": ["Champ 1", "Champ 2", "Champ 3"],
     "weakAgainst": ["Champ 1", "Champ 2", "Champ 3"]
   }
 
   Skill order rules:
-  - "skillPriority" is the order to level up abilities. Always start with "R", then the next 3 entries are Q/W/E in priority order (highest priority first). Example for an AP mage who maxes Q first: ["R","Q","E","W"]. Exactly 4 entries.
+  - "skillPriority" lists Q/W/E in level-up priority order (highest priority first). Exactly 3 entries. Do NOT include "R" (R is always maxed first whenever possible). Example for an AP mage who maxes Q first, then E, then W: ["Q","E","W"].
 
   Summoner spells:
   - "summonerSpells" contains exactly 2 summoner spell names (English) appropriate for this champion's role. Use simple names from this set: Flash, Ignite, Teleport, Heal, Barrier, Exhaust, Cleanse, Ghost, Smite, Snowball. Flash is almost always one of the two.

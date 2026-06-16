@@ -289,7 +289,7 @@ function SkillOrderRow({
     E: spellUrls[2] ?? null,
     R: spellUrls[3] ?? null,
   };
-  const safePriority = priority.length === 4 ? priority : ["R", "Q", "E", "W"];
+  const safePriority = (priority.length === 3 ? priority : ["Q", "E", "W"]).filter(k => k !== "R");
 
   return (
     <div
@@ -449,7 +449,7 @@ export async function generateBuildImage(buildInfo: BuildRecommendation): Promis
     ...buildInfo.runes.details.map(getRuneIconUrl),
   ]);
 
-  const skillPriority = buildInfo.skillPriority ?? ["R", "Q", "E", "W"];
+  const skillPriority = buildInfo.skillPriority ?? ["Q", "E", "W"];
 
   const thaiFont = await fetchThaiFont();
 
