@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { getChampionIconUrl } from "./ddragon";
 import { getLatestVersion } from "./champions";
-import { fetchThaiFont, getTierStyle } from "./imageCommon";
+import { fetchThaiFont, getRankedEmblemUrl, getRankedBannerUrl } from "./imageCommon";
 import { LeagueEntry } from "./riot";
 
 export interface ProfileImageInput {
@@ -31,8 +31,8 @@ function RankCard({
   entry: LeagueEntry | undefined;
   color: string;
 }) {
-  const tierStyle = getTierStyle(entry?.tier);
   const wr = entry ? winRate(entry.wins, entry.losses) : 0;
+  const emblemUrl = getRankedEmblemUrl(entry?.tier);
 
   return (
     <div
@@ -71,26 +71,27 @@ function RankCard({
           <div
             style={{
               display: "flex",
-              flexDirection: "column",
+              width: 110,
+              height: 110,
               alignItems: "center",
               justifyContent: "center",
-              width: 96,
-              height: 96,
-              background: tierStyle.bg,
-              borderRadius: 12,
-              marginRight: 18,
+              marginRight: 14,
             }}
           >
-            <div style={{ display: "flex", color: tierStyle.text, fontSize: 14, fontWeight: 700, letterSpacing: 1 }}>
-              {entry.tier}
-            </div>
-            <div style={{ display: "flex", color: tierStyle.text, fontSize: 28, fontWeight: 700, marginTop: 2 }}>
-              {entry.rank}
-            </div>
+            {emblemUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={emblemUrl} width={110} height={110} alt="" />
+            )}
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>
-            <div style={{ display: "flex", color: "#ffffff", fontSize: 28, fontWeight: 700 }}>
-              {entry.leaguePoints} <span style={{ color: "#9aa0b4", fontSize: 16, fontWeight: 400, marginLeft: 6 }}>LP</span>
+            <div style={{ display: "flex", color: "#ffffff", fontSize: 22, fontWeight: 700, letterSpacing: 1 }}>
+              {entry.tier} {entry.rank}
+            </div>
+            <div style={{ display: "flex", alignItems: "baseline", marginTop: 4 }}>
+              <div style={{ display: "flex", color: "#ffffff", fontSize: 28, fontWeight: 700 }}>
+                {entry.leaguePoints}
+              </div>
+              <div style={{ display: "flex", color: "#9aa0b4", fontSize: 16, marginLeft: 6 }}>LP</div>
             </div>
             <div style={{ display: "flex", color: "#9aa0b4", fontSize: 14, marginTop: 6 }}>
               {entry.wins}W / {entry.losses}L
@@ -101,23 +102,23 @@ function RankCard({
           </div>
         </div>
       ) : (
-        <div style={{ display: "flex", alignItems: "center", height: 96 }}>
+        <div style={{ display: "flex", alignItems: "center", height: 110 }}>
           <div
             style={{
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
-              width: 96,
-              height: 96,
-              background: "#2b2d35",
+              width: 110,
+              height: 110,
+              background: "#1f2230",
               borderRadius: 12,
-              marginRight: 18,
+              marginRight: 14,
             }}
           >
-            <div style={{ display: "flex", color: "#9aa0b4", fontSize: 16, fontWeight: 700 }}>UNRANKED</div>
+            <div style={{ display: "flex", color: "#9aa0b4", fontSize: 14, fontWeight: 700 }}>UNRANKED</div>
           </div>
-          <div style={{ display: "flex", color: "#6b7280", fontSize: 18 }}>ยังไม่จัดอันดับ</div>
+          <div style={{ display: "flex", color: "#6b7280", fontSize: 16 }}>ยังไม่จัดอันดับ</div>
         </div>
       )}
     </div>
@@ -197,6 +198,7 @@ function MasteryCard({
 export async function generateProfileImage(input: ProfileImageInput): Promise<Buffer> {
   const version = await getLatestVersion();
   const profileIconUrl = `https://ddragon.leagueoflegends.com/cdn/${version}/img/profileicon/${input.profileIconId}.png`;
+  const bannerUrl = getRankedBannerUrl(input.soloDuo?.tier);
 
   const masteryIcons = await Promise.all(input.masteries.map(m => getChampionIconUrl(m.championName)));
   const thaiFont = await fetchThaiFont();
@@ -218,16 +220,54 @@ export async function generateProfileImage(input: ProfileImageInput): Promise<Bu
           <div
             style={{
               display: "flex",
-              width: 88,
-              height: 88,
-              borderRadius: 16,
-              overflow: "hidden",
-              border: "2px solid #f1c40f",
-              marginRight: 20,
+              position: "relative",
+              width: 130,
+              height: 150,
+              alignItems: "center",
+              justifyContent: "center",
+              marginRight: 12,
             }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={profileIconUrl} width={88} height={88} alt="" />
+            {bannerUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={bannerUrl}
+                width={130}
+                height={150}
+                alt=""
+                style={{ position: "absolute", top: 0, left: 0 }}
+              />
+            )}
+            <div
+              style={{
+                display: "flex",
+                width: 72,
+                height: 72,
+                borderRadius: 8,
+                overflow: "hidden",
+                position: "relative",
+                marginTop: 8,
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={profileIconUrl} width={72} height={72} alt="" />
+            </div>
+            <div
+              style={{
+                display: "flex",
+                position: "absolute",
+                bottom: 14,
+                background: "#0f1117",
+                border: "1px solid #2b2d35",
+                color: "#ffffff",
+                fontSize: 12,
+                fontWeight: 700,
+                padding: "2px 8px",
+                borderRadius: 10,
+              }}
+            >
+              {input.summonerLevel}
+            </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div style={{ display: "flex", color: "#f1c40f", fontSize: 14, fontWeight: 700, letterSpacing: 2 }}>
@@ -242,7 +282,7 @@ export async function generateProfileImage(input: ProfileImageInput): Promise<Bu
               </div>
             </div>
             <div style={{ display: "flex", color: "#9aa0b4", fontSize: 14, marginTop: 4 }}>
-              Level {input.summonerLevel} · Thailand (TH)
+              Thailand (TH){input.soloDuo ? ` · ${input.soloDuo.tier} ${input.soloDuo.rank}` : ""}
             </div>
           </div>
           <div style={{ display: "flex", flex: 1 }} />
@@ -283,7 +323,7 @@ export async function generateProfileImage(input: ProfileImageInput): Promise<Bu
     ),
     {
       width: 1100,
-      height: 540,
+      height: 580,
       fonts: thaiFont
         ? [{ name: "Noto Sans Thai", data: thaiFont, weight: 600, style: "normal" }]
         : undefined,

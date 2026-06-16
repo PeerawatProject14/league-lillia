@@ -32,3 +32,21 @@ export const TIER_COLORS: Record<string, { bg: string; text: string }> = {
 export function getTierStyle(tier: string | undefined) {
   return TIER_COLORS[(tier ?? "UNRANKED").toUpperCase()] ?? TIER_COLORS.UNRANKED;
 }
+
+const CDRAGON_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images";
+
+export function getRankedEmblemUrl(tier: string | undefined): string | null {
+  if (!tier) return null;
+  const key = tier.toLowerCase();
+  const VALID = ["iron", "bronze", "silver", "gold", "platinum", "emerald", "diamond", "master", "grandmaster", "challenger"];
+  if (!VALID.includes(key)) return null;
+  return `${CDRAGON_BASE}/ranked-emblem/emblem-${key}.png`;
+}
+
+export function getRankedBannerUrl(tier: string | undefined): string | null {
+  if (!tier) return null;
+  const key = tier.toLowerCase();
+  const VALID = ["iron", "bronze", "silver", "gold", "platinum", "emerald", "diamond", "master", "grandmaster", "challenger"];
+  if (!VALID.includes(key)) return null;
+  return `${CDRAGON_BASE}/regalia/regalia-banner-${key}.png`;
+}
