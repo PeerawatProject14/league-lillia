@@ -670,9 +670,8 @@ async function handleBuildCommand(championQuery: string, token: string) {
         name: "⚠️ ไม่สามารถสร้างรูปภาพ Build ได้",
         value: "แสดงข้อมูลแบบข้อความแทน:\n\n" +
           `**⚔️ Starter:** ${buildInfo.starterItems.join(", ")}\n` +
-          `**📦 Core:** ${buildInfo.coreItems.join(", ")}\n` +
-          `**👟 Boots:** ${(buildInfo.boots ?? []).join(", ")}\n` +
-          `**🌟 Situational:** ${buildInfo.situationalItems.join(", ")}\n` +
+          `**📦 Core (1-3):** ${buildInfo.coreItems.join(" → ")}\n` +
+          `**🌟 Situational (4-6):** ${buildInfo.situationalItems.join(", ")}\n` +
           `**💡 Optional:** ${(buildInfo.optionalItems ?? []).join(", ")}\n` +
           `**🔮 Runes:** ${buildInfo.runes.keystone} (${buildInfo.runes.primaryTree}/${buildInfo.runes.secondaryTree})\n` +
           `**🟢 Strong vs:** ${buildInfo.strongAgainst.join(", ")}\n` +

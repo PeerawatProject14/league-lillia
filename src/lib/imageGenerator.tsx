@@ -5,10 +5,9 @@ import { getLatestVersion } from "./champions";
 
 const SECTIONS = {
   starter: { label: "STARTER", sub: "ไอเทมเริ่มต้น", color: "#4ade80" },
-  core: { label: "CORE", sub: "ไอเทมหลัก", color: "#60a5fa" },
-  boots: { label: "BOOTS", sub: "รองเท้า", color: "#fb923c" },
-  situational: { label: "SITUATIONAL", sub: "ตามสถานการณ์", color: "#fbbf24" },
-  optional: { label: "OPTIONAL", sub: "ทางเลือก", color: "#2dd4bf" },
+  core: { label: "CORE", sub: "ช่อง 1-3 (ของใหญ่-รองเท้า-ของใหญ่)", color: "#60a5fa" },
+  situational: { label: "SITUATIONAL", sub: "ช่อง 4-6 ตามรูปเกม", color: "#fbbf24" },
+  optional: { label: "OPTIONAL", sub: "ทางเลือกสำรอง", color: "#2dd4bf" },
   runes: { label: "RUNES", sub: "รูนแนะนำ", color: "#a78bfa" },
   strong: { label: "STRONG VS", sub: "ชนะทาง", color: "#22c55e" },
   weak: { label: "WEAK VS", sub: "แพ้ทาง", color: "#ef4444" },
@@ -102,6 +101,76 @@ function FullRow({ section, urls }: { section: Section; urls: (string | null)[] 
         {urls.filter(Boolean).map((u, i) => (
           <IconCell key={i} url={u} />
         ))}
+      </div>
+    </div>
+  );
+}
+
+function Arrow() {
+  return (
+    <div
+      style={{
+        display: "flex",
+        color: "#4b5563",
+        fontSize: 24,
+        marginRight: 6,
+        alignItems: "center",
+      }}
+    >
+      ›
+    </div>
+  );
+}
+
+function CoreRow({
+  section,
+  urls,
+  bootsIndex,
+}: {
+  section: Section;
+  urls: (string | null)[];
+  bootsIndex: number;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        padding: "10px 0",
+        borderBottom: "1px solid #1f222b",
+      }}
+    >
+      <SectionLabel section={section} />
+      <div style={{ display: "flex", flex: 1, alignItems: "center" }}>
+        {urls.map((u, i) => {
+          if (!u) return null;
+          const isBoots = i === bootsIndex;
+          const cell = (
+            <div
+              key={`cell-${i}`}
+              style={{
+                display: "flex",
+                width: 52,
+                height: 52,
+                borderRadius: 8,
+                overflow: "hidden",
+                background: "#1f2230",
+                border: isBoots ? "2px solid #fb923c" : "1px solid #2b2d35",
+                marginRight: 6,
+                position: "relative",
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={u} width={isBoots ? 48 : 52} height={isBoots ? 48 : 52} alt="" />
+            </div>
+          );
+          return (
+            <div key={i} style={{ display: "flex", alignItems: "center" }}>
+              {i > 0 && <Arrow />}
+              {cell}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -220,13 +289,12 @@ export async function generateBuildImage(buildInfo: BuildRecommendation): Promis
   const latestVersion = await getLatestVersion();
   const champIconUrl = `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/champion/${buildInfo.championIdName}.png`;
 
-  const boots = buildInfo.boots ?? [];
   const optionalItems = buildInfo.optionalItems ?? [];
+  const bootsIndex = typeof buildInfo.bootsIndex === "number" ? buildInfo.bootsIndex : 1;
 
   const [
     starterUrls,
     coreUrls,
-    bootsUrls,
     situationalUrls,
     optionalUrls,
     strongUrls,
@@ -238,7 +306,6 @@ export async function generateBuildImage(buildInfo: BuildRecommendation): Promis
   ] = await Promise.all([
     Promise.all(buildInfo.starterItems.map(getItemIconUrl)),
     Promise.all(buildInfo.coreItems.map(getItemIconUrl)),
-    Promise.all(boots.map(getItemIconUrl)),
     Promise.all(buildInfo.situationalItems.map(getItemIconUrl)),
     Promise.all(optionalItems.map(getItemIconUrl)),
     Promise.all(buildInfo.strongAgainst.map(getChampionIconUrl)),
@@ -308,8 +375,7 @@ export async function generateBuildImage(buildInfo: BuildRecommendation): Promis
         </div>
 
         <FullRow section={SECTIONS.starter} urls={starterUrls} />
-        <FullRow section={SECTIONS.core} urls={coreUrls} />
-        <FullRow section={SECTIONS.boots} urls={bootsUrls} />
+        <CoreRow section={SECTIONS.core} urls={coreUrls} bootsIndex={bootsIndex} />
         <SplitRow
           left={SECTIONS.situational}
           right={SECTIONS.optional}
@@ -333,7 +399,7 @@ export async function generateBuildImage(buildInfo: BuildRecommendation): Promis
     ),
     {
       width: 1100,
-      height: 560,
+      height: 500,
       fonts: thaiFont
         ? [{ name: "Noto Sans Thai", data: thaiFont, weight: 600, style: "normal" }]
         : undefined,

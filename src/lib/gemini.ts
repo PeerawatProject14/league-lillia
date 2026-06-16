@@ -91,7 +91,7 @@ export interface BuildRecommendation {
   displayName: string;
   starterItems: string[];
   coreItems: string[];
-  boots: string[];
+  bootsIndex: number;
   situationalItems: string[];
   optionalItems: string[];
   runes: {
@@ -129,8 +129,8 @@ export async function getAiBuildRecommendation(championQuery: string): Promise<B
     "championIdName": "Exact DDragon internal ID name",
     "displayName": "Readable display name of champion",
     "starterItems": ["Starter Item 1 (Thai/Eng translation)", "Starter Item 2"],
-    "coreItems": ["Core Item 1", "Core Item 2", "Core Item 3"],
-    "boots": ["Recommended boots (e.g. Sorcerer's Shoes, Plated Steelcaps) - 1 to 2 items"],
+    "coreItems": ["Big Item 1", "Recommended Boots", "Big Item 2"],
+    "bootsIndex": 1,
     "situationalItems": ["Situational Item 1", "Situational Item 2", "Situational Item 3"],
     "optionalItems": ["Optional/alternative Item 1", "Optional Item 2", "Optional Item 3"],
     "runes": {
@@ -143,9 +143,12 @@ export async function getAiBuildRecommendation(championQuery: string): Promise<B
     "weakAgainst": ["Champ 1", "Champ 2", "Champ 3"]
   }
 
-  Notes:
-  - "boots" should be the boots recommended for this champion (e.g. Sorcerer's Shoes for AP carries). Provide 1-2 items.
-  - "optionalItems" are alternative/flex picks the player can consider instead of core or situational depending on playstyle. Provide 3 items. Do NOT repeat items from coreItems or situationalItems.
+  CRITICAL rules for items (LoL has 6 item slots total, excluding starter/trinket):
+  - "coreItems" represents slots 1-3 (the fixed early build path). Provide EXACTLY 3 items in build order: a big item, then boots, then a big item.
+    Example for an AP carry: ["Liandry's Torment", "Sorcerer's Shoes", "Rabadon's Deathcap"].
+  - "bootsIndex" must be the 0-based index of the boots inside coreItems (usually 1, since boots typically go second).
+  - "situationalItems" are the HIGHER-PRIORITY picks for slots 4-6 — what the player should usually build. Provide EXACTLY 3 items in priority order (best first).
+  - "optionalItems" are LOWER-PRIORITY alternatives the player can swap in if the game state calls for it (vs. heavy AD, lots of crowd control, etc.). Provide EXACTLY 3 items. Do NOT repeat items already in coreItems or situationalItems.
   `;
 
   try {
