@@ -8,6 +8,7 @@ import {
 } from "./ddragon";
 import { BuildRecommendation } from "./gemini";
 import { getLatestVersion } from "./champions";
+import { fetchThaiFont } from "./imageCommon";
 
 const SECTIONS = {
   starter: { label: "STARTER", sub: "ไอเทมเริ่มต้น", color: "#4ade80" },
@@ -19,23 +20,6 @@ const SECTIONS = {
   strong: { label: "STRONG VS", sub: "ชนะทาง", color: "#22c55e" },
   weak: { label: "WEAK VS", sub: "แพ้ทาง", color: "#ef4444" },
 };
-
-async function fetchThaiFont(): Promise<ArrayBuffer | null> {
-  try {
-    const cssRes = await fetch(
-      "https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@600&display=swap",
-      { headers: { "User-Agent": "Mozilla/5.0" } }
-    );
-    const css = await cssRes.text();
-    const match = css.match(/url\((https:\/\/[^)]+\.woff2)\)/);
-    if (!match) return null;
-    const fontRes = await fetch(match[1]);
-    return await fontRes.arrayBuffer();
-  } catch (e) {
-    console.warn("Failed to load Thai font:", e);
-    return null;
-  }
-}
 
 function IconCell({ url, size = 48 }: { url: string | null; size?: number }) {
   if (!url) return null;

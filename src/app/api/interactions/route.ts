@@ -13,6 +13,7 @@ import {
 import { getChampionName, getLatestVersion, getChampionInternalId } from "@/lib/champions";
 import { getAiCoachingReport, MatchSummary, getAiBuildRecommendation } from "@/lib/gemini";
 import { generateBuildImage } from "@/lib/imageGenerator";
+import { generateProfileImage } from "@/lib/profileImage";
 
 const DISCORD_PUBLIC_KEY = process.env.DISCORD_PUBLIC_KEY || "";
 const DISCORD_APP_ID = process.env.DISCORD_APP_ID || "";
@@ -196,37 +197,51 @@ export async function POST(req: NextRequest) {
 // Handler for `/profile`
 async function handleProfileCommand(summonerInput: string, token: string) {
   const { gameName, tagLine } = parseRiotId(summonerInput);
-  const latestVersion = await getLatestVersion();
-  
-  // A: Fetch Riot account details
+
   const account = await getRiotAccount(gameName, tagLine);
-  
-  // B: Fetch Summoner details
   const summoner = await getSummonerByPuuid(account.puuid);
-  
-  // C: Fetch League entries (ranks)
   const leagues = await getLeagueEntries(account.puuid);
   const soloDuo = leagues.find((l: LeagueEntry) => l.queueType === "RANKED_SOLO_5x5");
   const flex = leagues.find((l: LeagueEntry) => l.queueType === "RANKED_FLEX_SR");
 
-  // D: Fetch Top Masteries
   const masteries = await getTopChampionMasteries(account.puuid, 3);
-  const masteryFields = [];
-  for (let i = 0; i < masteries.length; i++) {
-    const m = masteries[i];
+  const masteryEntries: { championName: string; championLevel: number; championPoints: number }[] = [];
+  for (const m of masteries) {
     const champName = await getChampionName(m.championId);
-    masteryFields.push(`• **${champName}** - Level ${m.championLevel} (${m.championPoints.toLocaleString()} pts)`);
+    masteryEntries.push({
+      championName: champName,
+      championLevel: m.championLevel,
+      championPoints: m.championPoints,
+    });
+  }
+
+  let imageBuffer: Buffer | undefined;
+  try {
+    imageBuffer = await generateProfileImage({
+      gameName: account.gameName,
+      tagLine: account.tagLine,
+      summonerLevel: summoner.summonerLevel,
+      profileIconId: summoner.profileIconId,
+      soloDuo,
+      flex,
+      masteries: masteryEntries,
+    });
+  } catch (e) {
+    console.error("Failed to generate profile image:", e);
   }
 
   const rankColor = soloDuo ? getRankColor(soloDuo.tier) : 0xFFFFFF;
 
-  const embed = {
+  const embed: any = {
     title: `🏆 LoL Profile: ${account.gameName}#${account.tagLine}`,
     color: rankColor,
-    thumbnail: {
-      url: `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/profileicon/${summoner.profileIconId}.png`,
-    },
-    fields: [
+    image: imageBuffer ? { url: "attachment://profile.png" } : undefined,
+    footer: { text: "League of Legends Buddy Bot" },
+    timestamp: new Date().toISOString(),
+  };
+
+  if (!imageBuffer) {
+    embed.fields = [
       {
         name: "📊 ข้อมูลทั่วไป",
         value: `• **Level:** ${summoner.summonerLevel}\n• **Server:** Thailand (TH)`,
@@ -235,28 +250,26 @@ async function handleProfileCommand(summonerInput: string, token: string) {
       {
         name: "⚔️ Ranked Solo/Duo",
         value: soloDuo
-          ? `• **Rank:** ${soloDuo.tier} ${soloDuo.rank}\n• **LP:** ${soloDuo.leaguePoints}\n• **Win Rate:** ${soloDuo.wins}W / ${soloDuo.losses}L (${Math.round((soloDuo.wins / (soloDuo.wins + soloDuo.losses)) * 100)}%)`
-          : "• **Rank:** Unranked",
+          ? `• **Rank:** ${soloDuo.tier} ${soloDuo.rank}\n• **LP:** ${soloDuo.leaguePoints}\n• **WR:** ${soloDuo.wins}W/${soloDuo.losses}L (${Math.round((soloDuo.wins / (soloDuo.wins + soloDuo.losses)) * 100)}%)`
+          : "Unranked",
         inline: true,
       },
       {
         name: "👥 Ranked Flex",
         value: flex
-          ? `• **Rank:** ${flex.tier} ${flex.rank}\n• **LP:** ${flex.leaguePoints}\n• **Win Rate:** ${flex.wins}W / ${flex.losses}L (${Math.round((flex.wins / (flex.wins + flex.losses)) * 100)}%)`
-          : "• **Rank:** Unranked",
+          ? `• **Rank:** ${flex.tier} ${flex.rank}\n• **LP:** ${flex.leaguePoints}\n• **WR:** ${flex.wins}W/${flex.losses}L (${Math.round((flex.wins / (flex.wins + flex.losses)) * 100)}%)`
+          : "Unranked",
         inline: true,
       },
       {
-        name: "🔥 แชมเปี้ยนช่ำชองสูงสุด (Top Mastery)",
-        value: masteryFields.length > 0 ? masteryFields.join("\n") : "ไม่มีข้อมูล",
+        name: "🔥 Top Mastery",
+        value: masteryEntries.length > 0
+          ? masteryEntries.map(m => `• **${m.championName}** - Lv.${m.championLevel} (${m.championPoints.toLocaleString()} pts)`).join("\n")
+          : "ไม่มีข้อมูล",
         inline: false,
       },
-    ],
-    footer: {
-      text: "League of Legends Buddy Bot • Powered by Gemini AI",
-    },
-    timestamp: new Date().toISOString(),
-  };
+    ];
+  }
 
   // Add OP.GG link button + AI Coach and Live Game action buttons
   const components = [
@@ -291,10 +304,12 @@ async function handleProfileCommand(summonerInput: string, token: string) {
     },
   ];
 
-  await updateInteractionResponse(token, {
-    embeds: [embed],
-    components: components,
-  });
+  await updateInteractionResponse(
+    token,
+    { embeds: [embed], components },
+    imageBuffer,
+    "profile.png"
+  );
 }
 
 // Handler for `/coach`
