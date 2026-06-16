@@ -10,8 +10,9 @@ import {
   getActiveGame,
   LeagueEntry
 } from "@/lib/riot";
-import { getChampionName } from "@/lib/champions";
-import { getAiCoachingReport, MatchSummary } from "@/lib/gemini";
+import { getChampionName, getLatestVersion, getChampionInternalId } from "@/lib/champions";
+import { getAiCoachingReport, MatchSummary, getAiBuildRecommendation } from "@/lib/gemini";
+import { generateBuildImage } from "@/lib/imageGenerator";
 
 const DISCORD_PUBLIC_KEY = process.env.DISCORD_PUBLIC_KEY || "";
 const DISCORD_APP_ID = process.env.DISCORD_APP_ID || "";
@@ -30,21 +31,42 @@ const RANK_COLORS: Record<string, number> = {
   IRON: 0x6C6C6C,
 };
 
+function safeTruncate(text: string, maxLength: number = 4000): string {
+  if (!text) return "";
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength - 100) + "\n\n...(ข้อมูลบางส่วนถูกตัดออก เนื่องจากยาวเกินขีดจำกัดของ Discord)...";
+}
+
 function getRankColor(tier: string): number {
   return RANK_COLORS[tier.toUpperCase()] || 0xFFFFFF;
 }
 
 // Function to update Discord deferred message
-async function updateInteractionResponse(token: string, body: any) {
+async function updateInteractionResponse(token: string, body: any, fileBuffer?: Buffer, fileName?: string) {
   const url = `https://discord.com/api/v10/webhooks/${DISCORD_APP_ID}/${token}/messages/@original`;
   try {
-    const res = await fetch(url, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    });
+    let res;
+    if (fileBuffer && fileName) {
+      const formData = new FormData();
+      formData.append("payload_json", JSON.stringify(body));
+      
+      const blob = new Blob([new Uint8Array(fileBuffer)], { type: "image/png" });
+      formData.append("files[0]", blob, fileName);
+      
+      res = await fetch(url, {
+        method: "PATCH",
+        body: formData,
+      });
+    } else {
+      res = await fetch(url, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+    }
+    
     if (!res.ok) {
       const text = await res.text();
       console.error(`Error updating interaction response: ${res.status} - ${text}`);
@@ -100,8 +122,13 @@ export async function POST(req: NextRequest) {
 
     if (interaction.type === InteractionType.APPLICATION_COMMAND) {
       commandName = interaction.data.name;
-      const summonerOption = interaction.data.options?.find((opt: any) => opt.name === "summoner");
-      summonerInput = summonerOption?.value || "";
+      if (commandName === "build") {
+        const champOption = interaction.data.options?.find((opt: any) => opt.name === "champion");
+        summonerInput = champOption?.value || "";
+      } else {
+        const summonerOption = interaction.data.options?.find((opt: any) => opt.name === "summoner");
+        summonerInput = summonerOption?.value || "";
+      }
     } else if (interaction.type === InteractionType.MESSAGE_COMPONENT) {
       // Button custom_id is formatted as: "action:gameName#tagLine"
       const customId = interaction.data.custom_id || "";
@@ -113,9 +140,12 @@ export async function POST(req: NextRequest) {
     }
 
     if (!summonerInput) {
+      const errMsg = commandName === "build"
+        ? "❌ กรุณากรอกชื่อแชมเปี้ยนที่ต้องการแนะนำ"
+        : "❌ กรุณากรอกชื่อ Summoner (ตัวอย่าง: Name#Tag)";
       return NextResponse.json({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-        data: { content: "❌ กรุณากรอกชื่อ Summoner (ตัวอย่าง: Name#Tag)" },
+        data: { content: errMsg },
       });
     }
 
@@ -136,6 +166,13 @@ export async function POST(req: NextRequest) {
             await handleCoachCommand(summonerInput, interactionToken);
           } else if (commandName === "livegame") {
             await handleLiveGameCommand(summonerInput, interactionToken);
+          } else if (commandName === "history") {
+            await handleHistoryCommand(summonerInput, interactionToken);
+          } else if (commandName === "detailgame") {
+            const selectedMatchId = interaction.data.values?.[0] || "";
+            await handleDetailGameCommand(summonerInput, selectedMatchId, interactionToken);
+          } else if (commandName === "build") {
+            await handleBuildCommand(summonerInput, interactionToken);
           } else {
             await updateInteractionResponse(interactionToken, {
               content: `❌ ไม่พบคำสั่ง: ${commandName}`,
@@ -159,6 +196,7 @@ export async function POST(req: NextRequest) {
 // Handler for `/profile`
 async function handleProfileCommand(summonerInput: string, token: string) {
   const { gameName, tagLine } = parseRiotId(summonerInput);
+  const latestVersion = await getLatestVersion();
   
   // A: Fetch Riot account details
   const account = await getRiotAccount(gameName, tagLine);
@@ -167,7 +205,7 @@ async function handleProfileCommand(summonerInput: string, token: string) {
   const summoner = await getSummonerByPuuid(account.puuid);
   
   // C: Fetch League entries (ranks)
-  const leagues = await getLeagueEntries(summoner.id);
+  const leagues = await getLeagueEntries(account.puuid);
   const soloDuo = leagues.find((l: LeagueEntry) => l.queueType === "RANKED_SOLO_5x5");
   const flex = leagues.find((l: LeagueEntry) => l.queueType === "RANKED_FLEX_SR");
 
@@ -186,7 +224,7 @@ async function handleProfileCommand(summonerInput: string, token: string) {
     title: `🏆 LoL Profile: ${account.gameName}#${account.tagLine}`,
     color: rankColor,
     thumbnail: {
-      url: `https://ddragon.leagueoflegends.com/cdn/14.12.1/img/profileicon/${summoner.profileIconId}.png`,
+      url: `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/profileicon/${summoner.profileIconId}.png`,
     },
     fields: [
       {
@@ -229,7 +267,7 @@ async function handleProfileCommand(summonerInput: string, token: string) {
           type: 2, // Button
           style: 5, // Link
           label: "ดูใน OP.GG",
-          url: `https://www.op.gg/summoners/th/${encodeURIComponent(account.gameName)}-${encodeURIComponent(account.tagLine)}`,
+          url: `https://www.op.gg/summoners/sg/${encodeURIComponent(account.gameName)}-${encodeURIComponent(account.tagLine)}`,
         },
         {
           type: 2, // Button
@@ -242,6 +280,12 @@ async function handleProfileCommand(summonerInput: string, token: string) {
           style: 3, // Success (Green)
           label: "🎮 เช็คเกมสด (Live Game)",
           custom_id: `livegame:${account.gameName}#${account.tagLine}`,
+        },
+        {
+          type: 2, // Button
+          style: 2, // Secondary (Grey)
+          label: "📜 ประวัติการเล่น",
+          custom_id: `history:${account.gameName}#${account.tagLine}`,
         },
       ],
     },
@@ -325,7 +369,7 @@ async function handleCoachCommand(summonerInput: string, token: string) {
   // E: Return AI Report as a beautifully styled Embed
   const embed = {
     title: `🤖 AI Coach Analysis: ${account.gameName}#${account.tagLine}`,
-    description: coachingReport,
+    description: safeTruncate(coachingReport),
     color: 0xFF8800, // AI Theme Color (Orange)
     footer: {
       text: "วิเคราะห์อ้างอิงจากข้อมูลสถิติ 5 เกมล่าสุด • ข้อมูลอัปเดตแบบเรียลไทม์",
@@ -400,3 +444,248 @@ async function handleLiveGameCommand(summonerInput: string, token: string) {
     embeds: [embed],
   });
 }
+
+async function handleHistoryCommand(summonerInput: string, token: string) {
+  const { gameName, tagLine } = parseRiotId(summonerInput);
+  
+  // A: Fetch Riot account details
+  const account = await getRiotAccount(gameName, tagLine);
+
+  // B: Fetch Match history IDs (last 10 games)
+  const matchIds = await getMatchIds(account.puuid, 10);
+  if (matchIds.length === 0) {
+    await updateInteractionResponse(token, {
+      content: `❌ ไม่พบประวัติการเล่นล่าสุดของ ${account.gameName}#${account.tagLine}`,
+    });
+    return;
+  }
+
+  // C: Fetch Match Details & compile list
+  const matchLines: string[] = [];
+  const selectOptions: any[] = [];
+  
+  // Map positions to friendly game roles
+  const ROLE_MAP: Record<string, string> = {
+    TOP: "TOP",
+    JUNGLE: "JG",
+    MIDDLE: "MID",
+    BOTTOM: "ADC",
+    UTILITY: "SUP",
+  };
+
+  for (let i = 0; i < matchIds.length; i++) {
+    const matchId = matchIds[i];
+    try {
+      const match = await getMatchDetail(matchId);
+      const playerStats = match.info.participants.find(p => p.puuid === account.puuid);
+      if (playerStats) {
+        const champName = await getChampionName(playerStats.championId);
+        
+        // Calculate CS/min
+        const totalCs = playerStats.totalMinionsKilled + playerStats.neutralMinionsKilled;
+        const durationMin = match.info.gameDuration / 60;
+        const csPerMin = durationMin > 0 ? totalCs / durationMin : 0;
+        
+        // Calculate KDA
+        const kdaVal = playerStats.deaths === 0
+          ? "Perfect KDA"
+          : `${((playerStats.kills + playerStats.assists) / playerStats.deaths).toFixed(2)}:1 KDA`;
+
+        const winStatus = playerStats.win ? "🟢 **ชนะ**" : "🔴 **แพ้**";
+        const role = ROLE_MAP[playerStats.individualPosition] || playerStats.individualPosition || "UNKNOWN";
+        const kdaString = `**${playerStats.kills}**/**${playerStats.deaths}**/**${playerStats.assists}**`;
+
+        matchLines.push(
+          `**${i + 1}.** ${winStatus} | **${champName}** (${role})\n` +
+          `   • KDA: ${kdaString} (${kdaVal})\n` +
+          `   • CS: ${totalCs} (${csPerMin.toFixed(1)}/นาที) | เวลา: ${Math.floor(durationMin)} นาที`
+        );
+
+        // Add dropdown option for this game
+        const winLabel = playerStats.win ? "ชนะ" : "แพ้";
+        const labelText = `เกมที่ ${i + 1}: ${winLabel} - ${champName} (${role})`;
+        const descText = `KDA: ${playerStats.kills}/${playerStats.deaths}/${playerStats.assists} | เวลา: ${Math.floor(durationMin)} นาที`;
+        
+        selectOptions.push({
+          label: labelText.substring(0, 100),
+          description: descText.substring(0, 100),
+          value: matchId,
+        });
+      }
+    } catch (e) {
+      console.warn(`Failed to load details for match ${matchId}:`, e);
+    }
+  }
+
+  if (matchLines.length === 0) {
+    await updateInteractionResponse(token, {
+      content: `❌ ไม่สามารถดึงรายละเอียดการเล่นล่าสุดเพื่อสรุปผลได้`,
+    });
+    return;
+  }
+
+  const embed = {
+    title: `📜 Match History: ${account.gameName}#${account.tagLine}`,
+    description: safeTruncate(`ประวัติการเล่น 10 เกมล่าสุด:\n\n${matchLines.join("\n\n")}`),
+    color: 0x5865F2, // Blurple Color (Discord theme)
+    footer: {
+      text: "League of Legends Match History Status",
+    },
+    timestamp: new Date().toISOString(),
+  };
+
+  const components = [
+    {
+      type: 1, // Action Row
+      components: [
+        {
+          type: 3, // String Select
+          custom_id: `detailgame:${account.gameName}#${account.tagLine}`,
+          placeholder: "เลือกรอบการเล่นเพื่อดูรูปแชมเปี้ยนและรายละเอียด...",
+          options: selectOptions,
+        },
+      ],
+    },
+  ];
+
+  await updateInteractionResponse(token, {
+    embeds: [embed],
+    components: components,
+  });
+}
+
+// Handler for showing detailed game info with champion image
+async function handleDetailGameCommand(summonerInput: string, matchId: string, token: string) {
+  const { gameName, tagLine } = parseRiotId(summonerInput);
+  
+  // A: Fetch Riot account details
+  const account = await getRiotAccount(gameName, tagLine);
+  
+  // B: Fetch match detail
+  const match = await getMatchDetail(matchId);
+  const playerStats = match.info.participants.find(p => p.puuid === account.puuid);
+  if (!playerStats) {
+    await updateInteractionResponse(token, {
+      content: `❌ ไม่พบข้อมูลสถิติของ ${account.gameName}#${account.tagLine} ในเกมนี้`,
+    });
+    return;
+  }
+
+  const champName = await getChampionName(playerStats.championId);
+  const internalId = await getChampionInternalId(playerStats.championId);
+  const latestVersion = await getLatestVersion();
+
+  // Calculate stats
+  const totalCs = playerStats.totalMinionsKilled + playerStats.neutralMinionsKilled;
+  const durationMin = match.info.gameDuration / 60;
+  const csPerMin = durationMin > 0 ? totalCs / durationMin : 0;
+  const kdaVal = playerStats.deaths === 0
+    ? "Perfect"
+    : ((playerStats.kills + playerStats.assists) / playerStats.deaths).toFixed(2);
+
+  // Group participants into Blue (100) and Red (200) teams
+  const blueTeam = [];
+  const redTeam = [];
+
+  for (const part of match.info.participants) {
+    const partChampName = await getChampionName(part.championId);
+    const displayName = part.riotIdGameName 
+      ? `${part.riotIdGameName}#${part.riotIdTagline}` 
+      : part.summonerId; // Fallback
+    
+    const kdaStr = `${part.kills}/${part.deaths}/${part.assists}`;
+    const line = `• **${displayName}** - **${partChampName}** (${kdaStr})`;
+    
+    if (part.teamId === 100) {
+      blueTeam.push(line);
+    } else {
+      redTeam.push(line);
+    }
+  }
+
+  const embed = {
+    title: `🎮 รายละเอียดเกม: ${account.gameName}#${account.tagLine} (${playerStats.win ? "🟢 ชนะ" : "🔴 แพ้"})`,
+    description: `• **โหมดเกม:** ${match.info.gameMode}\n• **ระยะเวลา:** ${Math.floor(durationMin)} นาที`,
+    color: playerStats.win ? 0x2ECC71 : 0xE74C3C, // Green for Win, Red for Loss
+    thumbnail: {
+      url: `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/champion/${internalId}.png`,
+    },
+    image: {
+      url: `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${internalId}_0.jpg`,
+    },
+    fields: [
+      {
+        name: "📊 สถิติส่วนตัว",
+        value: `• **เล่นแชมเปี้ยน:** ${champName}\n• **KDA:** ${playerStats.kills}/${playerStats.deaths}/${playerStats.assists} (${kdaVal}:1)\n• **CS:** ${totalCs} (${csPerMin.toFixed(1)}/นาที)\n• **Vision Score:** ${playerStats.visionScore}\n• **สร้างความเสียหาย:** ${playerStats.totalDamageDealtToChampions.toLocaleString()}\n• **เงินที่ได้รับ:** ${playerStats.goldEarned.toLocaleString()} Gold`,
+        inline: false,
+      },
+      {
+        name: "🔵 ทีมสีฟ้า (Blue Team)",
+        value: blueTeam.length > 0 ? safeTruncate(blueTeam.join("\n"), 1024) : "ไม่มีข้อมูล",
+        inline: false,
+      },
+      {
+        name: "🔴 ทีมสีแดง (Red Team)",
+        value: redTeam.length > 0 ? safeTruncate(redTeam.join("\n"), 1024) : "ไม่มีข้อมูล",
+        inline: false,
+      },
+    ],
+    footer: {
+      text: `Riot Match ID: ${matchId}`,
+    },
+    timestamp: new Date().toISOString(),
+  };
+
+  await updateInteractionResponse(token, {
+    embeds: [embed],
+  });
+}
+
+// Handler for `/build`
+async function handleBuildCommand(championQuery: string, token: string) {
+  const buildInfo = await getAiBuildRecommendation(championQuery);
+  const latestVersion = await getLatestVersion();
+
+  let imageBuffer: Buffer | undefined;
+  try {
+    imageBuffer = await generateBuildImage(buildInfo);
+  } catch (e) {
+    console.error("Failed to generate build image:", e);
+  }
+
+  const embed: any = {
+    title: `🛡️ Build แนะนำสำหรับแชมเปี้ยน: ${buildInfo.displayName}`,
+    color: 0xF1C40F,
+    thumbnail: {
+      url: `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/champion/${buildInfo.championIdName}.png`,
+    },
+    image: imageBuffer
+      ? { url: "attachment://build.png" }
+      : { url: `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${buildInfo.championIdName}_0.jpg` },
+    footer: {
+      text: "วิเคราะห์และจัดของโดย Gemini AI • ข้อมูลและรูปภาพอัปเดตแบบเรียลไทม์",
+    },
+    timestamp: new Date().toISOString(),
+  };
+
+  if (!imageBuffer) {
+    embed.fields = [
+      {
+        name: "⚠️ ไม่สามารถสร้างรูปภาพ Build ได้",
+        value: "แสดงข้อมูลแบบข้อความแทน:\n\n" +
+          `**⚔️ Starter:** ${buildInfo.starterItems.join(", ")}\n` +
+          `**📦 Core:** ${buildInfo.coreItems.join(", ")}\n` +
+          `**🌟 Situational:** ${buildInfo.situationalItems.join(", ")}\n` +
+          `**🔮 Runes:** ${buildInfo.runes.keystone} (${buildInfo.runes.primaryTree}/${buildInfo.runes.secondaryTree})\n` +
+          `**🟢 Strong vs:** ${buildInfo.strongAgainst.join(", ")}\n` +
+          `**🔴 Weak vs:** ${buildInfo.weakAgainst.join(", ")}`,
+        inline: false,
+      },
+    ];
+  }
+
+  await updateInteractionResponse(token, {
+    embeds: [embed],
+  }, imageBuffer, "build.png");
+}
+

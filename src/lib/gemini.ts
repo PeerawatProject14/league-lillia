@@ -39,7 +39,7 @@ export async function getAiCoachingReport(
   matches: MatchSummary[]
 ): Promise<string> {
   const client = getGeminiClient();
-  const model = client.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = client.getGenerativeModel({ model: "gemini-flash-latest" });
 
   // Format matches statistics for the prompt
   let matchDataText = "";
@@ -83,5 +83,71 @@ Please write a coaching review that is:
   } catch (error) {
     console.error("Failed to generate AI coaching report:", error);
     throw new Error("Failed to generate coaching analysis from Gemini API.");
+  }
+}
+
+export interface BuildRecommendation {
+  championIdName: string;
+  displayName: string;
+  starterItems: string[];
+  coreItems: string[];
+  situationalItems: string[];
+  runes: {
+    keystone: string;
+    primaryTree: string;
+    secondaryTree: string;
+    details: string[];
+  };
+  strongAgainst: string[];
+  weakAgainst: string[];
+}
+
+/**
+ * Generates an AI League of Legends build recommendation in Thai for a specific champion
+ */
+export async function getAiBuildRecommendation(championQuery: string): Promise<BuildRecommendation> {
+  const client = getGeminiClient();
+  const model = client.getGenerativeModel({
+    model: "gemini-flash-latest",
+    generationConfig: { responseMimeType: "application/json" },
+  });
+
+  const prompt = `
+  Analyze the following League of Legends champion query: "${championQuery}".
+  Determine which champion the user is referring to (they might search in Thai like "ลูเซียน" or English like "Lucian").
+  Identify the exact official Riot Games internal ID for this champion (used in Data Dragon URLs, e.g. "MonkeyKing" for Wukong, "Kaisa" for Kai'Sa, "Aatrox" for Aatrox, "LeBlanc" for Leblanc, "Fiddlesticks" for Fiddlesticks).
+  
+  Provide a clean, highly structured build recommendation in Thai for that champion.
+  Do not include long paragraphs, gameplay tips, or combo instructions. Only include the requested JSON fields.
+  
+  For strongAgainst and weakAgainst, provide exactly 3 champion display names that the query champion is strong or weak against.
+  
+  Output MUST be a JSON object with the following schema:
+  {
+    "championIdName": "Exact DDragon internal ID name",
+    "displayName": "Readable display name of champion",
+    "starterItems": ["Starter Item 1 (Thai/Eng translation)", "Starter Item 2"],
+    "coreItems": ["Core Item 1", "Core Item 2", "Core Item 3"],
+    "situationalItems": ["Situational Item 1", "Situational Item 2", "Situational Item 3"],
+    "runes": {
+      "keystone": "Keystone name",
+      "primaryTree": "Primary tree name (e.g. Precision)",
+      "secondaryTree": "Secondary tree name (e.g. Inspiration)",
+      "details": ["Rune detail 1", "Rune detail 2", "Rune detail 3", "Rune detail 4", "Rune detail 5"]
+    },
+    "strongAgainst": ["Champ 1", "Champ 2", "Champ 3"],
+    "weakAgainst": ["Champ 1", "Champ 2", "Champ 3"]
+  }
+  `;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const jsonText = response.text();
+    if (!jsonText) throw new Error("Empty response from Gemini");
+    return JSON.parse(jsonText) as BuildRecommendation;
+  } catch (error) {
+    console.error("Failed to generate build recommendation:", error);
+    throw new Error("Failed to get build recommendation from Gemini AI.");
   }
 }

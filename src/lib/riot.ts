@@ -1,8 +1,9 @@
 const RIOT_API_KEY = process.env.RIOT_API_KEY;
 
-// Region configuration (defaulting to TH / Asia)
-const PLATFORM_URL = "https://th2.api.riotgames.com"; // For TH server endpoint
-const REGION_URL = "https://asia.api.riotgames.com";   // For Account & Match v5
+// Region configuration (defaulting to TH / Asia / SEA)
+const PLATFORM_URL = "https://sg2.api.riotgames.com"; // For TH server endpoint (consolidated to SG2)
+const ACCOUNT_REGION_URL = "https://asia.api.riotgames.com"; // For Account v1
+const MATCH_REGION_URL = "https://sea.api.riotgames.com";     // For Match v5 (Southeast Asia)
 
 function getHeaders(): HeadersInit {
   if (!RIOT_API_KEY) {
@@ -69,6 +70,7 @@ export interface MatchParticipant {
   totalDamageDealtToChampions: number;
   goldEarned: number;
   individualPosition: string; // TOP, JUNGLE, MIDDLE, BOTTOM, UTILITY
+  teamId: number;
 }
 
 export interface MatchDetail {
@@ -107,7 +109,7 @@ export interface ActiveGameInfo {
  * Gets the PUUID of a Riot account using their Riot ID (gameName#tagLine)
  */
 export async function getRiotAccount(gameName: string, tagLine: string): Promise<RiotAccount> {
-  const url = `${REGION_URL}/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`;
+  const url = `${ACCOUNT_REGION_URL}/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`;
   const res = await fetch(url, { headers: getHeaders() });
   
   if (!res.ok) {
@@ -135,14 +137,14 @@ export async function getSummonerByPuuid(puuid: string): Promise<Summoner> {
 }
 
 /**
- * Gets league entries (ranks) for a given summoner ID
+ * Gets league entries (ranks) for a given PUUID
  */
-export async function getLeagueEntries(summonerId: string): Promise<LeagueEntry[]> {
-  const url = `${PLATFORM_URL}/lol/league/v4/entries/by-summoner/${summonerId}`;
+export async function getLeagueEntries(puuid: string): Promise<LeagueEntry[]> {
+  const url = `${PLATFORM_URL}/lol/league/v4/entries/by-puuid/${puuid}`;
   const res = await fetch(url, { headers: getHeaders() });
   
   if (!res.ok) {
-    throw new Error(`League API returned status ${res.status} for Summoner ID ${summonerId}`);
+    throw new Error(`League API returned status ${res.status} for PUUID ${puuid}`);
   }
   
   return res.json();
@@ -166,7 +168,7 @@ export async function getTopChampionMasteries(puuid: string, count: number = 3):
  * Gets match IDs list for a PUUID
  */
 export async function getMatchIds(puuid: string, count: number = 5): Promise<string[]> {
-  const url = `${REGION_URL}/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=${count}`;
+  const url = `${MATCH_REGION_URL}/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=${count}`;
   const res = await fetch(url, { headers: getHeaders() });
   
   if (!res.ok) {
@@ -180,7 +182,7 @@ export async function getMatchIds(puuid: string, count: number = 5): Promise<str
  * Gets specific match details by Match ID
  */
 export async function getMatchDetail(matchId: string): Promise<MatchDetail> {
-  const url = `${REGION_URL}/lol/match/v5/matches/${matchId}`;
+  const url = `${MATCH_REGION_URL}/lol/match/v5/matches/${matchId}`;
   const res = await fetch(url, { headers: getHeaders() });
   
   if (!res.ok) {

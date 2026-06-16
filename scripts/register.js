@@ -68,6 +68,30 @@ const commands = [
       },
     ],
   },
+  {
+    name: "history",
+    description: "ดูประวัติการเล่น 10 เกมล่าสุดของผู้เล่น",
+    options: [
+      {
+        type: 3, // STRING
+        name: "summoner",
+        description: "ชื่อในเกม#แท็กสั้น เช่น Name#Tag",
+        required: true,
+      },
+    ],
+  },
+  {
+    name: "build",
+    description: "แนะนำไอเทม รูน ลำดับสกิล และการเล่นสำหรับแชมเปี้ยน",
+    options: [
+      {
+        type: 3, // STRING
+        name: "champion",
+        description: "ชื่อแชมเปี้ยนที่ต้องการ เช่น Aatrox, Wukong, Lucian, ยาซูโอะ",
+        required: true,
+      },
+    ],
+  },
 ];
 
 async function registerCommands() {
