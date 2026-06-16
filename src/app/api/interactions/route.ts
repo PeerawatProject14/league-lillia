@@ -14,6 +14,7 @@ import { getChampionName, getLatestVersion, getChampionInternalId } from "@/lib/
 import { getAiCoachingReport, MatchSummary, getAiBuildRecommendation } from "@/lib/gemini";
 import { generateBuildImage } from "@/lib/imageGenerator";
 import { generateProfileImage } from "@/lib/profileImage";
+import { generateHistoryImage, HistoryMatchEntry } from "@/lib/historyImage";
 
 const DISCORD_PUBLIC_KEY = process.env.DISCORD_PUBLIC_KEY || "";
 const DISCORD_APP_ID = process.env.DISCORD_APP_ID || "";
@@ -475,11 +476,6 @@ async function handleHistoryCommand(summonerInput: string, token: string) {
     return;
   }
 
-  // C: Fetch Match Details & compile list
-  const matchLines: string[] = [];
-  const selectOptions: any[] = [];
-  
-  // Map positions to friendly game roles
   const ROLE_MAP: Record<string, string> = {
     TOP: "TOP",
     JUNGLE: "JG",
@@ -488,85 +484,107 @@ async function handleHistoryCommand(summonerInput: string, token: string) {
     UTILITY: "SUP",
   };
 
+  const matches: HistoryMatchEntry[] = [];
+  const selectOptions: any[] = [];
+
   for (let i = 0; i < matchIds.length; i++) {
     const matchId = matchIds[i];
     try {
       const match = await getMatchDetail(matchId);
       const playerStats = match.info.participants.find(p => p.puuid === account.puuid);
-      if (playerStats) {
-        const champName = await getChampionName(playerStats.championId);
-        
-        // Calculate CS/min
-        const totalCs = playerStats.totalMinionsKilled + playerStats.neutralMinionsKilled;
-        const durationMin = match.info.gameDuration / 60;
-        const csPerMin = durationMin > 0 ? totalCs / durationMin : 0;
-        
-        // Calculate KDA
-        const kdaVal = playerStats.deaths === 0
-          ? "Perfect KDA"
-          : `${((playerStats.kills + playerStats.assists) / playerStats.deaths).toFixed(2)}:1 KDA`;
+      if (!playerStats) continue;
 
-        const winStatus = playerStats.win ? "🟢 **ชนะ**" : "🔴 **แพ้**";
-        const role = ROLE_MAP[playerStats.individualPosition] || playerStats.individualPosition || "UNKNOWN";
-        const kdaString = `**${playerStats.kills}**/**${playerStats.deaths}**/**${playerStats.assists}**`;
+      const champName = await getChampionName(playerStats.championId);
+      const totalCs = playerStats.totalMinionsKilled + playerStats.neutralMinionsKilled;
+      const durationMin = match.info.gameDuration / 60;
+      const csPerMin = durationMin > 0 ? totalCs / durationMin : 0;
 
-        matchLines.push(
-          `**${i + 1}.** ${winStatus} | **${champName}** (${role})\n` +
-          `   • KDA: ${kdaString} (${kdaVal})\n` +
-          `   • CS: ${totalCs} (${csPerMin.toFixed(1)}/นาที) | เวลา: ${Math.floor(durationMin)} นาที`
-        );
+      matches.push({
+        matchId,
+        championName: champName,
+        role: playerStats.individualPosition || "UNKNOWN",
+        win: playerStats.win,
+        kills: playerStats.kills,
+        deaths: playerStats.deaths,
+        assists: playerStats.assists,
+        cs: totalCs,
+        csPerMin,
+        durationMinutes: durationMin,
+      });
 
-        // Add dropdown option for this game
-        const winLabel = playerStats.win ? "ชนะ" : "แพ้";
-        const labelText = `เกมที่ ${i + 1}: ${winLabel} - ${champName} (${role})`;
-        const descText = `KDA: ${playerStats.kills}/${playerStats.deaths}/${playerStats.assists} | เวลา: ${Math.floor(durationMin)} นาที`;
-        
-        selectOptions.push({
-          label: labelText.substring(0, 100),
-          description: descText.substring(0, 100),
-          value: matchId,
-        });
-      }
+      const winLabel = playerStats.win ? "ชนะ" : "แพ้";
+      const role = ROLE_MAP[playerStats.individualPosition] || playerStats.individualPosition || "UNKNOWN";
+      const labelText = `เกมที่ ${i + 1}: ${winLabel} - ${champName} (${role})`;
+      const descText = `KDA: ${playerStats.kills}/${playerStats.deaths}/${playerStats.assists} | เวลา: ${Math.floor(durationMin)} นาที`;
+
+      selectOptions.push({
+        label: labelText.substring(0, 100),
+        description: descText.substring(0, 100),
+        value: matchId,
+      });
     } catch (e) {
       console.warn(`Failed to load details for match ${matchId}:`, e);
     }
   }
 
-  if (matchLines.length === 0) {
+  if (matches.length === 0) {
     await updateInteractionResponse(token, {
       content: `❌ ไม่สามารถดึงรายละเอียดการเล่นล่าสุดเพื่อสรุปผลได้`,
     });
     return;
   }
 
-  const embed = {
+  let imageBuffer: Buffer | undefined;
+  try {
+    imageBuffer = await generateHistoryImage({
+      gameName: account.gameName,
+      tagLine: account.tagLine,
+      matches,
+    });
+  } catch (e) {
+    console.error("Failed to generate history image:", e);
+  }
+
+  const embed: any = {
     title: `📜 Match History: ${account.gameName}#${account.tagLine}`,
-    description: safeTruncate(`ประวัติการเล่น 10 เกมล่าสุด:\n\n${matchLines.join("\n\n")}`),
-    color: 0x5865F2, // Blurple Color (Discord theme)
-    footer: {
-      text: "League of Legends Match History Status",
-    },
+    color: 0x5865F2,
+    image: imageBuffer ? { url: "attachment://history.png" } : undefined,
+    footer: { text: "เลือกในเมนูด้านล่างเพื่อดูรายละเอียดเกม" },
     timestamp: new Date().toISOString(),
   };
 
+  if (!imageBuffer) {
+    embed.description = safeTruncate(
+      matches
+        .map((m, i) => {
+          const winStatus = m.win ? "🟢 ชนะ" : "🔴 แพ้";
+          const role = ROLE_MAP[m.role] || m.role;
+          return `**${i + 1}.** ${winStatus} **${m.championName}** (${role}) — ${m.kills}/${m.deaths}/${m.assists} · ${m.cs} CS · ${Math.floor(m.durationMinutes)} นาที`;
+        })
+        .join("\n")
+    );
+  }
+
   const components = [
     {
-      type: 1, // Action Row
+      type: 1,
       components: [
         {
-          type: 3, // String Select
+          type: 3,
           custom_id: `detailgame:${account.gameName}#${account.tagLine}`,
-          placeholder: "เลือกรอบการเล่นเพื่อดูรูปแชมเปี้ยนและรายละเอียด...",
+          placeholder: "เลือกรอบการเล่นเพื่อดูรายละเอียด...",
           options: selectOptions,
         },
       ],
     },
   ];
 
-  await updateInteractionResponse(token, {
-    embeds: [embed],
-    components: components,
-  });
+  await updateInteractionResponse(
+    token,
+    { embeds: [embed], components },
+    imageBuffer,
+    "history.png"
+  );
 }
 
 // Handler for showing detailed game info with champion image
