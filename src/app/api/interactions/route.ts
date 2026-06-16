@@ -662,6 +662,9 @@ async function handleBuildCommand(championQuery: string, token: string) {
     image: imageBuffer
       ? { url: "attachment://build.png" }
       : { url: `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${buildInfo.championIdName}_0.jpg` },
+    description: imageBuffer
+      ? "🟢 Starter • 🔵 Core • 🟡 Situational • 🟣 Runes • ✅ Strong vs • ❌ Weak vs"
+      : undefined,
     footer: {
       text: "วิเคราะห์และจัดของโดย Gemini AI • ข้อมูลและรูปภาพอัปเดตแบบเรียลไทม์",
     },
