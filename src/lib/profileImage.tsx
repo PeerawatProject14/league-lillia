@@ -343,7 +343,7 @@ export async function generateProfileImage(input: ProfileImageInput): Promise<Bu
     ),
     {
       width: 1100,
-      height: 640,
+      height: 680,
       fonts: thaiFont
         ? [{ name: "Noto Sans Thai", data: thaiFont, weight: 600, style: "normal" }]
         : undefined,

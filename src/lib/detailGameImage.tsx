@@ -468,7 +468,7 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
       ),
       {
         width: 1100,
-        height: 580,
+        height: 620,
         fonts: thaiFont
           ? [{ name: "Noto Sans Thai", data: thaiFont, weight: 600, style: "normal" }]
           : undefined,
