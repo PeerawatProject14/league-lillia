@@ -186,7 +186,7 @@ export async function generateHistoryImage(input: HistoryImageInput): Promise<Bu
       ),
       {
         width: 1100,
-        height: 880,
+        height: 1000,
         fonts: thaiFont
           ? [{ name: "Noto Sans Thai", data: thaiFont, weight: 600, style: "normal" }]
           : undefined,
