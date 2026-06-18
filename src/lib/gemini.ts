@@ -378,16 +378,33 @@ export async function getAiMatchReview(input: MatchReviewInput): Promise<string>
     team.map(p => `${p.champion}(${p.role}) ${p.kda}${p.isMe ? " [ME]" : ""}`).join(", ");
 
   if (input.scope === "self") {
+    const myTeam = input.blue.some(p => p.isMe) ? input.blue : input.red;
+    const enemyTeam = input.blue.some(p => p.isMe) ? input.red : input.blue;
+    const oppositeLaner = enemyTeam.find(p => p.role === input.myRole);
+    const opposite = oppositeLaner
+      ? `Opposite ${input.myRole}: ${oppositeLaner.champion} ${oppositeLaner.kda} KDA, ${oppositeLaner.cs} CS`
+      : `(No direct opposite ${input.myRole} laner found)`;
+
     const prompt = `
-You are an experienced LoL coach analyzing ONE specific match for a single player. Reply in Thai. Be DETAILED, SPECIFIC, and reference the actual numbers — do not give generic advice.
+You are an experienced LoL coach analyzing ONE specific match for a single player. Reply in Thai. Be DETAILED, SPECIFIC, and reference the actual numbers. NEVER use vague filler like "ควรปรับให้ดีขึ้น" or "เล่นให้ดีกว่านี้" — every claim must cite a number or a role-vs-role comparison.
 
 Player: ${input.myChampion} (${input.myRole}) — ${input.myWin ? "WIN" : "LOSS"}
 KDA: ${input.myStats.kills}/${input.myStats.deaths}/${input.myStats.assists}
 CS: ${input.myStats.cs} (${input.myStats.csPerMin.toFixed(1)}/min)
 Vision: ${input.myStats.visionScore}, Damage: ${input.myStats.damage.toLocaleString()}, Gold: ${input.myStats.gold.toLocaleString()}
 Duration: ${Math.floor(input.gameMinutes)} min, Mode: ${input.gameMode}
-${teamSummary(input.blue, "BLUE")}
-${teamSummary(input.red, "RED")}
+${opposite}
+PLAYER's TEAM: ${myTeam.map(p => `${p.champion}(${p.role}) ${p.kda}`).join(", ")}
+ENEMY TEAM: ${enemyTeam.map(p => `${p.champion}(${p.role}) ${p.kda}`).join(", ")}
+
+ROLE CONTEXT (read carefully — judge by role, NOT raw numbers):
+- UTILITY (support): low kills + HIGH assists = good. Death ≤6 with 20+ assists = excellent. CS unimportant. Vision 30+ is great, 15- is low.
+- JUNGLE: KDA ratio matters most. Deaths ≤4 ideal. CS/min 5-6 expected. Vision score 20+.
+- BOTTOM (ADC): CS/min 7+ ideal. Damage output highest expected. Both kills+assists matter.
+- MIDDLE: CS/min 6+ ideal. Damage carry. Roams help team.
+- TOP: CS/min 6+ ideal. Often tanky front-line or split-push. KDA ratio.
+
+COMPARE THE PLAYER TO THE OPPOSITE LANER in the same role wherever possible.
 
 Compare the player's numbers to what's expected for their role, and reference specific enemy laners/junglers by name when relevant.
 
@@ -411,35 +428,59 @@ Total 180-250 Thai words. Don't summarize — give the player something actionab
   }
 
   // team scope
-  const prompt = `
-You are an experienced LoL coach analyzing a match at the team level. Reply in Thai. Be DETAILED and SPECIFIC.
+  const myTeam = input.blue.some(p => p.isMe) ? input.blue : input.red;
+  const enemyTeam = input.blue.some(p => p.isMe) ? input.red : input.blue;
+  const winnerLabel = input.myWin ? "ทีมของผู้เล่น (ที่มี [ME])" : "ทีมตรงข้าม";
 
-Result: ${input.myWin ? "ทีมของผู้เล่นชนะ" : "ทีมของผู้เล่นแพ้"}
+  const prompt = `
+You are an experienced LoL coach reviewing a finished match. Reply in Thai. Be DETAILED, SPECIFIC, and CORRECT.
+
+Result: ${winnerLabel} ชนะ
 Duration: ${Math.floor(input.gameMinutes)} min, Mode: ${input.gameMode}
-The player is marked [ME] in the lineup.
-${teamSummary(input.blue, "BLUE")}
-${teamSummary(input.red, "RED")}
+
+PLAYER's TEAM (the one with [ME]):
+${myTeam.map(p => `- ${p.champion} (${p.role}): ${p.kda} KDA, ${p.cs} CS${p.isMe ? " [ME]" : ""}`).join("\n")}
+
+ENEMY TEAM:
+${enemyTeam.map(p => `- ${p.champion} (${p.role}): ${p.kda} KDA, ${p.cs} CS`).join("\n")}
+
+CRITICAL RULES — read carefully:
+1. ROLE CONTEXT — judge each player by their role's expectations, NOT raw KDA:
+   - Support (UTILITY): low kills + HIGH assists = good. Death ~5 with assists 20+ is excellent. CS doesn't matter. Vision is what matters but it's not given here — assume average.
+   - Jungle: deaths matter most. 1/9/X is BAD (too many deaths). 7+/2/X is great. KDA ratio is key.
+   - ADC (BOTTOM): CS/min should be 7+. Damage output expected highest. Kills/Assists both count.
+   - Mid (MIDDLE): CS 6+/min. Damage carry. KDA balanced.
+   - Top (TOP): CS 6+/min. Often split-push or front-line tank — judge by KDA ratio AND CS.
+
+2. CROSS-TEAM COMPARISON — when you label someone a "weakness" or "strength", you MUST compare to the OPPOSITE LANER in the same role.
+   Example: "Soraka 0/5/25 ของเราดีกว่า Nautilus 2/8/15 ของฝั่งตรงข้ามที่ตายเยอะกว่าและ KP ต่ำกว่า"
+
+3. CAUSE-EFFECT — explain why the result happened. The winning team had ADVANTAGES; the losing team had GAPS. Be concrete.
+
+4. DO NOT use vague phrases like "ไม่สามารถทำได้ดีเท่าที่ควร", "ควรเล่นให้ดีขึ้น" — these are useless. Every claim must cite a number or a role-vs-role comparison.
+
+5. DO NOT confuse which team won. The winner is: ${winnerLabel}.
 
 Format (Markdown, ใช้ bold สำหรับหัวข้อ, bullets ใช้ • ขึ้นต้น):
 
 **📊 ภาพรวมแมตช์:**
-2-3 ประโยค อธิบายว่าเกมนี้เป็นยังไง — ใครเป็นตัวพา (carry) ของแต่ละทีม, ใครเป็นจุดอ่อน, win condition คืออะไร
+2-3 ประโยค อธิบายว่าทำไม ${winnerLabel} ถึงชนะ — ใครเป็นคน carry, ใครเป็นจุดอ่อนของฝั่งแพ้ (ระบุชัด)
 
-**🏆 ผู้เล่นเด่น:**
-2 ประโยค — 1 ตัวจากทีม [ME] และ 1 ตัวจากทีมตรงข้าม พร้อมเหตุผลจาก stat
+**🏆 ผู้เล่นเด่นในแมตช์ (ทุกฝั่ง):**
+2 ประโยค — เลือก MVP ของแต่ละทีม โดยอ้างจาก stat เทียบกับ role expectation และเทียบกับ opposite laner
 
 **📉 จุดอ่อนของทีม [ME]:**
-2-3 bullets เจาะจง (ผู้เล่นคนไหน + ทำอะไรพลาด + ตัวเลขสนับสนุน)
+2-3 bullets — สำหรับแต่ละ bullet ต้องบอก: ผู้เล่นไหน + ตัวเลขที่ต่ำกว่ามาตรฐาน role + เปรียบเทียบกับ opposite laner. ถ้าทีม [ME] ชนะ และไม่มีจุดอ่อนชัดเจน ให้บอกว่า "ไม่มีจุดอ่อนชัดเจน" แทนที่จะหาเรื่อง
 
 **🛡️ จุดแข็งของทีมตรงข้าม:**
-1-2 bullets ที่ทีม [ME] รับมือไม่ได้
+1-2 bullets — สำหรับ enemy ที่ทำได้ดีกว่า opposite laner ของเรา (ระบุชื่อ + ตัวเลข + เปรียบเทียบ)
 
-**🎯 ถ้าจะ${input.myWin ? "รักษาฟอร์ม" : "พลิกเกมแบบนี้"}ครั้งหน้า:**
-2-3 bullets concrete (drafting, macro, objective priority, teamfight positioning, ฯลฯ)
+**🎯 ${input.myWin ? "วิธีรักษาฟอร์ม" : "วิธีพลิกเกมแบบนี้"}ครั้งหน้า:**
+2-3 bullets concrete (drafting, macro, objective, teamfight) เจาะจงตาม composition ของแมตช์นี้
 
-Total 220-300 Thai words. Reference players' champions and roles when discussing them.
+Total 250-350 Thai words. Reference champions and roles by name throughout.
 `.trim();
-  return (await callGeminiForText(prompt, "review:team", 1500)).trim();
+  return (await callGeminiForText(prompt, "review:team", 1800)).trim();
 }
 
 export interface LiveGamePrediction {
