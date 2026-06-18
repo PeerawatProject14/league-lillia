@@ -1,10 +1,10 @@
 {
-  "fetchedAt": "2026-06-18T09:38:33.286Z",
+  "fetchedAt": "2026-06-18T14:59:45.371Z",
   "roles": {
-    "top": 172,
-    "jungle": 163,
-    "mid": 171,
-    "adc": 171,
-    "support": 172
+    "top": "error: curl exited 22: curl: (22) The requested URL returned error: 403\n",
+    "jungle": "error: curl exited 22: curl: (22) The requested URL returned error: 403\n",
+    "mid": "error: curl exited 22: curl: (22) The requested URL returned error: 403\n",
+    "adc": "error: curl exited 22: curl: (22) The requested URL returned error: 403\n",
+    "support": "error: curl exited 22: curl: (22) The requested URL returned error: 403\n"
   }
 }
