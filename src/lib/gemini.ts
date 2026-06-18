@@ -114,8 +114,8 @@ export interface BuildRecommendation {
  */
 const BUILD_MODEL_CHAIN = [
   "gemini-flash-latest",
+  "gemini-2.5-flash",
   "gemini-2.0-flash",
-  "gemini-1.5-flash",
 ];
 
 const GROQ_MODEL_CHAIN = [
@@ -341,7 +341,6 @@ export interface MatchReviewInput {
 }
 
 const REVIEW_MODEL_CHAIN = [
-  "gemini-2.5-pro",
   "gemini-2.5-flash",
   "gemini-flash-latest",
   "gemini-2.0-flash",
@@ -451,7 +450,14 @@ export async function getAiMatchReview(input: MatchReviewInput): Promise<MatchRe
     const prompt = `
 You are a SAVAGE Thai LoL coach analyzing ONE match for a single player. Tone is BLUNT, AGGRESSIVE, and DIRECT — like a high-elo friend who calls out bad play without sugar-coating. Use Thai gamer slang freely: "ห่วย", "โยน", "เน่า", "ไก่", "กาก", "ฟีด", "ลงของมั่ว", "บอท". If the player played well, praise them clearly too. NEVER use polite filler like "ควรปรับให้ดีขึ้น" — say "ลอง __ ดู ไม่งั้นห่วยกว่านี้" instead.
 
-Comment on item builds too. If items don't fit the champion/role/matchup, call it out (e.g. "ขึ้น Tear ก่อน Eclipse บน Yasuo จังหวะแย่มาก", "Soraka ขึ้น Athene's Unholy Grail ดี แต่ทำไมขึ้น Sorc Shoes แทน Ionian", "ADC ไม่มี crit item ก่อน 3rd item = โยนเกม").
+Comment on item builds CAREFULLY. Meta evolves — many champions have multiple viable builds right now (on-hit Volibear, AP Tristana, tank Sett, lethality Senna, bruiser top, etc.). DO NOT criticize an unfamiliar item combination just because it's unusual.
+
+Only call out items when ALL of these are true:
+- The build clearly doesn't fit the champion's damage type (e.g. AD assassin with full AP items)
+- The stats prove it failed (low DMG, low CS, lots of deaths)
+- The matchup obviously demanded something else (e.g. enemy team all AP but you went armor only)
+
+If unsure, comment on STATS, not items. Praise good item synergy when obvious (e.g. "Soraka ขึ้น Ardent + Staff of Flowing Water บูสต์ ADC โหด").
 
 ผู้เล่นเล่นอยู่ ${playerTeamColorTh} (${playerTeamColorEn}) ฝั่งตรงข้ามคือ ${enemyTeamColorTh} (${enemyTeamColorEn})
 
@@ -516,11 +522,25 @@ Return STRICT JSON only (no markdown fences, no prose outside JSON):
   const prompt = `
 You are a SAVAGE Thai LoL coach reviewing a finished match. Tone is BLUNT, AGGRESSIVE, and DIRECT — like a high-elo friend roasting/praising teammates. Use Thai gamer slang freely: "ห่วย", "โยน", "เน่า", "ไก่", "กาก", "ฟีด", "ลงของมั่ว", "บอท", "ตัวถ่วง". Praise the carry clearly. Roast the troll/throwing players directly by champion name.
 
-Comment on item builds. If a player built items that don't fit their champion / role / enemy comp, CALL IT OUT by name. Examples:
-- "Yasuo ขึ้น Eclipse 1st item ห่วย ควรขึ้น IE หรือ Statikk Shiv ก่อน"
-- "ทำไม Soraka ขึ้น Sorc Shoes แทน Ionian — โดน CC ตายเปล่าๆ"
-- "Tank top lane แต่ขึ้น Eclipse + Bloodthirster = โยนเกม"
-- "ADC ฝั่งตรงข้ามมี Vayne แต่ทีมไม่มีใครขึ้น Plated Steelcaps เลย"
+Comment on item builds CAREFULLY. Meta evolves and YOU DO NOT KNOW the current patch. Many champions now have multiple viable builds that look weird:
+- On-hit Volibear (Wit's End, Navori, Blade of the Ruined King) — REAL build
+- AP Tristana, AP Kog'Maw, AP Twitch — REAL builds
+- Bruiser top with mixed dmg + survivability — REAL
+- Lethality Senna / Caitlyn — REAL
+- Crit Yasuo with Statikk → IE → Bloodthirster — REAL
+- Tank Sett, Tank Mordekaiser — REAL
+
+DO NOT call a build "throwing" or "ลงของมั่ว" just because it's unfamiliar. Only roast item choices when ALL of these are true:
+1. The build clearly mismatches the damage type (e.g. AP champion with full AD items, support with all carry items + 0 utility)
+2. The player's stats prove the build failed (low DMG, lots of deaths, bad CS)
+3. The matchup obviously demanded the opposite (e.g. enemy comp is 5x AP and the frontline went pure armor)
+
+If unsure → COMMENT ON STATS, not items. Stats are objective; item meta is patch-dependent and you can't tell from training data alone.
+
+Acceptable item commentary:
+- Praise: "Soraka ขึ้น Ardent + Staff of Flowing Water บูสต์ ADC โหดมาก"
+- Cautious: "build Volibear แบบ on-hit ก็ดูเข้าใจได้ แต่ stat ออกมา 4/12 ก็ไม่เวิร์คในเกมนี้"
+- Roast (only when obviously wrong): "ADC ขึ้นของ AP ทั้งหมด นี่ไม่ใช่ Senna lethality นะ คือผิดจริงๆ"
 
 ผู้เล่นที่ขอรีวิวอยู่ ${playerTeamColorTh} (${playerTeamColorEn}) ฝั่งตรงข้ามคือ ${enemyTeamColorTh} (${enemyTeamColorEn})
 ทีมที่ชนะ: ${winningColorTh}
