@@ -805,12 +805,19 @@ async function handleMatchReviewCommand(
   const red: typeof blue = [];
   for (const part of match.info.participants) {
     const pName = await getChampionName(part.championId);
+    const partCs = part.totalMinionsKilled + part.neutralMinionsKilled;
     const row = {
       name: part.riotIdGameName || part.summonerId,
       champion: pName,
       role: part.individualPosition || "?",
-      kda: `${part.kills}/${part.deaths}/${part.assists}`,
-      cs: part.totalMinionsKilled + part.neutralMinionsKilled,
+      kills: part.kills,
+      deaths: part.deaths,
+      assists: part.assists,
+      cs: partCs,
+      csPerMin: durationMin > 0 ? partCs / durationMin : 0,
+      visionScore: part.visionScore,
+      damage: part.totalDamageDealtToChampions,
+      gold: part.goldEarned,
       win: part.win,
       isMe: part.puuid === account.puuid,
     };

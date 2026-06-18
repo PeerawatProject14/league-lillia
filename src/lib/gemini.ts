@@ -302,6 +302,22 @@ export async function getAiBuildRecommendation(championQuery: string): Promise<B
   }
 }
 
+export interface ReviewPlayer {
+  name: string;
+  champion: string;
+  role: string;
+  kills: number;
+  deaths: number;
+  assists: number;
+  cs: number;
+  csPerMin: number;
+  visionScore: number;
+  damage: number;
+  gold: number;
+  win: boolean;
+  isMe: boolean;
+}
+
 export interface MatchReviewInput {
   scope: "self" | "team";
   myChampion: string;
@@ -319,9 +335,8 @@ export interface MatchReviewInput {
   };
   gameMinutes: number;
   gameMode: string;
-  // team summary used for both scopes (gives context for self review too)
-  blue: Array<{ name: string; champion: string; role: string; kda: string; cs: number; win: boolean; isMe: boolean }>;
-  red: Array<{ name: string; champion: string; role: string; kda: string; cs: number; win: boolean; isMe: boolean }>;
+  blue: ReviewPlayer[];
+  red: ReviewPlayer[];
 }
 
 const REVIEW_MODEL_CHAIN = [
@@ -386,16 +401,35 @@ export async function getAiMatchReview(input: MatchReviewInput): Promise<string>
   const enemyTeamColorEn = playerOnBlue ? "RED" : "BLUE";
   const enemyTeamColorTh = playerOnBlue ? "ทีมแดง" : "ทีมน้ำเงิน";
 
-  const teamLine = (team: typeof input.blue, color: string) =>
-    `${color} TEAM:\n` +
-    team.map(p => `- ${p.champion} (${p.role}): ${p.kda} KDA, ${p.cs} CS${p.isMe ? "  ← ผู้เล่นที่ขอรีวิว" : ""}`).join("\n");
+  const teamTotalKills = (team: ReviewPlayer[]) => team.reduce((s, p) => s + p.kills, 0);
+  const blueKills = teamTotalKills(input.blue);
+  const redKills = teamTotalKills(input.red);
+
+  const kp = (p: ReviewPlayer, teamKills: number) =>
+    teamKills === 0 ? 0 : Math.round(((p.kills + p.assists) / teamKills) * 100);
+
+  const teamLine = (team: ReviewPlayer[], color: string, teamKills: number) =>
+    `${color} TEAM (รวม ${teamKills} kills):\n` +
+    team
+      .map(
+        p =>
+          `- ${p.champion} (${p.role}): ${p.kills}/${p.deaths}/${p.assists} KDA, ` +
+          `KP ${kp(p, teamKills)}%, ` +
+          `CS ${p.cs} (${p.csPerMin.toFixed(1)}/min), ` +
+          `Vision ${p.visionScore}, ` +
+          `DMG ${Math.round(p.damage / 1000)}k, ` +
+          `Gold ${Math.round(p.gold / 1000)}k` +
+          (p.isMe ? "  ← ผู้เล่นที่ขอรีวิว" : "")
+      )
+      .join("\n");
 
   if (input.scope === "self") {
     const myTeam = playerOnBlue ? input.blue : input.red;
     const enemyTeam = playerOnBlue ? input.red : input.blue;
     const oppositeLaner = enemyTeam.find(p => p.role === input.myRole);
+    const oppKills = oppositeLaner ? `${oppositeLaner.kills}/${oppositeLaner.deaths}/${oppositeLaner.assists}` : "";
     const opposite = oppositeLaner
-      ? `Opposite ${input.myRole}: ${oppositeLaner.champion} ${oppositeLaner.kda} KDA, ${oppositeLaner.cs} CS`
+      ? `Opposite ${input.myRole}: ${oppositeLaner.champion} ${oppKills} KDA, CS ${oppositeLaner.cs} (${oppositeLaner.csPerMin.toFixed(1)}/min), Vision ${oppositeLaner.visionScore}, DMG ${Math.round(oppositeLaner.damage / 1000)}k, Gold ${Math.round(oppositeLaner.gold / 1000)}k`
       : `(No direct opposite ${input.myRole} laner found)`;
 
     const prompt = `
@@ -410,10 +444,11 @@ Vision: ${input.myStats.visionScore}, Damage: ${input.myStats.damage.toLocaleStr
 Duration: ${Math.floor(input.gameMinutes)} min, Mode: ${input.gameMode}
 ${opposite}
 
-${teamLine(myTeam, playerTeamColorEn)}
+${teamLine(myTeam, playerTeamColorEn, playerOnBlue ? blueKills : redKills)}
 
-${teamLine(enemyTeam, enemyTeamColorEn)}
+${teamLine(enemyTeam, enemyTeamColorEn, playerOnBlue ? redKills : blueKills)}
 
+ทุก stat ที่ให้มาเหนือคือข้อมูลทั้งหมดที่มี ใช้พิจารณาทั้งหมดในการตัดสิน อย่าเดาเพิ่ม
 เมื่ออ้างถึงทีม ให้ใช้ "${playerTeamColorTh}" หรือ "${enemyTeamColorTh}" — ห้ามใช้คำว่า [ME] หรือ "ทีมของผู้เล่น" ในข้อความออก
 
 ROLE CONTEXT (read carefully — judge by role, NOT raw numbers):
@@ -469,29 +504,33 @@ ${teamLine(enemyTeam, enemyTeamColorEn)}
 
 CRITICAL RULES — read carefully:
 
-0. STEP-BY-STEP MVP RULE — before naming any MVP or "best player", compute KDA ratio for each player:
-   - KDA ratio = (kills + assists) / max(deaths, 1)
-   - **0 deaths = PERFECT KDA (highest possible)** — a player with 0 deaths almost always outperforms a player with high kills + 5+ deaths.
-   - Tie-break with: KP (kill participation = (kills+assists) / team_kills), then role-appropriate stat (CS/min for laners, vision for sup, etc.)
-   - Example: Player A 10/6/2 = (10+2)/6 = 2.0 KDA. Player B 6/0/7 = (6+7)/1 = 13.0 KDA. Player B is FAR better.
+1. MVP SELECTION — pick the player who best fulfilled their ROLE, NOT just KDA or kill count.
+   Each role has different success metrics — weigh them like this:
 
-1. ROLE CONTEXT — judge each player by their role's expectations, NOT raw KDA:
-   - Support (UTILITY): low kills + HIGH assists = good. Death ~5 with assists 20+ is excellent. CS doesn't matter. Vision matters.
-   - Jungle: deaths matter most. 1/9/X is BAD (too many deaths). 7+/2/X is great. KDA ratio is key.
-   - ADC (BOTTOM): CS/min should be 7+. Damage output expected highest. Kills+assists both count.
-   - Mid (MIDDLE): CS 6+/min. Damage carry. KDA balanced.
-   - Top (TOP): CS 6+/min. Often split-push or front-line tank — judge by KDA ratio AND CS.
+   - **ADC (BOTTOM)**: Damage to champions (highest), CS/min (≥7 expected), KDA. Carries deal the most damage and farm hard.
+   - **MIDDLE**: Damage to champions, KP%, CS/min (≥6). Burst carries should hit very high DMG; control mages might have lower DMG but high KP.
+   - **TOP**: KDA ratio, CS/min (≥6), damage taken vs. dealt. Tanks/bruisers might have lower damage but high CC/KP.
+   - **JUNGLE**: KP% (should be 50%+), KDA ratio, vision score (should be 20+). Junglers MUST participate in fights.
+   - **UTILITY (Support)**: KP% (60%+ is great), vision score (highest expected), assists. Kills are NOT expected. Low CS is NORMAL. A support with 0/5/25 and high vision is a GREAT performance.
 
-2. CROSS-TEAM COMPARISON — when you label someone a "weakness" or "strength", you MUST compare to the OPPOSITE LANER in the same role.
-   Example: "Soraka 0/5/25 ของ${playerTeamColorTh}ดีกว่า Nautilus 2/8/15 ของ${enemyTeamColorTh} ที่ตายเยอะกว่าและ KP ต่ำกว่า"
+2. ROLE EXPECTATIONS — do NOT penalize players for what their role doesn't require:
+   - Support with low CS = fine
+   - Tank with low damage = fine if KP and CC are high
+   - Hyper-carry with low KP early game = fine if late game damage is dominant
 
-3. CAUSE-EFFECT — explain why the result happened. The winning team had ADVANTAGES; the losing team had GAPS. Be concrete.
+3. KDA RATIO IS ONLY ONE SIGNAL — not the deciding factor.
+   - A 6/0/7 KDA-perfect player with 15% KP and 8k damage is LESS impactful than a 10/6/2 with 60% KP and 35k damage.
+   - But a 0/3/25 support with 70% KP and 80 vision IS an MVP-tier game.
+   - Use ALL stats. Reason like a coach watching VOD, not a calculator.
 
-4. DO NOT use vague phrases like "ไม่สามารถทำได้ดีเท่าที่ควร", "ควรเล่นให้ดีขึ้น" — these are useless. Every claim must cite a number or a role-vs-role comparison.
+4. CROSS-TEAM COMPARISON — when you label someone a "weakness" or "strength", MUST compare to the SAME-ROLE opposite laner with their actual stats.
+   Example: "Soraka 0/5/25 (KP 70%, Vision 60) ของ${playerTeamColorTh}เด่นกว่า Nautilus 2/8/15 (KP 45%, Vision 35) ของ${enemyTeamColorTh}"
 
-5. DO NOT confuse which team won. The winner is: ${winningColorTh}.
+5. CAUSE-EFFECT — explain why the result happened. The winning team had ADVANTAGES; the losing team had GAPS. Be concrete with numbers.
 
-6. DO NOT pick MVP based on raw kill count. A 6/0/X player with the same role is ALWAYS better than 10/6/X.
+6. DO NOT use vague phrases like "ไม่สามารถทำได้ดีเท่าที่ควร", "ควรเล่นให้ดีขึ้น" — useless. Every claim cites a stat or comparison.
+
+7. The winner is: ${winningColorTh}.
 
 Format (Markdown, ใช้ bold สำหรับหัวข้อ, bullets ใช้ • ขึ้นต้น):
 
