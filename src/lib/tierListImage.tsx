@@ -20,6 +20,15 @@ const TIER_COLOR: Record<TierLetter, { bg: string; fg: string }> = {
   D: { bg: "#9aa0b4", fg: "#0f1117" },
 };
 
+const TIER_LABEL_TH: Record<TierLetter, string> = {
+  "S+": "โครตเทพ",
+  S: "เทพ",
+  A: "เก่ง",
+  B: "พอเล่นได้",
+  C: "ใช้วิจารณญาณ",
+  D: "อย่าหาทำ",
+};
+
 const TIERS: TierLetter[] = ["S+", "S", "A", "B", "C", "D"];
 
 function ChampIcon({ entry, version }: { entry: TierEntry; version: string }) {
@@ -89,20 +98,22 @@ function TierRow({
       <div
         style={{
           display: "flex",
-          width: 60,
-          height: 60,
+          width: 130,
+          minHeight: 60,
           borderRadius: 8,
           background: colors.bg,
           color: colors.fg,
-          fontSize: 26,
+          fontSize: 18,
           fontWeight: 700,
           alignItems: "center",
           justifyContent: "center",
           marginRight: 14,
           flexShrink: 0,
+          textAlign: "center",
+          padding: "4px 8px",
         }}
       >
-        {tier}
+        {TIER_LABEL_TH[tier]}
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", flex: 1 }}>
         {entries.length > 0 ? (
