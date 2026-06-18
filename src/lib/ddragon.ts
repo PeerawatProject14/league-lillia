@@ -2,6 +2,7 @@ import { getLatestVersion } from "./champions";
 
 let championByNameMap: Record<string, string> = {};
 let itemByNameMap: Record<string, string> = {};
+let itemByIdMap: Record<string, string> = {}; // id -> display name
 let runeByNameMap: Record<string, string> = {};
 let runeTreeByNameMap: Record<string, string> = {};
 let summonerSpellByNameMap: Record<string, string> = {};
@@ -47,11 +48,14 @@ async function loadDataDragonCache(): Promise<void> {
       if (res.ok) {
         const data = await res.json();
         const map: Record<string, string> = {};
+        const idMap: Record<string, string> = {};
         for (const itemId of Object.keys(data.data)) {
           const item = data.data[itemId];
           map[cleanName(item.name)] = itemId;
+          idMap[itemId] = item.name;
         }
         itemByNameMap = map;
+        itemByIdMap = idMap;
       }
     } catch (e) {
       console.error("Failed to cache items from DDragon:", e);
@@ -157,6 +161,12 @@ export async function getItemIconById(id: number): Promise<string | null> {
   if (!id) return null;
   const version = await getLatestVersion();
   return `https://ddragon.leagueoflegends.com/cdn/${version}/img/item/${id}.png`;
+}
+
+export async function getItemNameById(id: number): Promise<string | null> {
+  if (!id) return null;
+  await loadDataDragonCache();
+  return itemByIdMap[String(id)] ?? null;
 }
 
 export async function getRuneIconById(id: number): Promise<string | null> {

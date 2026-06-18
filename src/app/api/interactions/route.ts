@@ -17,7 +17,7 @@ import { generateProfileImage } from "@/lib/profileImage";
 import { generateHistoryImage, HistoryMatchEntry } from "@/lib/historyImage";
 import { generateDetailGameImage, DetailPlayerEntry } from "@/lib/detailGameImage";
 import { generateLiveGameImage, LivePlayerEntry } from "@/lib/liveGameImage";
-import { getChampionSplashUrl } from "@/lib/ddragon";
+import { getChampionSplashUrl, getItemNameById } from "@/lib/ddragon";
 
 const DISCORD_PUBLIC_KEY = process.env.DISCORD_PUBLIC_KEY || "";
 const DISCORD_APP_ID = process.env.DISCORD_APP_ID || "";
@@ -807,6 +807,10 @@ async function handleMatchReviewCommand(
   for (const part of match.info.participants) {
     const pName = await getChampionName(part.championId);
     const partCs = part.totalMinionsKilled + part.neutralMinionsKilled;
+    const itemIds = [part.item0, part.item1, part.item2, part.item3, part.item4, part.item5, part.item6];
+    const itemNames = (
+      await Promise.all(itemIds.map(id => (id ? getItemNameById(id) : Promise.resolve(null))))
+    ).filter((n): n is string => Boolean(n));
     const row = {
       name: part.riotIdGameName || part.summonerId,
       champion: pName,
@@ -821,6 +825,7 @@ async function handleMatchReviewCommand(
       gold: part.goldEarned,
       win: part.win,
       isMe: part.puuid === account.puuid,
+      items: itemNames,
     };
     if (part.teamId === 100) blue.push(row);
     else red.push(row);

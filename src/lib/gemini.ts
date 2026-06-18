@@ -316,6 +316,7 @@ export interface ReviewPlayer {
   gold: number;
   win: boolean;
   isMe: boolean;
+  items: string[]; // resolved item display names, excluding empty slots
 }
 
 export interface MatchReviewInput {
@@ -432,7 +433,8 @@ export async function getAiMatchReview(input: MatchReviewInput): Promise<MatchRe
           `CS ${p.cs} (${p.csPerMin.toFixed(1)}/min), ` +
           `Vision ${p.visionScore}, ` +
           `DMG ${Math.round(p.damage / 1000)}k, ` +
-          `Gold ${Math.round(p.gold / 1000)}k` +
+          `Gold ${Math.round(p.gold / 1000)}k, ` +
+          `Items: [${p.items.length > 0 ? p.items.join(", ") : "—"}]` +
           (p.isMe ? "  ← ผู้เล่นที่ขอรีวิว" : "")
       )
       .join("\n");
@@ -447,7 +449,9 @@ export async function getAiMatchReview(input: MatchReviewInput): Promise<MatchRe
       : `(No direct opposite ${input.myRole} laner found)`;
 
     const prompt = `
-You are an experienced LoL coach analyzing ONE specific match for a single player. Reply in Thai. Be DETAILED, SPECIFIC, and reference the actual numbers. NEVER use vague filler like "ควรปรับให้ดีขึ้น" or "เล่นให้ดีกว่านี้" — every claim must cite a number or a role-vs-role comparison.
+You are a SAVAGE Thai LoL coach analyzing ONE match for a single player. Tone is BLUNT, AGGRESSIVE, and DIRECT — like a high-elo friend who calls out bad play without sugar-coating. Use Thai gamer slang freely: "ห่วย", "โยน", "เน่า", "ไก่", "กาก", "ฟีด", "ลงของมั่ว", "บอท". If the player played well, praise them clearly too. NEVER use polite filler like "ควรปรับให้ดีขึ้น" — say "ลอง __ ดู ไม่งั้นห่วยกว่านี้" instead.
+
+Comment on item builds too. If items don't fit the champion/role/matchup, call it out (e.g. "ขึ้น Tear ก่อน Eclipse บน Yasuo จังหวะแย่มาก", "Soraka ขึ้น Athene's Unholy Grail ดี แต่ทำไมขึ้น Sorc Shoes แทน Ionian", "ADC ไม่มี crit item ก่อน 3rd item = โยนเกม").
 
 ผู้เล่นเล่นอยู่ ${playerTeamColorTh} (${playerTeamColorEn}) ฝั่งตรงข้ามคือ ${enemyTeamColorTh} (${enemyTeamColorEn})
 
@@ -510,7 +514,13 @@ Return STRICT JSON only (no markdown fences, no prose outside JSON):
   const losingColorTh = winningColorTh === "ทีมน้ำเงิน" ? "ทีมแดง" : "ทีมน้ำเงิน";
 
   const prompt = `
-You are an experienced LoL coach reviewing a finished match. Reply in Thai. Be DETAILED, SPECIFIC, and CORRECT.
+You are a SAVAGE Thai LoL coach reviewing a finished match. Tone is BLUNT, AGGRESSIVE, and DIRECT — like a high-elo friend roasting/praising teammates. Use Thai gamer slang freely: "ห่วย", "โยน", "เน่า", "ไก่", "กาก", "ฟีด", "ลงของมั่ว", "บอท", "ตัวถ่วง". Praise the carry clearly. Roast the troll/throwing players directly by champion name.
+
+Comment on item builds. If a player built items that don't fit their champion / role / enemy comp, CALL IT OUT by name. Examples:
+- "Yasuo ขึ้น Eclipse 1st item ห่วย ควรขึ้น IE หรือ Statikk Shiv ก่อน"
+- "ทำไม Soraka ขึ้น Sorc Shoes แทน Ionian — โดน CC ตายเปล่าๆ"
+- "Tank top lane แต่ขึ้น Eclipse + Bloodthirster = โยนเกม"
+- "ADC ฝั่งตรงข้ามมี Vayne แต่ทีมไม่มีใครขึ้น Plated Steelcaps เลย"
 
 ผู้เล่นที่ขอรีวิวอยู่ ${playerTeamColorTh} (${playerTeamColorEn}) ฝั่งตรงข้ามคือ ${enemyTeamColorTh} (${enemyTeamColorEn})
 ทีมที่ชนะ: ${winningColorTh}
