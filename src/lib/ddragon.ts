@@ -122,6 +122,13 @@ export async function getChampionIconUrl(name: string): Promise<string | null> {
   return `https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${key}.png`;
 }
 
+export async function getChampionSplashUrl(name: string): Promise<string | null> {
+  await loadDataDragonCache();
+  const key = championByNameMap[cleanName(name)];
+  if (!key) return null;
+  return `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${key}_0.jpg`;
+}
+
 export async function getItemIconUrl(name: string): Promise<string | null> {
   await loadDataDragonCache();
   const version = await getLatestVersion();

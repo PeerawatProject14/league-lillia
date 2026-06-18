@@ -17,7 +17,7 @@ import { generateProfileImage } from "@/lib/profileImage";
 import { generateHistoryImage, HistoryMatchEntry } from "@/lib/historyImage";
 import { generateDetailGameImage, DetailPlayerEntry } from "@/lib/detailGameImage";
 import { generateLiveGameImage, LivePlayerEntry } from "@/lib/liveGameImage";
-import { generateMvpImage } from "@/lib/mvpImage";
+import { getChampionSplashUrl } from "@/lib/ddragon";
 
 const DISCORD_PUBLIC_KEY = process.env.DISCORD_PUBLIC_KEY || "";
 const DISCORD_APP_ID = process.env.DISCORD_APP_ID || "";
@@ -856,17 +856,9 @@ async function handleMatchReviewCommand(
     return;
   }
 
-  let mvpImageBuffer: Buffer | null = null;
-  if (reviewResult.mvpChampion) {
-    try {
-      mvpImageBuffer = await generateMvpImage({
-        championDisplayName: reviewResult.mvpChampion,
-        isPlayerMvp: reviewResult.mvpChampion.toLowerCase() === champName.toLowerCase(),
-      });
-    } catch (e) {
-      console.warn("MVP image generation failed:", e);
-    }
-  }
+  const mvpSplashUrl = reviewResult.mvpChampion
+    ? await getChampionSplashUrl(reviewResult.mvpChampion)
+    : null;
 
   const embed: any = {
     title: scope === "self"
@@ -874,17 +866,12 @@ async function handleMatchReviewCommand(
       : `👥 รีวิวทั้งทีม: เกม ${champName} (${playerStats.win ? "🟢 ชนะ" : "🔴 แพ้"})`,
     description: safeTruncate(reviewResult.review, 4000),
     color: scope === "self" ? 0xF1C40F : 0x5865F2,
-    image: mvpImageBuffer ? { url: "attachment://mvp.png" } : undefined,
+    image: mvpSplashUrl ? { url: mvpSplashUrl } : undefined,
     footer: { text: `Match ID: ${matchId} • วิเคราะห์โดย AI` },
     timestamp: new Date().toISOString(),
   };
 
-  await updateInteractionResponse(
-    token,
-    { embeds: [embed] },
-    mvpImageBuffer ?? undefined,
-    "mvp.png"
-  );
+  await updateInteractionResponse(token, { embeds: [embed] });
 }
 
 // Handler for `/build`
