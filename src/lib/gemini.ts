@@ -112,6 +112,40 @@ export interface BuildRecommendation {
 /**
  * Generates an AI League of Legends build recommendation in Thai for a specific champion
  */
+async function callGeminiForBuild(model: any, prompt: string, label: string): Promise<BuildRecommendation> {
+  const MAX_ATTEMPTS = 3;
+  let lastErr: any = null;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const jsonText = response.text();
+      if (!jsonText) throw new Error("Empty response from Gemini");
+      try {
+        return JSON.parse(jsonText) as BuildRecommendation;
+      } catch (parseErr) {
+        const cleaned = jsonText
+          .replace(/^```(?:json)?\s*/i, "")
+          .replace(/\s*```\s*$/i, "")
+          .trim();
+        try {
+          return JSON.parse(cleaned) as BuildRecommendation;
+        } catch {
+          console.warn(`[${label}] attempt ${attempt} JSON parse failed. First 400 chars: ${jsonText.slice(0, 400)}`);
+          throw parseErr;
+        }
+      }
+    } catch (e: any) {
+      lastErr = e;
+      console.warn(`[${label}] attempt ${attempt}/${MAX_ATTEMPTS} failed: ${e?.message ?? e}`);
+      if (attempt < MAX_ATTEMPTS) {
+        await new Promise(r => setTimeout(r, 400 * attempt));
+      }
+    }
+  }
+  throw lastErr ?? new Error(`${label} failed after ${MAX_ATTEMPTS} attempts`);
+}
+
 export async function getAiBuildRecommendation(championQuery: string): Promise<BuildRecommendation> {
   const client = getGeminiClient();
   const model = client.getGenerativeModel({
@@ -165,11 +199,7 @@ export async function getAiBuildRecommendation(championQuery: string): Promise<B
   `;
 
   try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const jsonText = response.text();
-    if (!jsonText) throw new Error("Empty response from Gemini");
-    return JSON.parse(jsonText) as BuildRecommendation;
+    return await callGeminiForBuild(model, prompt, "build");
   } catch (error) {
     console.error("Failed to generate build recommendation:", error);
     throw new Error("Failed to get build recommendation from Gemini AI.");
@@ -239,11 +269,7 @@ export async function getAiMatchupBuildRecommendation(
   `;
 
   try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const jsonText = response.text();
-    if (!jsonText) throw new Error("Empty response from Gemini");
-    return JSON.parse(jsonText) as BuildRecommendation;
+    return await callGeminiForBuild(model, prompt, "buildvs");
   } catch (error) {
     console.error("Failed to generate matchup build recommendation:", error);
     throw new Error("Failed to get matchup build from Gemini AI.");
