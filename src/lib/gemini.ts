@@ -379,7 +379,7 @@ export async function getAiMatchReview(input: MatchReviewInput): Promise<string>
 
   if (input.scope === "self") {
     const prompt = `
-You are a concise LoL coach. Review this player's performance in ONE match. Reply in Thai, KEEP IT SHORT.
+You are an experienced LoL coach analyzing ONE specific match for a single player. Reply in Thai. Be DETAILED, SPECIFIC, and reference the actual numbers — do not give generic advice.
 
 Player: ${input.myChampion} (${input.myRole}) — ${input.myWin ? "WIN" : "LOSS"}
 KDA: ${input.myStats.kills}/${input.myStats.deaths}/${input.myStats.assists}
@@ -389,35 +389,57 @@ Duration: ${Math.floor(input.gameMinutes)} min, Mode: ${input.gameMode}
 ${teamSummary(input.blue, "BLUE")}
 ${teamSummary(input.red, "RED")}
 
-Format (Markdown, no headings, ใช้ bold สำหรับหัวข้อ):
-**✅ ทำได้ดี:** 1-2 bullets (ใช้ • ขึ้นต้น)
-**⚠️ ควรปรับ:** 1-2 bullets
-**🎯 แนะนำ:** 1 ประโยคสั้นๆ สำหรับเกมหน้า
+Compare the player's numbers to what's expected for their role, and reference specific enemy laners/junglers by name when relevant.
 
-Total under 100 Thai words. Be specific to numbers (e.g. "CS 4.2/min ต่ำสำหรับ ADC ควรขึ้น 7+").
+Format (Markdown, ใช้ bold สำหรับหัวข้อ, bullets ใช้ • ขึ้นต้น):
+
+**📊 ภาพรวมเกม:**
+2-3 ประโยค สรุปว่าเกมนี้ผู้เล่นเล่นยังไง, มีอิมแพคต่อทีมแค่ไหน, ช่วงไหนเด่น/ช่วงไหนพลาด
+
+**✅ ทำได้ดี:**
+2-3 bullets เจาะลึกพร้อมตัวเลข (เช่น "CS 7.5/min สูงกว่าค่าเฉลี่ย ADC, แสดงว่า farm efficiency ดี")
+
+**⚠️ ควรปรับ:**
+2-3 bullets เจาะลึก + บอกสาเหตุที่เป็นไปได้ (เช่น "Death 8 ครั้ง แต่ damage แค่ 12k บอกว่าน่าจะตายเข้ารบไม่ออก ลอง position หลังกว่านี้")
+
+**🎯 ข้อเสนอแนะสำหรับเกมหน้า:**
+2-3 bullets เป็น action concrete ที่เอาไปใช้ได้จริง (warding, item timing, combo, decision making, ฯลฯ)
+
+Total 180-250 Thai words. Don't summarize — give the player something actionable.
 `.trim();
-    return (await callGeminiForText(prompt, "review:self", 400)).trim();
+    return (await callGeminiForText(prompt, "review:self", 1200)).trim();
   }
 
   // team scope
   const prompt = `
-You are a concise LoL coach. Review THE WHOLE TEAM's performance in this match. Reply in Thai, KEEP IT SHORT.
+You are an experienced LoL coach analyzing a match at the team level. Reply in Thai. Be DETAILED and SPECIFIC.
 
 Result: ${input.myWin ? "ทีมของผู้เล่นชนะ" : "ทีมของผู้เล่นแพ้"}
 Duration: ${Math.floor(input.gameMinutes)} min, Mode: ${input.gameMode}
-The player is marked [ME].
+The player is marked [ME] in the lineup.
 ${teamSummary(input.blue, "BLUE")}
 ${teamSummary(input.red, "RED")}
 
-Format (Markdown):
-**📊 ภาพรวม:** 1-2 ประโยค (ใครเป็นตัวพา/ตัวถ่วงของทีม [ME])
-**👤 ผู้เล่นเด่นของทีม:** ชื่อแชม + 1 ประโยคสั้น
-**👥 จุดที่ทีมพลาด:** 1-2 bullets (ใช้ • ขึ้นต้น)
-**🎯 ถ้าจะชนะ/รักษาชัย:** 1 ประโยค
+Format (Markdown, ใช้ bold สำหรับหัวข้อ, bullets ใช้ • ขึ้นต้น):
 
-Total under 120 Thai words. Be specific to the data given.
+**📊 ภาพรวมแมตช์:**
+2-3 ประโยค อธิบายว่าเกมนี้เป็นยังไง — ใครเป็นตัวพา (carry) ของแต่ละทีม, ใครเป็นจุดอ่อน, win condition คืออะไร
+
+**🏆 ผู้เล่นเด่น:**
+2 ประโยค — 1 ตัวจากทีม [ME] และ 1 ตัวจากทีมตรงข้าม พร้อมเหตุผลจาก stat
+
+**📉 จุดอ่อนของทีม [ME]:**
+2-3 bullets เจาะจง (ผู้เล่นคนไหน + ทำอะไรพลาด + ตัวเลขสนับสนุน)
+
+**🛡️ จุดแข็งของทีมตรงข้าม:**
+1-2 bullets ที่ทีม [ME] รับมือไม่ได้
+
+**🎯 ถ้าจะ${input.myWin ? "รักษาฟอร์ม" : "พลิกเกมแบบนี้"}ครั้งหน้า:**
+2-3 bullets concrete (drafting, macro, objective priority, teamfight positioning, ฯลฯ)
+
+Total 220-300 Thai words. Reference players' champions and roles when discussing them.
 `.trim();
-  return (await callGeminiForText(prompt, "review:team", 500)).trim();
+  return (await callGeminiForText(prompt, "review:team", 1500)).trim();
 }
 
 export interface LiveGamePrediction {
