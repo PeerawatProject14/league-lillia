@@ -41,3 +41,8 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+
+# local test scripts and outputs
+scripts/test-*.js
+test-output.png
+src/app/api/test-image/
