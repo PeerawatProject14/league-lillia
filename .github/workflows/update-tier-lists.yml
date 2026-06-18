@@ -1,0 +1,34 @@
+name: Update tier lists
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"  # every 6 hours
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Fetch tier lists
+        run: node scripts/fetch-tier-lists.mjs
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "tier-list-bot"
+          git config user.email "tier-list-bot@users.noreply.github.com"
+          git add data/tier-list-*.json
+          if git diff --staged --quiet; then
+            echo "No changes to tier lists."
+          else
+            git commit -m "chore: refresh tier list data ($(date -u +%Y-%m-%dT%H:%MZ))"
+            git push
+          fi

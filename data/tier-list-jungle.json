@@ -1,0 +1,1149 @@
+{
+  "role": "jungle",
+  "fetchedAt": "2026-06-18T09:38:35.673Z",
+  "source": "u.gg",
+  "rank": "master_plus",
+  "entries": [
+    {
+      "championId": 45,
+      "winRate": 100,
+      "pickRate": 0.00046516387723394954,
+      "banRate": 0.407223704651847,
+      "role": "jungle"
+    },
+    {
+      "championId": 26,
+      "winRate": 100,
+      "pickRate": 0.00046516387723394954,
+      "banRate": 1.5349598195622216,
+      "role": "jungle"
+    },
+    {
+      "championId": 142,
+      "winRate": 100,
+      "pickRate": 0.00046516387723394954,
+      "banRate": 10.165624951613154,
+      "role": "jungle"
+    },
+    {
+      "championId": 117,
+      "winRate": 80,
+      "pickRate": 0.002325819386169748,
+      "banRate": 6.897512787030776,
+      "role": "jungle"
+    },
+    {
+      "championId": 526,
+      "winRate": 75,
+      "pickRate": 0.0018606555089357981,
+      "banRate": 1.4885084464080185,
+      "role": "jungle"
+    },
+    {
+      "championId": 240,
+      "winRate": 68.42105263157895,
+      "pickRate": 0.008838113667445042,
+      "banRate": 0.5450294450093162,
+      "role": "jungle"
+    },
+    {
+      "championId": 910,
+      "winRate": 66.66666666666666,
+      "pickRate": 0.0013954916317018486,
+      "banRate": 2.9352106569772545,
+      "role": "jungle"
+    },
+    {
+      "championId": 101,
+      "winRate": 60,
+      "pickRate": 0.002325819386169748,
+      "banRate": 4.854684620982601,
+      "role": "jungle"
+    },
+    {
+      "championId": 83,
+      "winRate": 54.074074074074076,
+      "pickRate": 0.06279712342658318,
+      "banRate": 3.977269794736543,
+      "role": "jungle"
+    },
+    {
+      "championId": 421,
+      "winRate": 54.05670665212649,
+      "pickRate": 4.265552754235316,
+      "banRate": 4.027850178837786,
+      "role": "jungle"
+    },
+    {
+      "championId": 10,
+      "winRate": 53.44827586206896,
+      "pickRate": 0.02697950487956907,
+      "banRate": 1.9571511888970896,
+      "role": "jungle"
+    },
+    {
+      "championId": 55,
+      "winRate": 53.333333333333336,
+      "pickRate": 0.006977458158509242,
+      "banRate": 14.628053532626929,
+      "role": "jungle"
+    },
+    {
+      "championId": 200,
+      "winRate": 53.124056746151524,
+      "pickRate": 3.0821758505521495,
+      "banRate": 6.871190342243396,
+      "role": "jungle"
+    },
+    {
+      "championId": 427,
+      "winRate": 52.97600498597694,
+      "pickRate": 1.492710882043744,
+      "banRate": 0.6126419992671005,
+      "role": "jungle"
+    },
+    {
+      "championId": 76,
+      "winRate": 52.95516603540914,
+      "pickRate": 5.281005498237029,
+      "banRate": 4.613137480580745,
+      "role": "jungle"
+    },
+    {
+      "championId": 68,
+      "winRate": 52.28070175438596,
+      "pickRate": 0.13257170501167562,
+      "banRate": 2.647212143421195,
+      "role": "jungle"
+    },
+    {
+      "championId": 14,
+      "winRate": 51.963746223564954,
+      "pickRate": 0.1539692433644373,
+      "banRate": 1.4719924026198574,
+      "role": "jungle"
+    },
+    {
+      "championId": 33,
+      "winRate": 51.891891891891895,
+      "pickRate": 1.032663807459368,
+      "banRate": 1.2051550701673799,
+      "role": "jungle"
+    },
+    {
+      "championId": 72,
+      "winRate": 51.7220172201722,
+      "pickRate": 1.5127129287648038,
+      "banRate": 0.347869172288143,
+      "role": "jungle"
+    },
+    {
+      "championId": 11,
+      "winRate": 51.69117647058824,
+      "pickRate": 5.060982984305371,
+      "banRate": 12.500580642164428,
+      "role": "jungle"
+    },
+    {
+      "championId": 119,
+      "winRate": 51.515151515151516,
+      "pickRate": 0.030700815897440666,
+      "banRate": 19.250997414206893,
+      "role": "jungle"
+    },
+    {
+      "championId": 163,
+      "winRate": 51.46045290449622,
+      "pickRate": 1.4173543339318442,
+      "banRate": 0.6131581256354806,
+      "role": "jungle"
+    },
+    {
+      "championId": 35,
+      "winRate": 51.42712165419256,
+      "pickRate": 3.666886844235224,
+      "banRate": 10.451042833327312,
+      "role": "jungle"
+    },
+    {
+      "championId": 203,
+      "winRate": 51.37306456324862,
+      "pickRate": 3.1845119035436187,
+      "banRate": 3.521014085088593,
+      "role": "jungle"
+    },
+    {
+      "championId": 266,
+      "winRate": 51.26582278481012,
+      "pickRate": 2.3518685632948486,
+      "banRate": 7.032221769177966,
+      "role": "jungle"
+    },
+    {
+      "championId": 19,
+      "winRate": 51.061776061776065,
+      "pickRate": 1.4457293304431151,
+      "banRate": 0.6090291146884403,
+      "role": "jungle"
+    },
+    {
+      "championId": 143,
+      "winRate": 51.04311543810849,
+      "pickRate": 1.3378113109248388,
+      "banRate": 1.7367652295988152,
+      "role": "jungle"
+    },
+    {
+      "championId": 31,
+      "winRate": 51.02319236016372,
+      "pickRate": 0.34096512201248497,
+      "banRate": 0.39586892454748623,
+      "role": "jungle"
+    },
+    {
+      "championId": 98,
+      "winRate": 51.012145748987855,
+      "pickRate": 0.22979095535357105,
+      "banRate": 0.8402537277226957,
+      "role": "jungle"
+    },
+    {
+      "championId": 75,
+      "winRate": 50.991664271342344,
+      "pickRate": 1.6183051288969104,
+      "banRate": 2.9563718380808357,
+      "role": "jungle"
+    },
+    {
+      "championId": 20,
+      "winRate": 50.97463844057849,
+      "pickRate": 2.219296858283173,
+      "banRate": 0.9919948800264258,
+      "role": "jungle"
+    },
+    {
+      "championId": 48,
+      "winRate": 50.930626057529615,
+      "pickRate": 0.5498237028905283,
+      "banRate": 0.24103101403347596,
+      "role": "jungle"
+    },
+    {
+      "championId": 91,
+      "winRate": 50.915645277577504,
+      "pickRate": 6.45182297723488,
+      "banRate": 20.81950544771382,
+      "role": "jungle"
+    },
+    {
+      "championId": 518,
+      "winRate": 50.88495575221239,
+      "pickRate": 0.10512703625487259,
+      "banRate": 1.1659294661704973,
+      "role": "jungle"
+    },
+    {
+      "championId": 25,
+      "winRate": 50.87412587412587,
+      "pickRate": 0.2660737377778191,
+      "banRate": 6.50009548337815,
+      "role": "jungle"
+    },
+    {
+      "championId": 245,
+      "winRate": 50.75587005467996,
+      "pickRate": 4.338583482961047,
+      "banRate": 2.1981822029305658,
+      "role": "jungle"
+    },
+    {
+      "championId": 28,
+      "winRate": 50.72977481234362,
+      "pickRate": 2.230925955214022,
+      "banRate": 2.5584384080598292,
+      "role": "jungle"
+    },
+    {
+      "championId": 876,
+      "winRate": 50.67842605156038,
+      "pickRate": 2.056954665128525,
+      "banRate": 0.920769441189981,
+      "role": "jungle"
+    },
+    {
+      "championId": 120,
+      "winRate": 50.614413816007975,
+      "pickRate": 5.602433737405688,
+      "banRate": 7.496219374351616,
+      "role": "jungle"
+    },
+    {
+      "championId": 77,
+      "winRate": 50.57471264367817,
+      "pickRate": 1.7401780647322052,
+      "banRate": 0.9383177377149021,
+      "role": "jungle"
+    },
+    {
+      "championId": 122,
+      "winRate": 50.522648083623686,
+      "pickRate": 0.5340081310645741,
+      "banRate": 10.184205500874834,
+      "role": "jungle"
+    },
+    {
+      "championId": 141,
+      "winRate": 50.49632797998548,
+      "pickRate": 5.763845602805868,
+      "banRate": 4.115075535094012,
+      "role": "jungle"
+    },
+    {
+      "championId": 79,
+      "winRate": 50.38510911424904,
+      "pickRate": 0.7247253207304933,
+      "banRate": 0.7416735913621091,
+      "role": "jungle"
+    },
+    {
+      "championId": 904,
+      "winRate": 50.334928229665074,
+      "pickRate": 0.48609625170947723,
+      "banRate": 1.1664455925388773,
+      "role": "jungle"
+    },
+    {
+      "championId": 6,
+      "winRate": 50.331125827814574,
+      "pickRate": 0.07023974546232638,
+      "banRate": 0.6482547186853229,
+      "role": "jungle"
+    },
+    {
+      "championId": 9,
+      "winRate": 50.30789825970549,
+      "pickRate": 1.7373870814688015,
+      "banRate": 1.268122487109744,
+      "role": "jungle"
+    },
+    {
+      "championId": 107,
+      "winRate": 50.29342118809842,
+      "pickRate": 4.518136739573351,
+      "banRate": 17.894101191735786,
+      "role": "jungle"
+    },
+    {
+      "championId": 62,
+      "winRate": 50.26545126715416,
+      "pickRate": 4.643730986426518,
+      "banRate": 1.36154135978653,
+      "role": "jungle"
+    },
+    {
+      "championId": 517,
+      "winRate": 50.22601707684581,
+      "pickRate": 8.335271516155142,
+      "banRate": 18.969708543439776,
+      "role": "jungle"
+    },
+    {
+      "championId": 246,
+      "winRate": 50.21362151294295,
+      "pickRate": 1.850887067513885,
+      "banRate": 4.961006652868889,
+      "role": "jungle"
+    },
+    {
+      "championId": 131,
+      "winRate": 50.17478922475838,
+      "pickRate": 4.524183869977393,
+      "banRate": 4.284364983922663,
+      "role": "jungle"
+    },
+    {
+      "championId": 16,
+      "winRate": 50,
+      "pickRate": 0.0009303277544678991,
+      "banRate": 1.8177970694344803,
+      "role": "jungle"
+    },
+    {
+      "championId": 13,
+      "winRate": 50,
+      "pickRate": 0.004651638772339496,
+      "banRate": 0.8743180680357778,
+      "role": "jungle"
+    },
+    {
+      "championId": 895,
+      "winRate": 50,
+      "pickRate": 0.0009303277544678991,
+      "banRate": 2.131601901409541,
+      "role": "jungle"
+    },
+    {
+      "championId": 134,
+      "winRate": 50,
+      "pickRate": 0.0009303277544678991,
+      "banRate": 5.201005414165604,
+      "role": "jungle"
+    },
+    {
+      "championId": 523,
+      "winRate": 50,
+      "pickRate": 0.0009303277544678991,
+      "banRate": 1.2815417726876248,
+      "role": "jungle"
+    },
+    {
+      "championId": 222,
+      "winRate": 50,
+      "pickRate": 0.0018606555089357981,
+      "banRate": 1.3238641348947877,
+      "role": "jungle"
+    },
+    {
+      "championId": 21,
+      "winRate": 50,
+      "pickRate": 0.0018606555089357981,
+      "banRate": 0.25290192050621674,
+      "role": "jungle"
+    },
+    {
+      "championId": 111,
+      "winRate": 50,
+      "pickRate": 0.050237698741266545,
+      "banRate": 14.160443042874618,
+      "role": "jungle"
+    },
+    {
+      "championId": 268,
+      "winRate": 50,
+      "pickRate": 0.0009303277544678991,
+      "banRate": 0.26993409066275786,
+      "role": "jungle"
+    },
+    {
+      "championId": 34,
+      "winRate": 50,
+      "pickRate": 0.0009303277544678991,
+      "banRate": 5.953517659263694,
+      "role": "jungle"
+    },
+    {
+      "championId": 3,
+      "winRate": 50,
+      "pickRate": 0.005581966526807394,
+      "banRate": 2.2735366527140504,
+      "role": "jungle"
+    },
+    {
+      "championId": 223,
+      "winRate": 50,
+      "pickRate": 0.0018606555089357981,
+      "banRate": 0.6322548012655418,
+      "role": "jungle"
+    },
+    {
+      "championId": 7,
+      "winRate": 50,
+      "pickRate": 0.0009303277544678991,
+      "banRate": 16.996557437122906,
+      "role": "jungle"
+    },
+    {
+      "championId": 950,
+      "winRate": 49.95672601384767,
+      "pickRate": 7.524490878136368,
+      "banRate": 30.230037522386983,
+      "role": "jungle"
+    },
+    {
+      "championId": 30,
+      "winRate": 49.795605518651,
+      "pickRate": 1.8206514154936786,
+      "banRate": 3.671722984655563,
+      "role": "jungle"
+    },
+    {
+      "championId": 104,
+      "winRate": 49.785700739616914,
+      "pickRate": 12.264045623273079,
+      "banRate": 20.778215338243417,
+      "role": "jungle"
+    },
+    {
+      "championId": 136,
+      "winRate": 49.77973568281938,
+      "pickRate": 0.10559220013210653,
+      "banRate": 0.48877167085589235,
+      "role": "jungle"
+    },
+    {
+      "championId": 60,
+      "winRate": 49.72355983591938,
+      "pickRate": 2.608173859650755,
+      "banRate": 2.6983086538908188,
+      "role": "jungle"
+    },
+    {
+      "championId": 59,
+      "winRate": 49.673241095083895,
+      "pickRate": 7.900808454818632,
+      "banRate": 1.8797322336400843,
+      "role": "jungle"
+    },
+    {
+      "championId": 233,
+      "winRate": 49.664429530201346,
+      "pickRate": 2.772376708314339,
+      "banRate": 3.0472100789157217,
+      "role": "jungle"
+    },
+    {
+      "championId": 78,
+      "winRate": 49.65986394557823,
+      "pickRate": 0.41027453972034345,
+      "banRate": 4.4051385541235915,
+      "role": "jungle"
+    },
+    {
+      "championId": 154,
+      "winRate": 49.6191282268303,
+      "pickRate": 2.1983644838076457,
+      "banRate": 0.9568982869765834,
+      "role": "jungle"
+    },
+    {
+      "championId": 56,
+      "winRate": 49.528023598820056,
+      "pickRate": 4.730716631469266,
+      "banRate": 7.4719614350377555,
+      "role": "jungle"
+    },
+    {
+      "championId": 113,
+      "winRate": 49.52088922958988,
+      "pickRate": 1.2136125557033743,
+      "banRate": 0.08980598809812596,
+      "role": "jungle"
+    },
+    {
+      "championId": 44,
+      "winRate": 49.504950495049506,
+      "pickRate": 0.046981551600628904,
+      "banRate": 0.20490216824687355,
+      "role": "jungle"
+    },
+    {
+      "championId": 887,
+      "winRate": 49.46107784431138,
+      "pickRate": 1.1652355124710436,
+      "banRate": 3.3522407626283215,
+      "role": "jungle"
+    },
+    {
+      "championId": 121,
+      "winRate": 49.43352932740571,
+      "pickRate": 6.48717543190466,
+      "banRate": 4.777265665725596,
+      "role": "jungle"
+    },
+    {
+      "championId": 102,
+      "winRate": 49.35813953488372,
+      "pickRate": 2.500255840132479,
+      "banRate": 1.9834736336844714,
+      "role": "jungle"
+    },
+    {
+      "championId": 2,
+      "winRate": 49.08200734394125,
+      "pickRate": 0.3800388877001367,
+      "banRate": 3.0967582102802047,
+      "role": "jungle"
+    },
+    {
+      "championId": 254,
+      "winRate": 49.01566469093988,
+      "pickRate": 4.394868312106355,
+      "banRate": 1.0487687805482295,
+      "role": "jungle"
+    },
+    {
+      "championId": 5,
+      "winRate": 48.998494847748056,
+      "pickRate": 4.017620407669622,
+      "banRate": 3.215983401375993,
+      "role": "jungle"
+    },
+    {
+      "championId": 64,
+      "winRate": 48.987004853608894,
+      "pickRate": 14.855008419466179,
+      "banRate": 22.834462789869473,
+      "role": "jungle"
+    },
+    {
+      "championId": 24,
+      "winRate": 48.71253693541579,
+      "pickRate": 1.1019732251672263,
+      "banRate": 15.08534149501164,
+      "role": "jungle"
+    },
+    {
+      "championId": 126,
+      "winRate": 48.2133676092545,
+      "pickRate": 3.618974964880127,
+      "banRate": 13.260318656419837,
+      "role": "jungle"
+    },
+    {
+      "championId": 17,
+      "winRate": 48.17708333333333,
+      "pickRate": 0.17862292885783662,
+      "banRate": 3.156112742643909,
+      "role": "jungle"
+    },
+    {
+      "championId": 67,
+      "winRate": 48.148148148148145,
+      "pickRate": 0.15071309622379964,
+      "banRate": 12.38445220927892,
+      "role": "jungle"
+    },
+    {
+      "championId": 92,
+      "winRate": 48.1421647819063,
+      "pickRate": 0.28793644000781476,
+      "banRate": 6.551708120216154,
+      "role": "jungle"
+    },
+    {
+      "championId": 234,
+      "winRate": 48.09899211655523,
+      "pickRate": 9.322814427522816,
+      "banRate": 4.648234073630587,
+      "role": "jungle"
+    },
+    {
+      "championId": 82,
+      "winRate": 47.97687861271676,
+      "pickRate": 0.16094670152294654,
+      "banRate": 2.585793105583971,
+      "role": "jungle"
+    },
+    {
+      "championId": 516,
+      "winRate": 47.82608695652174,
+      "pickRate": 0.021397538352761678,
+      "banRate": 0.4882555444875123,
+      "role": "jungle"
+    },
+    {
+      "championId": 105,
+      "winRate": 47.79582366589327,
+      "pickRate": 0.6014568932634967,
+      "banRate": 3.2438542252685143,
+      "role": "jungle"
+    },
+    {
+      "championId": 57,
+      "winRate": 47.74193548387097,
+      "pickRate": 0.4326024058275731,
+      "banRate": 0.09548337815030632,
+      "role": "jungle"
+    },
+    {
+      "championId": 36,
+      "winRate": 47.43429286608261,
+      "pickRate": 0.37166593790992564,
+      "banRate": 1.5587016325077032,
+      "role": "jungle"
+    },
+    {
+      "championId": 799,
+      "winRate": 47.237946515713446,
+      "pickRate": 2.383034543069523,
+      "banRate": 11.225748512265742,
+      "role": "jungle"
+    },
+    {
+      "championId": 133,
+      "winRate": 47.1445929526124,
+      "pickRate": 1.531319483854162,
+      "banRate": 1.2846385308979051,
+      "role": "jungle"
+    },
+    {
+      "championId": 106,
+      "winRate": 47.11538461538461,
+      "pickRate": 0.48377043232330746,
+      "banRate": 0.7086415037857869,
+      "role": "jungle"
+    },
+    {
+      "championId": 80,
+      "winRate": 46.81818181818182,
+      "pickRate": 1.1256965829061578,
+      "banRate": 1.5344436931938417,
+      "role": "jungle"
+    },
+    {
+      "championId": 63,
+      "winRate": 46.30952380952381,
+      "pickRate": 0.3907376568765176,
+      "banRate": 5.429133268989579,
+      "role": "jungle"
+    },
+    {
+      "championId": 29,
+      "winRate": 46.26865671641791,
+      "pickRate": 0.06233195954934924,
+      "banRate": 3.9204958942147394,
+      "role": "jungle"
+    },
+    {
+      "championId": 221,
+      "winRate": 46.07329842931937,
+      "pickRate": 0.08884630055168437,
+      "banRate": 0.7359962013099287,
+      "role": "jungle"
+    },
+    {
+      "championId": 23,
+      "winRate": 45.94594594594595,
+      "pickRate": 0.10326638074593679,
+      "banRate": 2.0299250068386745,
+      "role": "jungle"
+    },
+    {
+      "championId": 54,
+      "winRate": 45.87884806355512,
+      "pickRate": 0.4684200243745872,
+      "banRate": 15.595274346971113,
+      "role": "jungle"
+    },
+    {
+      "championId": 238,
+      "winRate": 45.61763198359816,
+      "pickRate": 1.815069448966871,
+      "banRate": 25.170450733157505,
+      "role": "jungle"
+    },
+    {
+      "championId": 32,
+      "winRate": 45.06359781950333,
+      "pickRate": 0.7679855613132507,
+      "banRate": 0.3390950240256825,
+      "role": "jungle"
+    },
+    {
+      "championId": 27,
+      "winRate": 44.84848484848485,
+      "pickRate": 0.07675203974360166,
+      "banRate": 1.255735454268623,
+      "role": "jungle"
+    },
+    {
+      "championId": 875,
+      "winRate": 44.827586206896555,
+      "pickRate": 0.02697950487956907,
+      "banRate": 0.9285113367156814,
+      "role": "jungle"
+    },
+    {
+      "championId": 4,
+      "winRate": 43.75,
+      "pickRate": 0.0074426220357431926,
+      "banRate": 1.5421855887195421,
+      "role": "jungle"
+    },
+    {
+      "championId": 897,
+      "winRate": 43.75,
+      "pickRate": 0.0074426220357431926,
+      "banRate": 5.105522036015298,
+      "role": "jungle"
+    },
+    {
+      "championId": 164,
+      "winRate": 43.190661478599225,
+      "pickRate": 0.11954711644912502,
+      "banRate": 1.2526386960583429,
+      "role": "jungle"
+    },
+    {
+      "championId": 127,
+      "winRate": 42.857142857142854,
+      "pickRate": 0.003256147140637647,
+      "banRate": 2.762308323569943,
+      "role": "jungle"
+    },
+    {
+      "championId": 110,
+      "winRate": 42.857142857142854,
+      "pickRate": 0.003256147140637647,
+      "banRate": 4.930039070766087,
+      "role": "jungle"
+    },
+    {
+      "championId": 777,
+      "winRate": 41.66666666666667,
+      "pickRate": 0.044655732214459155,
+      "banRate": 4.0407533380472875,
+      "role": "jungle"
+    },
+    {
+      "championId": 96,
+      "winRate": 41.66666666666667,
+      "pickRate": 0.005581966526807394,
+      "banRate": 0.35561106781384355,
+      "role": "jungle"
+    },
+    {
+      "championId": 74,
+      "winRate": 40,
+      "pickRate": 0.011629096930848739,
+      "banRate": 1.0596074342842101,
+      "role": "jungle"
+    },
+    {
+      "championId": 18,
+      "winRate": 38.46153846153847,
+      "pickRate": 0.006047130404041343,
+      "banRate": 2.521793435904847,
+      "role": "jungle"
+    },
+    {
+      "championId": 150,
+      "winRate": 36.36363636363637,
+      "pickRate": 0.015350407948720333,
+      "banRate": 1.6025723738200062,
+      "role": "jungle"
+    },
+    {
+      "championId": 81,
+      "winRate": 35.44303797468354,
+      "pickRate": 0.03674794630148201,
+      "banRate": 12.214646634081888,
+      "role": "jungle"
+    },
+    {
+      "championId": 145,
+      "winRate": 34.710743801652896,
+      "pickRate": 0.05628482914530789,
+      "banRate": 1.3548317169975896,
+      "role": "jungle"
+    },
+    {
+      "championId": 157,
+      "winRate": 34.285714285714285,
+      "pickRate": 0.016280735703188234,
+      "banRate": 16.30752873533556,
+      "role": "jungle"
+    },
+    {
+      "championId": 42,
+      "winRate": 34.090909090909086,
+      "pickRate": 0.02046721059829378,
+      "banRate": 0.2828372498722587,
+      "role": "jungle"
+    },
+    {
+      "championId": 90,
+      "winRate": 33.33333333333333,
+      "pickRate": 0.002790983263403697,
+      "banRate": 4.059333887308969,
+      "role": "jungle"
+    },
+    {
+      "championId": 202,
+      "winRate": 30.76923076923077,
+      "pickRate": 0.01814139121212403,
+      "banRate": 0.7292865585209883,
+      "role": "jungle"
+    },
+    {
+      "championId": 99,
+      "winRate": 28.57142857142857,
+      "pickRate": 0.003256147140637647,
+      "banRate": 1.1669617189072572,
+      "role": "jungle"
+    },
+    {
+      "championId": 114,
+      "winRate": 27.27272727272727,
+      "pickRate": 0.005116802649573445,
+      "banRate": 8.213118900031484,
+      "role": "jungle"
+    },
+    {
+      "championId": 86,
+      "winRate": 26.31578947368421,
+      "pickRate": 0.017676227334890084,
+      "banRate": 2.87430774550841,
+      "role": "jungle"
+    },
+    {
+      "championId": 69,
+      "winRate": 25,
+      "pickRate": 0.0037213110178715963,
+      "banRate": 3.549917161717875,
+      "role": "jungle"
+    },
+    {
+      "championId": 360,
+      "winRate": 25,
+      "pickRate": 0.0018606555089357981,
+      "banRate": 3.218047906849513,
+      "role": "jungle"
+    },
+    {
+      "championId": 38,
+      "winRate": 22.22222222222222,
+      "pickRate": 0.00837294979021109,
+      "banRate": 4.005140618629065,
+      "role": "jungle"
+    },
+    {
+      "championId": 53,
+      "winRate": 20,
+      "pickRate": 0.002325819386169748,
+      "banRate": 8.441246754855458,
+      "role": "jungle"
+    },
+    {
+      "championId": 39,
+      "winRate": 20,
+      "pickRate": 0.002325819386169748,
+      "banRate": 14.221862080711842,
+      "role": "jungle"
+    },
+    {
+      "championId": 804,
+      "winRate": 20,
+      "pickRate": 0.002325819386169748,
+      "banRate": 1.2588322124789033,
+      "role": "jungle"
+    },
+    {
+      "championId": 166,
+      "winRate": 11.11111111111111,
+      "pickRate": 0.004186474895105545,
+      "banRate": 4.169268803773916,
+      "role": "jungle"
+    },
+    {
+      "championId": 1,
+      "winRate": 0,
+      "pickRate": 0.0013954916317018486,
+      "banRate": 0.5687712579547977,
+      "role": "jungle"
+    },
+    {
+      "championId": 103,
+      "winRate": 0,
+      "pickRate": 0.0009303277544678991,
+      "banRate": 3.657271446340922,
+      "role": "jungle"
+    },
+    {
+      "championId": 51,
+      "winRate": 0,
+      "pickRate": 0.0013954916317018486,
+      "banRate": 15.297985558784214,
+      "role": "jungle"
+    },
+    {
+      "championId": 89,
+      "winRate": 0,
+      "pickRate": 0.0013954916317018486,
+      "banRate": 4.23326847345304,
+      "role": "jungle"
+    },
+    {
+      "championId": 37,
+      "winRate": 0,
+      "pickRate": 0.00046516387723394954,
+      "banRate": 0.4898039235926524,
+      "role": "jungle"
+    },
+    {
+      "championId": 893,
+      "winRate": 0,
+      "pickRate": 0.0009303277544678991,
+      "banRate": 2.089279539202378,
+      "role": "jungle"
+    },
+    {
+      "championId": 800,
+      "winRate": 0,
+      "pickRate": 0.00046516387723394954,
+      "banRate": 18.89280571455115,
+      "role": "jungle"
+    },
+    {
+      "championId": 555,
+      "winRate": 0,
+      "pickRate": 0.0013954916317018486,
+      "banRate": 42.28262047679754,
+      "role": "jungle"
+    },
+    {
+      "championId": 41,
+      "winRate": 0,
+      "pickRate": 0.00046516387723394954,
+      "banRate": 5.581390547661689,
+      "role": "jungle"
+    },
+    {
+      "championId": 50,
+      "winRate": 0,
+      "pickRate": 0.00046516387723394954,
+      "banRate": 0.799479744620673,
+      "role": "jungle"
+    },
+    {
+      "championId": 235,
+      "winRate": 0,
+      "pickRate": 0.0009303277544678991,
+      "banRate": 25.368643258615442,
+      "role": "jungle"
+    },
+    {
+      "championId": 201,
+      "winRate": 0,
+      "pickRate": 0.0009303277544678991,
+      "banRate": 7.917378490949724,
+      "role": "jungle"
+    },
+    {
+      "championId": 12,
+      "winRate": 0,
+      "pickRate": 0.0018606555089357981,
+      "banRate": 1.8363776186961616,
+      "role": "jungle"
+    },
+    {
+      "championId": 236,
+      "winRate": 0,
+      "pickRate": 0.0013954916317018486,
+      "banRate": 3.3574020263121223,
+      "role": "jungle"
+    },
+    {
+      "championId": 147,
+      "winRate": 0,
+      "pickRate": 0.00046516387723394954,
+      "banRate": 6.701384767046363,
+      "role": "jungle"
+    },
+    {
+      "championId": 15,
+      "winRate": 0,
+      "pickRate": 0.00046516387723394954,
+      "banRate": 2.2544399770839894,
+      "role": "jungle"
+    },
+    {
+      "championId": 115,
+      "winRate": 0,
+      "pickRate": 0.00046516387723394954,
+      "banRate": 0.41496560017754747,
+      "role": "jungle"
+    },
+    {
+      "championId": 432,
+      "winRate": 0,
+      "pickRate": 0.00046516387723394954,
+      "banRate": 10.445881569643511,
+      "role": "jungle"
+    },
+    {
+      "championId": 58,
+      "winRate": 0,
+      "pickRate": 0.0013954916317018486,
+      "banRate": 4.786039813988057,
+      "role": "jungle"
+    },
+    {
+      "championId": 61,
+      "winRate": 0,
+      "pickRate": 0.00046516387723394954,
+      "banRate": 1.3135416075271868,
+      "role": "jungle"
+    },
+    {
+      "championId": 161,
+      "winRate": 0,
+      "pickRate": 0.0009303277544678991,
+      "banRate": 1.2030905646938597,
+      "role": "jungle"
+    },
+    {
+      "championId": 112,
+      "winRate": 0,
+      "pickRate": 0.00046516387723394954,
+      "banRate": 10.547558464214378,
+      "role": "jungle"
+    },
+    {
+      "championId": 497,
+      "winRate": 0,
+      "pickRate": 0.0009303277544678991,
+      "banRate": 0.5780615325856383,
+      "role": "jungle"
+    },
+    {
+      "championId": 429,
+      "winRate": 0,
+      "pickRate": 0.00046516387723394954,
+      "banRate": 0.5687712579547977,
+      "role": "jungle"
+    },
+    {
+      "championId": 412,
+      "winRate": 0,
+      "pickRate": 0.0009303277544678991,
+      "banRate": 7.893120551635863,
+      "role": "jungle"
+    },
+    {
+      "championId": 84,
+      "winRate": 0,
+      "pickRate": 0.002325819386169748,
+      "banRate": 19.605576229283976,
+      "role": "jungle"
+    },
+    {
+      "championId": 8,
+      "winRate": 0,
+      "pickRate": 0.0013954916317018486,
+      "banRate": 8.385505107070415,
+      "role": "jungle"
+    },
+    {
+      "championId": 901,
+      "winRate": 0,
+      "pickRate": 0.00046516387723394954,
+      "banRate": 6.008227054311978,
+      "role": "jungle"
+    },
+    {
+      "championId": 43,
+      "winRate": 0,
+      "pickRate": 0.0018606555089357981,
+      "banRate": 8.277634696078987,
+      "role": "jungle"
+    },
+    {
+      "championId": 267,
+      "winRate": 0,
+      "pickRate": 0.0009303277544678991,
+      "banRate": 1.1674778452756374,
+      "role": "jungle"
+    }
+  ]
+}

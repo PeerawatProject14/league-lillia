@@ -1,0 +1,1212 @@
+{
+  "role": "support",
+  "fetchedAt": "2026-06-18T09:38:41.601Z",
+  "source": "u.gg",
+  "rank": "master_plus",
+  "entries": [
+    {
+      "championId": 887,
+      "winRate": 100,
+      "pickRate": 0.00046516387723394954,
+      "banRate": 3.3522407626283215,
+      "role": "support"
+    },
+    {
+      "championId": 15,
+      "winRate": 71.42857142857143,
+      "pickRate": 0.003256147140637647,
+      "banRate": 2.2544399770839894,
+      "role": "support"
+    },
+    {
+      "championId": 222,
+      "winRate": 70,
+      "pickRate": 0.009303277544678992,
+      "banRate": 1.3238641348947877,
+      "role": "support"
+    },
+    {
+      "championId": 200,
+      "winRate": 60,
+      "pickRate": 0.023258193861697477,
+      "banRate": 6.871190342243396,
+      "role": "support"
+    },
+    {
+      "championId": 69,
+      "winRate": 58.44155844155844,
+      "pickRate": 0.03581761854701411,
+      "banRate": 3.549917161717875,
+      "role": "support"
+    },
+    {
+      "championId": 523,
+      "winRate": 56.25,
+      "pickRate": 0.02977048814297277,
+      "banRate": 1.2815417726876248,
+      "role": "support"
+    },
+    {
+      "championId": 145,
+      "winRate": 55.33980582524271,
+      "pickRate": 0.0479118793550968,
+      "banRate": 1.3548317169975896,
+      "role": "support"
+    },
+    {
+      "championId": 7,
+      "winRate": 53.597122302158276,
+      "pickRate": 0.6465777893551898,
+      "banRate": 16.996557437122906,
+      "role": "support"
+    },
+    {
+      "championId": 79,
+      "winRate": 53.49143610013175,
+      "pickRate": 0.3530593828205677,
+      "banRate": 0.7416735913621091,
+      "role": "support"
+    },
+    {
+      "championId": 5,
+      "winRate": 53.333333333333336,
+      "pickRate": 0.03488729079254622,
+      "banRate": 3.215983401375993,
+      "role": "support"
+    },
+    {
+      "championId": 44,
+      "winRate": 52.85304430985017,
+      "pickRate": 1.4592190828828997,
+      "banRate": 0.20490216824687355,
+      "role": "support"
+    },
+    {
+      "championId": 526,
+      "winRate": 52.682580950129996,
+      "pickRate": 5.904325093730521,
+      "banRate": 1.4885084464080185,
+      "role": "support"
+    },
+    {
+      "championId": 799,
+      "winRate": 52.63157894736842,
+      "pickRate": 0.008838113667445042,
+      "banRate": 11.225748512265742,
+      "role": "support"
+    },
+    {
+      "championId": 78,
+      "winRate": 52.48713550600343,
+      "pickRate": 2.1695243234191404,
+      "banRate": 4.4051385541235915,
+      "role": "support"
+    },
+    {
+      "championId": 77,
+      "winRate": 52.38095238095239,
+      "pickRate": 0.00976844142191294,
+      "banRate": 0.9383177377149021,
+      "role": "support"
+    },
+    {
+      "championId": 412,
+      "winRate": 52.27644087938206,
+      "pickRate": 12.525932886155793,
+      "banRate": 7.893120551635863,
+      "role": "support"
+    },
+    {
+      "championId": 76,
+      "winRate": 52.275522755227556,
+      "pickRate": 0.37817823219120095,
+      "banRate": 4.613137480580745,
+      "role": "support"
+    },
+    {
+      "championId": 57,
+      "winRate": 52.26315789473684,
+      "pickRate": 1.767622733489008,
+      "banRate": 0.09548337815030632,
+      "role": "support"
+    },
+    {
+      "championId": 110,
+      "winRate": 52.10084033613446,
+      "pickRate": 0.05535450139083999,
+      "banRate": 4.930039070766087,
+      "role": "support"
+    },
+    {
+      "championId": 103,
+      "winRate": 52,
+      "pickRate": 0.09303277544678991,
+      "banRate": 3.657271446340922,
+      "role": "support"
+    },
+    {
+      "championId": 32,
+      "winRate": 51.87500000000001,
+      "pickRate": 0.5209835425020235,
+      "banRate": 0.3390950240256825,
+      "role": "support"
+    },
+    {
+      "championId": 136,
+      "winRate": 51.80722891566265,
+      "pickRate": 0.03860860181041781,
+      "banRate": 0.48877167085589235,
+      "role": "support"
+    },
+    {
+      "championId": 235,
+      "winRate": 51.57377309125506,
+      "pickRate": 5.867111983551805,
+      "banRate": 25.368643258615442,
+      "role": "support"
+    },
+    {
+      "championId": 33,
+      "winRate": 51.38461538461539,
+      "pickRate": 0.1511782601010336,
+      "banRate": 1.2051550701673799,
+      "role": "support"
+    },
+    {
+      "championId": 36,
+      "winRate": 51.37614678899083,
+      "pickRate": 0.050702862618500495,
+      "banRate": 1.5587016325077032,
+      "role": "support"
+    },
+    {
+      "championId": 12,
+      "winRate": 51.281435207432324,
+      "pickRate": 5.808036171143094,
+      "banRate": 1.8363776186961616,
+      "role": "support"
+    },
+    {
+      "championId": 98,
+      "winRate": 51.2311901504788,
+      "pickRate": 0.6800695885160342,
+      "banRate": 0.8402537277226957,
+      "role": "support"
+    },
+    {
+      "championId": 147,
+      "winRate": 51.1781206171108,
+      "pickRate": 9.94985533403418,
+      "banRate": 6.701384767046363,
+      "role": "support"
+    },
+    {
+      "championId": 421,
+      "winRate": 51.11111111111111,
+      "pickRate": 0.06279712342658318,
+      "banRate": 4.027850178837786,
+      "role": "support"
+    },
+    {
+      "championId": 432,
+      "winRate": 51.06337546976426,
+      "pickRate": 10.892277349310161,
+      "banRate": 10.445881569643511,
+      "role": "support"
+    },
+    {
+      "championId": 40,
+      "winRate": 51.03798386365697,
+      "pickRate": 5.131222729767697,
+      "banRate": 1.7223136912841739,
+      "role": "support"
+    },
+    {
+      "championId": 223,
+      "winRate": 51.025,
+      "pickRate": 1.860655508935798,
+      "banRate": 0.6322548012655418,
+      "role": "support"
+    },
+    {
+      "championId": 37,
+      "winRate": 50.9624319660162,
+      "pickRate": 3.5040794872033416,
+      "banRate": 0.4898039235926524,
+      "role": "support"
+    },
+    {
+      "championId": 89,
+      "winRate": 50.95029717196786,
+      "pickRate": 7.122124124329002,
+      "banRate": 4.23326847345304,
+      "role": "support"
+    },
+    {
+      "championId": 201,
+      "winRate": 50.91558731576596,
+      "pickRate": 5.207509605634065,
+      "banRate": 7.917378490949724,
+      "role": "support"
+    },
+    {
+      "championId": 60,
+      "winRate": 50.821391121985314,
+      "pickRate": 1.3308338527663297,
+      "banRate": 2.6983086538908188,
+      "role": "support"
+    },
+    {
+      "championId": 555,
+      "winRate": 50.75276012044162,
+      "pickRate": 6.951874145261376,
+      "banRate": 42.28262047679754,
+      "role": "support"
+    },
+    {
+      "championId": 26,
+      "winRate": 50.60499310767346,
+      "pickRate": 3.0370549544604564,
+      "banRate": 1.5349598195622216,
+      "role": "support"
+    },
+    {
+      "championId": 711,
+      "winRate": 50.57471264367817,
+      "pickRate": 0.08093851463870722,
+      "banRate": 2.098053687464839,
+      "role": "support"
+    },
+    {
+      "championId": 497,
+      "winRate": 50.486824475212146,
+      "pickRate": 5.207509605634065,
+      "banRate": 0.5780615325856383,
+      "role": "support"
+    },
+    {
+      "championId": 53,
+      "winRate": 50.45887008503831,
+      "pickRate": 5.5247513699076185,
+      "banRate": 8.441246754855458,
+      "role": "support"
+    },
+    {
+      "championId": 16,
+      "winRate": 50.36087369420703,
+      "pickRate": 4.898175627273488,
+      "banRate": 1.8177970694344803,
+      "role": "support"
+    },
+    {
+      "championId": 516,
+      "winRate": 50.27932960893855,
+      "pickRate": 0.08326433402487697,
+      "banRate": 0.4882555444875123,
+      "role": "support"
+    },
+    {
+      "championId": 96,
+      "winRate": 50.27027027027027,
+      "pickRate": 0.08605531728828066,
+      "banRate": 0.35561106781384355,
+      "role": "support"
+    },
+    {
+      "championId": 888,
+      "winRate": 50.187110187110186,
+      "pickRate": 1.1187191247476487,
+      "banRate": 0.09858013636058652,
+      "role": "support"
+    },
+    {
+      "championId": 10,
+      "winRate": 50,
+      "pickRate": 0.023258193861697477,
+      "banRate": 1.9571511888970896,
+      "role": "support"
+    },
+    {
+      "championId": 161,
+      "winRate": 49.96434937611408,
+      "pickRate": 2.609569351282457,
+      "banRate": 1.2030905646938597,
+      "role": "support"
+    },
+    {
+      "championId": 111,
+      "winRate": 49.960348929421095,
+      "pickRate": 12.904576282224228,
+      "banRate": 14.160443042874618,
+      "role": "support"
+    },
+    {
+      "championId": 517,
+      "winRate": 49.94219653179191,
+      "pickRate": 1.2071002614220991,
+      "banRate": 18.969708543439776,
+      "role": "support"
+    },
+    {
+      "championId": 3,
+      "winRate": 49.91869918699187,
+      "pickRate": 0.8582273534966369,
+      "banRate": 2.2735366527140504,
+      "role": "support"
+    },
+    {
+      "championId": 25,
+      "winRate": 49.91219512195122,
+      "pickRate": 2.3839648708239913,
+      "banRate": 6.50009548337815,
+      "role": "support"
+    },
+    {
+      "championId": 72,
+      "winRate": 49.83183856502242,
+      "pickRate": 0.829852356985366,
+      "banRate": 0.347869172288143,
+      "role": "support"
+    },
+    {
+      "championId": 117,
+      "winRate": 49.620484242890086,
+      "pickRate": 9.682851268501894,
+      "banRate": 6.897512787030776,
+      "role": "support"
+    },
+    {
+      "championId": 80,
+      "winRate": 49.5928338762215,
+      "pickRate": 2.85610620621645,
+      "banRate": 1.5344436931938417,
+      "role": "support"
+    },
+    {
+      "championId": 518,
+      "winRate": 49.51635191156149,
+      "pickRate": 2.019741554949809,
+      "banRate": 1.1659294661704973,
+      "role": "support"
+    },
+    {
+      "championId": 245,
+      "winRate": 49.38775510204081,
+      "pickRate": 0.11396514992231763,
+      "banRate": 2.1981822029305658,
+      "role": "support"
+    },
+    {
+      "championId": 143,
+      "winRate": 49.330730619074174,
+      "pickRate": 1.668077663760943,
+      "banRate": 1.7367652295988152,
+      "role": "support"
+    },
+    {
+      "championId": 50,
+      "winRate": 49.08338261383797,
+      "pickRate": 1.5731842328052172,
+      "banRate": 0.799479744620673,
+      "role": "support"
+    },
+    {
+      "championId": 55,
+      "winRate": 49.03225806451613,
+      "pickRate": 0.07210040097126218,
+      "banRate": 14.628053532626929,
+      "role": "support"
+    },
+    {
+      "championId": 43,
+      "winRate": 49.010634588563455,
+      "pickRate": 10.672719999255738,
+      "banRate": 8.277634696078987,
+      "role": "support"
+    },
+    {
+      "championId": 34,
+      "winRate": 48.99676375404531,
+      "pickRate": 0.718678190326452,
+      "banRate": 5.953517659263694,
+      "role": "support"
+    },
+    {
+      "championId": 154,
+      "winRate": 48.986125933831374,
+      "pickRate": 0.4358585529682107,
+      "banRate": 0.9568982869765834,
+      "role": "support"
+    },
+    {
+      "championId": 910,
+      "winRate": 48.94237782640408,
+      "pickRate": 0.6377396756877448,
+      "banRate": 2.9352106569772545,
+      "role": "support"
+    },
+    {
+      "championId": 68,
+      "winRate": 48.93617021276596,
+      "pickRate": 0.06558810668998688,
+      "banRate": 2.647212143421195,
+      "role": "support"
+    },
+    {
+      "championId": 163,
+      "winRate": 48.875255623721884,
+      "pickRate": 0.2274651359674013,
+      "banRate": 0.6131581256354806,
+      "role": "support"
+    },
+    {
+      "championId": 267,
+      "winRate": 48.67872044506258,
+      "pickRate": 8.026867865549033,
+      "banRate": 1.1674778452756374,
+      "role": "support"
+    },
+    {
+      "championId": 246,
+      "winRate": 48.49498327759198,
+      "pickRate": 0.1390839992929509,
+      "banRate": 4.961006652868889,
+      "role": "support"
+    },
+    {
+      "championId": 164,
+      "winRate": 48.37343273466622,
+      "pickRate": 2.74539720343477,
+      "banRate": 1.2526386960583429,
+      "role": "support"
+    },
+    {
+      "championId": 113,
+      "winRate": 48.333333333333336,
+      "pickRate": 0.08372949790211091,
+      "banRate": 0.08980598809812596,
+      "role": "support"
+    },
+    {
+      "championId": 59,
+      "winRate": 48.24355971896955,
+      "pickRate": 0.39724995115779294,
+      "banRate": 1.8797322336400843,
+      "role": "support"
+    },
+    {
+      "championId": 63,
+      "winRate": 48.16887080366226,
+      "pickRate": 1.8290243652838896,
+      "banRate": 5.429133268989579,
+      "role": "support"
+    },
+    {
+      "championId": 4,
+      "winRate": 48.153409090909086,
+      "pickRate": 0.32747536957270046,
+      "banRate": 1.5421855887195421,
+      "role": "support"
+    },
+    {
+      "championId": 106,
+      "winRate": 48.148148148148145,
+      "pickRate": 0.012559424685316636,
+      "banRate": 0.7086415037857869,
+      "role": "support"
+    },
+    {
+      "championId": 902,
+      "winRate": 48.14351272423863,
+      "pickRate": 5.574989068648885,
+      "banRate": 3.1318548033300475,
+      "role": "support"
+    },
+    {
+      "championId": 234,
+      "winRate": 48.06201550387597,
+      "pickRate": 0.06000614016317949,
+      "banRate": 4.648234073630587,
+      "role": "support"
+    },
+    {
+      "championId": 9,
+      "winRate": 47.97687861271676,
+      "pickRate": 0.48284010456883963,
+      "banRate": 1.268122487109744,
+      "role": "support"
+    },
+    {
+      "championId": 142,
+      "winRate": 47.89915966386555,
+      "pickRate": 0.9963810250351198,
+      "banRate": 10.165624951613154,
+      "role": "support"
+    },
+    {
+      "championId": 85,
+      "winRate": 47.8494623655914,
+      "pickRate": 0.08652048116551461,
+      "banRate": 1.3057997120014864,
+      "role": "support"
+    },
+    {
+      "championId": 99,
+      "winRate": 47.72260976610587,
+      "pickRate": 3.400813106457405,
+      "banRate": 1.1669617189072572,
+      "role": "support"
+    },
+    {
+      "championId": 107,
+      "winRate": 47.6056338028169,
+      "pickRate": 0.16513317641805209,
+      "banRate": 17.894101191735786,
+      "role": "support"
+    },
+    {
+      "championId": 1,
+      "winRate": 47.37903225806452,
+      "pickRate": 0.23072128310803897,
+      "banRate": 0.5687712579547977,
+      "role": "support"
+    },
+    {
+      "championId": 14,
+      "winRate": 47.368421052631575,
+      "pickRate": 0.17676227334890082,
+      "banRate": 1.4719924026198574,
+      "role": "support"
+    },
+    {
+      "championId": 101,
+      "winRate": 47.19710669077758,
+      "pickRate": 1.8006493687726186,
+      "banRate": 4.854684620982601,
+      "role": "support"
+    },
+    {
+      "championId": 141,
+      "winRate": 47.05882352941176,
+      "pickRate": 0.007907785912977142,
+      "banRate": 4.115075535094012,
+      "role": "support"
+    },
+    {
+      "championId": 17,
+      "winRate": 47.043010752688176,
+      "pickRate": 0.17304096233102922,
+      "banRate": 3.156112742643909,
+      "role": "support"
+    },
+    {
+      "championId": 893,
+      "winRate": 46.808510638297875,
+      "pickRate": 0.021862702229995628,
+      "banRate": 2.089279539202378,
+      "role": "support"
+    },
+    {
+      "championId": 75,
+      "winRate": 46.788990825688074,
+      "pickRate": 0.050702862618500495,
+      "banRate": 2.9563718380808357,
+      "role": "support"
+    },
+    {
+      "championId": 35,
+      "winRate": 46.77700348432056,
+      "pickRate": 1.0680162621291482,
+      "banRate": 10.451042833327312,
+      "role": "support"
+    },
+    {
+      "championId": 11,
+      "winRate": 46.601941747572816,
+      "pickRate": 0.0479118793550968,
+      "banRate": 12.500580642164428,
+      "role": "support"
+    },
+    {
+      "championId": 74,
+      "winRate": 46.578947368421055,
+      "pickRate": 0.17676227334890082,
+      "banRate": 1.0596074342842101,
+      "role": "support"
+    },
+    {
+      "championId": 2,
+      "winRate": 46.15384615384615,
+      "pickRate": 0.006047130404041343,
+      "banRate": 3.0967582102802047,
+      "role": "support"
+    },
+    {
+      "championId": 18,
+      "winRate": 46.15384615384615,
+      "pickRate": 0.012094260808082687,
+      "banRate": 2.521793435904847,
+      "role": "support"
+    },
+    {
+      "championId": 904,
+      "winRate": 45.689655172413794,
+      "pickRate": 0.05395900975913814,
+      "banRate": 1.1664455925388773,
+      "role": "support"
+    },
+    {
+      "championId": 127,
+      "winRate": 45.506692160611856,
+      "pickRate": 0.2432807077933556,
+      "banRate": 2.762308323569943,
+      "role": "support"
+    },
+    {
+      "championId": 64,
+      "winRate": 45.42586750788644,
+      "pickRate": 0.14745694908316198,
+      "banRate": 22.834462789869473,
+      "role": "support"
+    },
+    {
+      "championId": 114,
+      "winRate": 45.36082474226804,
+      "pickRate": 0.045120896091693105,
+      "banRate": 8.213118900031484,
+      "role": "support"
+    },
+    {
+      "championId": 202,
+      "winRate": 45.220588235294116,
+      "pickRate": 0.12652457460763428,
+      "banRate": 0.7292865585209883,
+      "role": "support"
+    },
+    {
+      "championId": 45,
+      "winRate": 45.21739130434783,
+      "pickRate": 0.2139753835276168,
+      "banRate": 0.407223704651847,
+      "role": "support"
+    },
+    {
+      "championId": 134,
+      "winRate": 45.1219512195122,
+      "pickRate": 0.11443031379955158,
+      "banRate": 5.201005414165604,
+      "role": "support"
+    },
+    {
+      "championId": 58,
+      "winRate": 44.44444444444444,
+      "pickRate": 0.004186474895105545,
+      "banRate": 4.786039813988057,
+      "role": "support"
+    },
+    {
+      "championId": 429,
+      "winRate": 44.44444444444444,
+      "pickRate": 0.046051223846161005,
+      "banRate": 0.5687712579547977,
+      "role": "support"
+    },
+    {
+      "championId": 105,
+      "winRate": 44.303797468354425,
+      "pickRate": 0.03674794630148201,
+      "banRate": 3.2438542252685143,
+      "role": "support"
+    },
+    {
+      "championId": 51,
+      "winRate": 44.230769230769226,
+      "pickRate": 0.048377043232330746,
+      "banRate": 15.297985558784214,
+      "role": "support"
+    },
+    {
+      "championId": 350,
+      "winRate": 44.17283700172431,
+      "pickRate": 4.586050665649508,
+      "banRate": 9.000211611811036,
+      "role": "support"
+    },
+    {
+      "championId": 19,
+      "winRate": 43.75,
+      "pickRate": 0.02977048814297277,
+      "banRate": 0.6090291146884403,
+      "role": "support"
+    },
+    {
+      "championId": 22,
+      "winRate": 43.52617079889807,
+      "pickRate": 0.33770897487184737,
+      "banRate": 5.7837120840666625,
+      "role": "support"
+    },
+    {
+      "championId": 427,
+      "winRate": 43.47826086956522,
+      "pickRate": 0.16048153764571257,
+      "banRate": 0.6126419992671005,
+      "role": "support"
+    },
+    {
+      "championId": 30,
+      "winRate": 43.15789473684211,
+      "pickRate": 0.044190568337225206,
+      "banRate": 3.671722984655563,
+      "role": "support"
+    },
+    {
+      "championId": 240,
+      "winRate": 43.103448275862064,
+      "pickRate": 0.02697950487956907,
+      "banRate": 0.5450294450093162,
+      "role": "support"
+    },
+    {
+      "championId": 29,
+      "winRate": 42.972972972972975,
+      "pickRate": 0.1721106345765613,
+      "banRate": 3.9204958942147394,
+      "role": "support"
+    },
+    {
+      "championId": 39,
+      "winRate": 42.857142857142854,
+      "pickRate": 0.006512294281275294,
+      "banRate": 14.221862080711842,
+      "role": "support"
+    },
+    {
+      "championId": 23,
+      "winRate": 42.857142857142854,
+      "pickRate": 0.006512294281275294,
+      "banRate": 2.0299250068386745,
+      "role": "support"
+    },
+    {
+      "championId": 804,
+      "winRate": 42.857142857142854,
+      "pickRate": 0.003256147140637647,
+      "banRate": 1.2588322124789033,
+      "role": "support"
+    },
+    {
+      "championId": 48,
+      "winRate": 42.5531914893617,
+      "pickRate": 0.10931351114997813,
+      "banRate": 0.24103101403347596,
+      "role": "support"
+    },
+    {
+      "championId": 950,
+      "winRate": 42.5287356321839,
+      "pickRate": 0.04046925731935361,
+      "banRate": 30.230037522386983,
+      "role": "support"
+    },
+    {
+      "championId": 20,
+      "winRate": 42.36641221374045,
+      "pickRate": 0.12187293583529478,
+      "banRate": 0.9919948800264258,
+      "role": "support"
+    },
+    {
+      "championId": 31,
+      "winRate": 42.16216216216216,
+      "pickRate": 0.08605531728828066,
+      "banRate": 0.39586892454748623,
+      "role": "support"
+    },
+    {
+      "championId": 897,
+      "winRate": 41.80327868852459,
+      "pickRate": 0.1134999860450837,
+      "banRate": 5.105522036015298,
+      "role": "support"
+    },
+    {
+      "championId": 24,
+      "winRate": 41.69381107491857,
+      "pickRate": 0.1428053103108225,
+      "banRate": 15.08534149501164,
+      "role": "support"
+    },
+    {
+      "championId": 28,
+      "winRate": 41.66666666666667,
+      "pickRate": 0.022327866107229578,
+      "banRate": 2.5584384080598292,
+      "role": "support"
+    },
+    {
+      "championId": 54,
+      "winRate": 41.584158415841586,
+      "pickRate": 0.09396310320125781,
+      "banRate": 15.595274346971113,
+      "role": "support"
+    },
+    {
+      "championId": 81,
+      "winRate": 41.55124653739612,
+      "pickRate": 0.16792415968145577,
+      "banRate": 12.214646634081888,
+      "role": "support"
+    },
+    {
+      "championId": 875,
+      "winRate": 41.29353233830846,
+      "pickRate": 0.09349793932402385,
+      "banRate": 0.9285113367156814,
+      "role": "support"
+    },
+    {
+      "championId": 62,
+      "winRate": 41.221374045801525,
+      "pickRate": 0.06093646791764739,
+      "banRate": 1.36154135978653,
+      "role": "support"
+    },
+    {
+      "championId": 777,
+      "winRate": 41.17647058823529,
+      "pickRate": 0.007907785912977142,
+      "banRate": 4.0407533380472875,
+      "role": "support"
+    },
+    {
+      "championId": 61,
+      "winRate": 41.17647058823529,
+      "pickRate": 0.03953892956488571,
+      "banRate": 1.3135416075271868,
+      "role": "support"
+    },
+    {
+      "championId": 91,
+      "winRate": 41.17647058823529,
+      "pickRate": 0.007907785912977142,
+      "banRate": 20.81950544771382,
+      "role": "support"
+    },
+    {
+      "championId": 67,
+      "winRate": 41.07142857142857,
+      "pickRate": 0.05209835425020235,
+      "banRate": 12.38445220927892,
+      "role": "support"
+    },
+    {
+      "championId": 800,
+      "winRate": 40.72056975282782,
+      "pickRate": 1.1103461749574375,
+      "banRate": 18.89280571455115,
+      "role": "support"
+    },
+    {
+      "championId": 92,
+      "winRate": 40.54054054054054,
+      "pickRate": 0.017211063457656134,
+      "banRate": 6.551708120216154,
+      "role": "support"
+    },
+    {
+      "championId": 6,
+      "winRate": 40.54054054054054,
+      "pickRate": 0.017211063457656134,
+      "banRate": 0.6482547186853229,
+      "role": "support"
+    },
+    {
+      "championId": 266,
+      "winRate": 40.49586776859504,
+      "pickRate": 0.05628482914530789,
+      "banRate": 7.032221769177966,
+      "role": "support"
+    },
+    {
+      "championId": 90,
+      "winRate": 40.20618556701031,
+      "pickRate": 0.045120896091693105,
+      "banRate": 4.059333887308969,
+      "role": "support"
+    },
+    {
+      "championId": 126,
+      "winRate": 40,
+      "pickRate": 0.016280735703188234,
+      "banRate": 13.260318656419837,
+      "role": "support"
+    },
+    {
+      "championId": 360,
+      "winRate": 40,
+      "pickRate": 0.002325819386169748,
+      "banRate": 3.218047906849513,
+      "role": "support"
+    },
+    {
+      "championId": 221,
+      "winRate": 39.800995024875625,
+      "pickRate": 0.09349793932402385,
+      "banRate": 0.7359962013099287,
+      "role": "support"
+    },
+    {
+      "championId": 157,
+      "winRate": 39.130434782608695,
+      "pickRate": 0.03209630752914252,
+      "banRate": 16.30752873533556,
+      "role": "support"
+    },
+    {
+      "championId": 115,
+      "winRate": 39.130434782608695,
+      "pickRate": 0.0534938458819042,
+      "banRate": 0.41496560017754747,
+      "role": "support"
+    },
+    {
+      "championId": 21,
+      "winRate": 39.0625,
+      "pickRate": 0.08931146442891831,
+      "banRate": 0.25290192050621674,
+      "role": "support"
+    },
+    {
+      "championId": 268,
+      "winRate": 38.46153846153847,
+      "pickRate": 0.006047130404041343,
+      "banRate": 0.26993409066275786,
+      "role": "support"
+    },
+    {
+      "championId": 84,
+      "winRate": 38.46153846153847,
+      "pickRate": 0.012094260808082687,
+      "banRate": 19.605576229283976,
+      "role": "support"
+    },
+    {
+      "championId": 27,
+      "winRate": 38.46153846153847,
+      "pickRate": 0.08465982565657881,
+      "banRate": 1.255735454268623,
+      "role": "support"
+    },
+    {
+      "championId": 131,
+      "winRate": 38.23529411764706,
+      "pickRate": 0.015815571825954285,
+      "banRate": 4.284364983922663,
+      "role": "support"
+    },
+    {
+      "championId": 901,
+      "winRate": 38.095238095238095,
+      "pickRate": 0.00976844142191294,
+      "banRate": 6.008227054311978,
+      "role": "support"
+    },
+    {
+      "championId": 133,
+      "winRate": 37.704918032786885,
+      "pickRate": 0.028374996511270924,
+      "banRate": 1.2846385308979051,
+      "role": "support"
+    },
+    {
+      "championId": 238,
+      "winRate": 37.68115942028986,
+      "pickRate": 0.06419261505828504,
+      "banRate": 25.170450733157505,
+      "role": "support"
+    },
+    {
+      "championId": 42,
+      "winRate": 37.5,
+      "pickRate": 0.0037213110178715963,
+      "banRate": 0.2828372498722587,
+      "role": "support"
+    },
+    {
+      "championId": 166,
+      "winRate": 37.5,
+      "pickRate": 0.037213110178715966,
+      "banRate": 4.169268803773916,
+      "role": "support"
+    },
+    {
+      "championId": 83,
+      "winRate": 37.5,
+      "pickRate": 0.0037213110178715963,
+      "banRate": 3.977269794736543,
+      "role": "support"
+    },
+    {
+      "championId": 254,
+      "winRate": 36.64596273291926,
+      "pickRate": 0.07489138423466588,
+      "banRate": 1.0487687805482295,
+      "role": "support"
+    },
+    {
+      "championId": 498,
+      "winRate": 33.33333333333333,
+      "pickRate": 0.006977458158509242,
+      "banRate": 0.5094167255910937,
+      "role": "support"
+    },
+    {
+      "championId": 150,
+      "winRate": 33.33333333333333,
+      "pickRate": 0.0013954916317018486,
+      "banRate": 1.6025723738200062,
+      "role": "support"
+    },
+    {
+      "championId": 236,
+      "winRate": 33.33333333333333,
+      "pickRate": 0.011163933053614789,
+      "banRate": 3.3574020263121223,
+      "role": "support"
+    },
+    {
+      "championId": 121,
+      "winRate": 33.33333333333333,
+      "pickRate": 0.00837294979021109,
+      "banRate": 4.777265665725596,
+      "role": "support"
+    },
+    {
+      "championId": 8,
+      "winRate": 33.33333333333333,
+      "pickRate": 0.0013954916317018486,
+      "banRate": 8.385505107070415,
+      "role": "support"
+    },
+    {
+      "championId": 203,
+      "winRate": 33.33333333333333,
+      "pickRate": 0.0013954916317018486,
+      "banRate": 3.521014085088593,
+      "role": "support"
+    },
+    {
+      "championId": 82,
+      "winRate": 32,
+      "pickRate": 0.011629096930848739,
+      "banRate": 2.585793105583971,
+      "role": "support"
+    },
+    {
+      "championId": 420,
+      "winRate": 30,
+      "pickRate": 0.004651638772339496,
+      "banRate": 1.6959912464967923,
+      "role": "support"
+    },
+    {
+      "championId": 233,
+      "winRate": 28.947368421052634,
+      "pickRate": 0.017676227334890084,
+      "banRate": 3.0472100789157217,
+      "role": "support"
+    },
+    {
+      "championId": 119,
+      "winRate": 28.57142857142857,
+      "pickRate": 0.003256147140637647,
+      "banRate": 19.250997414206893,
+      "role": "support"
+    },
+    {
+      "championId": 112,
+      "winRate": 28.125,
+      "pickRate": 0.014885244071486385,
+      "banRate": 10.547558464214378,
+      "role": "support"
+    },
+    {
+      "championId": 86,
+      "winRate": 25,
+      "pickRate": 0.0074426220357431926,
+      "banRate": 2.87430774550841,
+      "role": "support"
+    },
+    {
+      "championId": 56,
+      "winRate": 25,
+      "pickRate": 0.0037213110178715963,
+      "banRate": 7.4719614350377555,
+      "role": "support"
+    },
+    {
+      "championId": 122,
+      "winRate": 24.242424242424242,
+      "pickRate": 0.015350407948720333,
+      "banRate": 10.184205500874834,
+      "role": "support"
+    },
+    {
+      "championId": 38,
+      "winRate": 20,
+      "pickRate": 0.002325819386169748,
+      "banRate": 4.005140618629065,
+      "role": "support"
+    },
+    {
+      "championId": 104,
+      "winRate": 20,
+      "pickRate": 0.002325819386169748,
+      "banRate": 20.778215338243417,
+      "role": "support"
+    },
+    {
+      "championId": 41,
+      "winRate": 16.666666666666664,
+      "pickRate": 0.00837294979021109,
+      "banRate": 5.581390547661689,
+      "role": "support"
+    },
+    {
+      "championId": 13,
+      "winRate": 0,
+      "pickRate": 0.003256147140637647,
+      "banRate": 0.8743180680357778,
+      "role": "support"
+    },
+    {
+      "championId": 895,
+      "winRate": 0,
+      "pickRate": 0.00046516387723394954,
+      "banRate": 2.131601901409541,
+      "role": "support"
+    },
+    {
+      "championId": 102,
+      "winRate": 0,
+      "pickRate": 0.0009303277544678991,
+      "banRate": 1.9834736336844714,
+      "role": "support"
+    },
+    {
+      "championId": 876,
+      "winRate": 0,
+      "pickRate": 0.0009303277544678991,
+      "banRate": 0.920769441189981,
+      "role": "support"
+    },
+    {
+      "championId": 120,
+      "winRate": 0,
+      "pickRate": 0.0009303277544678991,
+      "banRate": 7.496219374351616,
+      "role": "support"
+    }
+  ]
+}
