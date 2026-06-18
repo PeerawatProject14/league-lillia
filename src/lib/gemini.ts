@@ -112,47 +112,63 @@ export interface BuildRecommendation {
 /**
  * Generates an AI League of Legends build recommendation in Thai for a specific champion
  */
-async function callGeminiForBuild(model: any, prompt: string, label: string): Promise<BuildRecommendation> {
-  const MAX_ATTEMPTS = 3;
+const BUILD_MODEL_CHAIN = [
+  "gemini-flash-latest",
+  "gemini-2.0-flash",
+  "gemini-1.5-flash",
+];
+
+async function callGeminiForBuild(prompt: string, label: string): Promise<BuildRecommendation> {
+  const client = getGeminiClient();
   let lastErr: any = null;
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    try {
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const jsonText = response.text();
-      if (!jsonText) throw new Error("Empty response from Gemini");
+
+  for (const modelName of BUILD_MODEL_CHAIN) {
+    const model = client.getGenerativeModel({
+      model: modelName,
+      generationConfig: { responseMimeType: "application/json" },
+    });
+
+    const MAX_ATTEMPTS = 2;
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
       try {
-        return JSON.parse(jsonText) as BuildRecommendation;
-      } catch (parseErr) {
-        const cleaned = jsonText
-          .replace(/^```(?:json)?\s*/i, "")
-          .replace(/\s*```\s*$/i, "")
-          .trim();
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const jsonText = response.text();
+        if (!jsonText) throw new Error("Empty response from Gemini");
         try {
-          return JSON.parse(cleaned) as BuildRecommendation;
-        } catch {
-          console.warn(`[${label}] attempt ${attempt} JSON parse failed. First 400 chars: ${jsonText.slice(0, 400)}`);
-          throw parseErr;
+          return JSON.parse(jsonText) as BuildRecommendation;
+        } catch (parseErr) {
+          const cleaned = jsonText
+            .replace(/^```(?:json)?\s*/i, "")
+            .replace(/\s*```\s*$/i, "")
+            .trim();
+          try {
+            return JSON.parse(cleaned) as BuildRecommendation;
+          } catch {
+            console.warn(`[${label}/${modelName}] attempt ${attempt} JSON parse failed. First 400 chars: ${jsonText.slice(0, 400)}`);
+            throw parseErr;
+          }
+        }
+      } catch (e: any) {
+        lastErr = e;
+        const status = e?.status;
+        const overloaded = status === 503 || status === 429;
+        console.warn(`[${label}/${modelName}] attempt ${attempt}/${MAX_ATTEMPTS} failed (status ${status ?? "?"}): ${e?.message ?? e}`);
+        // If overloaded, skip remaining attempts on this model and fall through to next model
+        if (overloaded) break;
+        if (attempt < MAX_ATTEMPTS) {
+          await new Promise(r => setTimeout(r, 500 * attempt));
         }
       }
-    } catch (e: any) {
-      lastErr = e;
-      console.warn(`[${label}] attempt ${attempt}/${MAX_ATTEMPTS} failed: ${e?.message ?? e}`);
-      if (attempt < MAX_ATTEMPTS) {
-        await new Promise(r => setTimeout(r, 400 * attempt));
-      }
     }
+    // brief pause before falling back to next model
+    await new Promise(r => setTimeout(r, 300));
   }
-  throw lastErr ?? new Error(`${label} failed after ${MAX_ATTEMPTS} attempts`);
+
+  throw lastErr ?? new Error(`${label} failed across all models`);
 }
 
 export async function getAiBuildRecommendation(championQuery: string): Promise<BuildRecommendation> {
-  const client = getGeminiClient();
-  const model = client.getGenerativeModel({
-    model: "gemini-flash-latest",
-    generationConfig: { responseMimeType: "application/json" },
-  });
-
   const prompt = `
   Analyze the following League of Legends champion query: "${championQuery}".
   Determine which champion the user is referring to (they might search in Thai like "ลูเซียน" or English like "Lucian").
@@ -199,7 +215,7 @@ export async function getAiBuildRecommendation(championQuery: string): Promise<B
   `;
 
   try {
-    return await callGeminiForBuild(model, prompt, "build");
+    return await callGeminiForBuild(prompt, "build");
   } catch (error) {
     console.error("Failed to generate build recommendation:", error);
     throw new Error("Failed to get build recommendation from Gemini AI.");
@@ -213,12 +229,6 @@ export async function getAiMatchupBuildRecommendation(
   myChampionQuery: string,
   vsChampionQuery: string
 ): Promise<BuildRecommendation> {
-  const client = getGeminiClient();
-  const model = client.getGenerativeModel({
-    model: "gemini-flash-latest",
-    generationConfig: { responseMimeType: "application/json" },
-  });
-
   const prompt = `
   You are an expert League of Legends coach. The user wants a MATCHUP-SPECIFIC build.
   - The champion they will play: "${myChampionQuery}"
@@ -269,7 +279,7 @@ export async function getAiMatchupBuildRecommendation(
   `;
 
   try {
-    return await callGeminiForBuild(model, prompt, "buildvs");
+    return await callGeminiForBuild(prompt, "buildvs");
   } catch (error) {
     console.error("Failed to generate matchup build recommendation:", error);
     throw new Error("Failed to get matchup build from Gemini AI.");
