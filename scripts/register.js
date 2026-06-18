@@ -110,6 +110,25 @@ const commands = [
       },
     ],
   },
+  {
+    name: "tier",
+    description: "ดู tier list ของ role ที่เลือก (Master+ จาก u.gg)",
+    options: [
+      {
+        type: 3, // STRING
+        name: "role",
+        description: "ตำแหน่งที่ต้องการดู",
+        required: true,
+        choices: [
+          { name: "Top", value: "top" },
+          { name: "Jungle", value: "jungle" },
+          { name: "Mid", value: "mid" },
+          { name: "ADC / Bot", value: "adc" },
+          { name: "Support", value: "support" },
+        ],
+      },
+    ],
+  },
 ];
 
 async function registerCommands() {

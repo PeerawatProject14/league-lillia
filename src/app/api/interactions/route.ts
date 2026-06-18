@@ -18,6 +18,8 @@ import { generateHistoryImage, HistoryMatchEntry } from "@/lib/historyImage";
 import { generateDetailGameImage, DetailPlayerEntry } from "@/lib/detailGameImage";
 import { generateLiveGameImage, LivePlayerEntry } from "@/lib/liveGameImage";
 import { getChampionSplashUrl, getItemNameById } from "@/lib/ddragon";
+import { fetchTierList, RoleKey } from "@/lib/tierList";
+import { generateTierListImage } from "@/lib/tierListImage";
 
 const DISCORD_PUBLIC_KEY = process.env.DISCORD_PUBLIC_KEY || "";
 const DISCORD_APP_ID = process.env.DISCORD_APP_ID || "";
@@ -136,6 +138,9 @@ export async function POST(req: NextRequest) {
         const vsOption = interaction.data.options?.find((opt: any) => opt.name === "vs");
         summonerInput = champOption?.value || "";
         vsInput = vsOption?.value || "";
+      } else if (commandName === "tier") {
+        const roleOption = interaction.data.options?.find((opt: any) => opt.name === "role");
+        summonerInput = roleOption?.value || "";
       } else {
         const summonerOption = interaction.data.options?.find((opt: any) => opt.name === "summoner");
         summonerInput = summonerOption?.value || "";
@@ -154,6 +159,8 @@ export async function POST(req: NextRequest) {
       const errMsg =
         commandName === "build" || commandName === "buildvs"
           ? "❌ กรุณากรอกชื่อแชมเปี้ยนที่ต้องการแนะนำ"
+          : commandName === "tier"
+          ? "❌ กรุณาเลือก role"
           : "❌ กรุณากรอกชื่อ Summoner (ตัวอย่าง: Name#Tag)";
       return NextResponse.json({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
@@ -194,6 +201,8 @@ export async function POST(req: NextRequest) {
             await handleBuildCommand(summonerInput, interactionToken);
           } else if (commandName === "buildvs") {
             await handleBuildVsCommand(summonerInput, vsInput, interactionToken);
+          } else if (commandName === "tier") {
+            await handleTierCommand(summonerInput as RoleKey, interactionToken);
           } else if (commandName === "reviewself" || commandName === "reviewteam") {
             const scope = commandName === "reviewself" ? "self" : "team";
             const sepIdx = summonerInput.indexOf("|");
@@ -969,5 +978,49 @@ async function handleBuildVsCommand(myChampion: string, vsChampion: string, toke
   }
 
   await updateInteractionResponse(token, { embeds: [embed] }, imageBuffer, "buildvs.png");
+}
+
+// Handler for `/tier`
+async function handleTierCommand(role: RoleKey, token: string) {
+  let entries;
+  try {
+    entries = await fetchTierList(role);
+  } catch (e: any) {
+    console.error("Failed to fetch tier list:", e);
+    await updateInteractionResponse(token, {
+      content: `❌ ไม่สามารถโหลด tier list ได้ (${e.message || e}). u.gg อาจล่ม หรือบล็อก datacenter`,
+    });
+    return;
+  }
+
+  let imageBuffer: Buffer | undefined;
+  try {
+    imageBuffer = await generateTierListImage(role, entries);
+  } catch (e) {
+    console.error("Failed to render tier list image:", e);
+  }
+
+  const ROLE_TH: Record<RoleKey, string> = {
+    top: "Top Lane",
+    jungle: "Jungle",
+    mid: "Mid Lane",
+    adc: "ADC / Bot",
+    support: "Support",
+  };
+
+  const embed: any = {
+    title: `🏆 Tier List: ${ROLE_TH[role]} (Master+)`,
+    color: 0xF1C40F,
+    image: imageBuffer ? { url: "attachment://tier.png" } : undefined,
+    footer: { text: "ข้อมูลจาก u.gg • อัพเดตทุก patch" },
+    timestamp: new Date().toISOString(),
+  };
+
+  if (!imageBuffer) {
+    const lines = entries.slice(0, 30).map(e => `${e.tier} ${e.championName} (${e.winRate.toFixed(1)}% WR)`);
+    embed.description = "```\n" + lines.join("\n") + "\n```";
+  }
+
+  await updateInteractionResponse(token, { embeds: [embed] }, imageBuffer, "tier.png");
 }
 
