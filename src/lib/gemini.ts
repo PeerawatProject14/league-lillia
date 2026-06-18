@@ -104,6 +104,9 @@ export interface BuildRecommendation {
   summonerSpells: string[];
   strongAgainst: string[];
   weakAgainst: string[];
+  vsChampionIdName?: string;
+  vsChampionDisplayName?: string;
+  matchupTip?: string;
 }
 
 /**
@@ -170,5 +173,79 @@ export async function getAiBuildRecommendation(championQuery: string): Promise<B
   } catch (error) {
     console.error("Failed to generate build recommendation:", error);
     throw new Error("Failed to get build recommendation from Gemini AI.");
+  }
+}
+
+/**
+ * Generates a matchup-specific build for a champion VS another champion.
+ */
+export async function getAiMatchupBuildRecommendation(
+  myChampionQuery: string,
+  vsChampionQuery: string
+): Promise<BuildRecommendation> {
+  const client = getGeminiClient();
+  const model = client.getGenerativeModel({
+    model: "gemini-flash-latest",
+    generationConfig: { responseMimeType: "application/json" },
+  });
+
+  const prompt = `
+  You are an expert League of Legends coach. The user wants a MATCHUP-SPECIFIC build.
+  - The champion they will play: "${myChampionQuery}"
+  - The opposing champion (the lane / threat they need to deal with): "${vsChampionQuery}"
+
+  Both names may be in Thai (e.g. "ลูเซียน") or English (e.g. "Lucian"). Identify each.
+
+  Tailor the build so that:
+  - "situationalItems" prioritize counter items against the enemy's damage type (armor vs AD, MR vs AP, grievous wounds vs healing, anti-shield, tenacity vs CC, etc.).
+  - "runes" lean toward the strongest matchup choice (e.g. Fleet Footwear into poke lanes, Conqueror into extended trades, Phase Rush into kite-heavy enemies).
+  - "summonerSpells" reflect the matchup (e.g. Exhaust into burst, Cleanse into hard CC).
+  - "matchupTip" is a SHORT 1-2 sentence Thai tip on how to play the lane against this specific opponent. Concrete and actionable (e.g. "ระวัง all-in ของ Zed ตอนเลเวล 6 ถ้าโดน mark ให้ใช้ Stopwatch หลบ").
+  - "skillPriority" must still exclude "R" — 3 entries (Q/W/E) in level-up order.
+
+  Identify the exact official Riot Games internal IDs for both champions (DDragon naming, e.g. "MonkeyKing" for Wukong, "Kaisa" for Kai'Sa, "LeBlanc" for Leblanc).
+
+  Output MUST be a JSON object with the following schema (note the extra matchup fields):
+  {
+    "championIdName": "Internal ID of MY champion",
+    "displayName": "Readable display name of MY champion",
+    "vsChampionIdName": "Internal ID of OPPOSING champion",
+    "vsChampionDisplayName": "Readable display name of OPPOSING champion",
+    "matchupTip": "1-2 sentence Thai tip about playing this lane",
+    "starterItems": ["Starter Item 1", "Starter Item 2"],
+    "coreItems": ["Big Item 1", "Recommended Boots", "Big Item 2"],
+    "bootsIndex": 1,
+    "situationalItems": ["Counter pick 1", "Counter pick 2", "Counter pick 3"],
+    "optionalItems": ["Optional 1", "Optional 2", "Optional 3"],
+    "runes": {
+      "keystone": "Keystone name",
+      "primaryTree": "Primary tree name",
+      "secondaryTree": "Secondary tree name",
+      "details": ["Rune detail 1", "Rune detail 2", "Rune detail 3", "Rune detail 4", "Rune detail 5"]
+    },
+    "skillPriority": ["Q", "E", "W"],
+    "summonerSpells": ["Flash", "Ignite"],
+    "strongAgainst": ["Champ 1", "Champ 2", "Champ 3"],
+    "weakAgainst": ["Champ 1", "Champ 2", "Champ 3"]
+  }
+
+  CRITICAL rules:
+  - "coreItems" has exactly 3 items in build order (big, boots, big). "bootsIndex" is 0-based pointer to the boots inside coreItems (usually 1).
+  - "situationalItems" are the matchup-priority picks for slots 4-6 (best first). EXACTLY 3 items.
+  - "optionalItems" are alternative flex picks. EXACTLY 3 items. No duplicates with core/situational.
+  - "summonerSpells" exactly 2; Flash is almost always one of them.
+  - "skillPriority" exactly 3 (Q/W/E only, no R).
+  - "matchupTip" required, written in Thai.
+  `;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const jsonText = response.text();
+    if (!jsonText) throw new Error("Empty response from Gemini");
+    return JSON.parse(jsonText) as BuildRecommendation;
+  } catch (error) {
+    console.error("Failed to generate matchup build recommendation:", error);
+    throw new Error("Failed to get matchup build from Gemini AI.");
   }
 }

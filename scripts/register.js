@@ -92,6 +92,24 @@ const commands = [
       },
     ],
   },
+  {
+    name: "buildvs",
+    description: "แนะนำการลงของแบบ matchup เฉพาะคู่ (เล่นตัวนี้ vs เจอตัวนั้น)",
+    options: [
+      {
+        type: 3, // STRING
+        name: "champion",
+        description: "แชมเปี้ยนที่คุณเล่น เช่น Yasuo, ยาซูโอะ",
+        required: true,
+      },
+      {
+        type: 3, // STRING
+        name: "vs",
+        description: "แชมเปี้ยนคู่ต่อสู้ที่ต้องการเคาน์เตอร์ เช่น Zed, เซด",
+        required: true,
+      },
+    ],
+  },
 ];
 
 async function registerCommands() {

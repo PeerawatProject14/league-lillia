@@ -11,7 +11,7 @@ import {
   LeagueEntry
 } from "@/lib/riot";
 import { getChampionName, getChampionInternalId } from "@/lib/champions";
-import { getAiCoachingReport, MatchSummary, getAiBuildRecommendation } from "@/lib/gemini";
+import { getAiCoachingReport, MatchSummary, getAiBuildRecommendation, getAiMatchupBuildRecommendation } from "@/lib/gemini";
 import { generateBuildImage } from "@/lib/imageGenerator";
 import { generateProfileImage } from "@/lib/profileImage";
 import { generateHistoryImage, HistoryMatchEntry } from "@/lib/historyImage";
@@ -122,12 +122,18 @@ export async function POST(req: NextRequest) {
   ) {
     let commandName = "";
     let summonerInput = "";
+    let vsInput = "";
 
     if (interaction.type === InteractionType.APPLICATION_COMMAND) {
       commandName = interaction.data.name;
       if (commandName === "build") {
         const champOption = interaction.data.options?.find((opt: any) => opt.name === "champion");
         summonerInput = champOption?.value || "";
+      } else if (commandName === "buildvs") {
+        const champOption = interaction.data.options?.find((opt: any) => opt.name === "champion");
+        const vsOption = interaction.data.options?.find((opt: any) => opt.name === "vs");
+        summonerInput = champOption?.value || "";
+        vsInput = vsOption?.value || "";
       } else {
         const summonerOption = interaction.data.options?.find((opt: any) => opt.name === "summoner");
         summonerInput = summonerOption?.value || "";
@@ -143,12 +149,20 @@ export async function POST(req: NextRequest) {
     }
 
     if (!summonerInput) {
-      const errMsg = commandName === "build"
-        ? "❌ กรุณากรอกชื่อแชมเปี้ยนที่ต้องการแนะนำ"
-        : "❌ กรุณากรอกชื่อ Summoner (ตัวอย่าง: Name#Tag)";
+      const errMsg =
+        commandName === "build" || commandName === "buildvs"
+          ? "❌ กรุณากรอกชื่อแชมเปี้ยนที่ต้องการแนะนำ"
+          : "❌ กรุณากรอกชื่อ Summoner (ตัวอย่าง: Name#Tag)";
       return NextResponse.json({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: { content: errMsg },
+      });
+    }
+
+    if (commandName === "buildvs" && !vsInput) {
+      return NextResponse.json({
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: { content: "❌ กรุณากรอกชื่อแชมเปี้ยนคู่ต่อสู้ที่ต้องการ counter" },
       });
     }
 
@@ -176,6 +190,8 @@ export async function POST(req: NextRequest) {
             await handleDetailGameCommand(summonerInput, selectedMatchId, interactionToken);
           } else if (commandName === "build") {
             await handleBuildCommand(summonerInput, interactionToken);
+          } else if (commandName === "buildvs") {
+            await handleBuildVsCommand(summonerInput, vsInput, interactionToken);
           } else {
             await updateInteractionResponse(interactionToken, {
               content: `❌ ไม่พบคำสั่ง: ${commandName}`,
@@ -732,5 +748,51 @@ async function handleBuildCommand(championQuery: string, token: string) {
   await updateInteractionResponse(token, {
     embeds: [embed],
   }, imageBuffer, "build.png");
+}
+
+// Handler for `/buildvs`
+async function handleBuildVsCommand(myChampion: string, vsChampion: string, token: string) {
+  const buildInfo = await getAiMatchupBuildRecommendation(myChampion, vsChampion);
+
+  let imageBuffer: Buffer | undefined;
+  try {
+    imageBuffer = await generateBuildImage(buildInfo);
+  } catch (e) {
+    console.error("Failed to generate matchup build image:", e);
+  }
+
+  const embed: any = {
+    title: `⚔️ ${buildInfo.displayName} vs ${buildInfo.vsChampionDisplayName ?? vsChampion}`,
+    color: 0xEF4444,
+    image: imageBuffer
+      ? { url: "attachment://buildvs.png" }
+      : { url: `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${buildInfo.championIdName}_0.jpg` },
+    footer: {
+      text: "Matchup build วิเคราะห์โดย Gemini AI",
+    },
+    timestamp: new Date().toISOString(),
+  };
+
+  if (!imageBuffer) {
+    embed.fields = [
+      {
+        name: "💡 Tip เลน",
+        value: buildInfo.matchupTip ?? "—",
+        inline: false,
+      },
+      {
+        name: "📦 Build",
+        value:
+          `**Core (1-3):** ${buildInfo.coreItems.join(" → ")}\n` +
+          `**Situational (4-6):** ${buildInfo.situationalItems.join(", ")}\n` +
+          `**Optional:** ${(buildInfo.optionalItems ?? []).join(", ")}\n` +
+          `**Runes:** ${buildInfo.runes.keystone}\n` +
+          `**Spells:** ${(buildInfo.summonerSpells ?? []).join(", ")}`,
+        inline: false,
+      },
+    ];
+  }
+
+  await updateInteractionResponse(token, { embeds: [embed] }, imageBuffer, "buildvs.png");
 }
 

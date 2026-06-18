@@ -401,6 +401,10 @@ function RuneRow({
 export async function generateBuildImage(buildInfo: BuildRecommendation): Promise<Buffer> {
   const latestVersion = await getLatestVersion();
   const champIconUrl = `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/champion/${buildInfo.championIdName}.png`;
+  const vsChampIconUrl = buildInfo.vsChampionIdName
+    ? `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/champion/${buildInfo.vsChampionIdName}.png`
+    : null;
+  const isMatchup = Boolean(buildInfo.vsChampionIdName && buildInfo.vsChampionDisplayName);
 
   const optionalItems = buildInfo.optionalItems ?? [];
   const bootsIndex = typeof buildInfo.bootsIndex === "number" ? buildInfo.bootsIndex : 1;
@@ -459,34 +463,67 @@ export async function generateBuildImage(buildInfo: BuildRecommendation): Promis
               borderRadius: 12,
               overflow: "hidden",
               border: "2px solid #f1c40f",
-              marginRight: 16,
+              marginRight: isMatchup ? 12 : 16,
             }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={champIconUrl} width={64} height={64} alt="" />
           </div>
+
+          {isMatchup && vsChampIconUrl ? (
+            <div style={{ display: "flex", alignItems: "center", marginRight: 16 }}>
+              <div
+                style={{
+                  display: "flex",
+                  color: "#ef4444",
+                  fontSize: 18,
+                  fontWeight: 700,
+                  letterSpacing: 2,
+                  margin: "0 10px",
+                }}
+              >
+                VS
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  width: 64,
+                  height: 64,
+                  borderRadius: 12,
+                  overflow: "hidden",
+                  border: "2px solid #ef4444",
+                }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={vsChampIconUrl} width={64} height={64} alt="" />
+              </div>
+            </div>
+          ) : null}
+
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div
               style={{
                 display: "flex",
-                color: "#f1c40f",
+                color: isMatchup ? "#ef4444" : "#f1c40f",
                 fontSize: 14,
                 fontWeight: 700,
                 letterSpacing: 2,
               }}
             >
-              BUILD GUIDE
+              {isMatchup ? "MATCHUP BUILD" : "BUILD GUIDE"}
             </div>
             <div
               style={{
                 display: "flex",
                 color: "#ffffff",
-                fontSize: 28,
+                fontSize: isMatchup ? 22 : 28,
                 fontWeight: 700,
                 marginTop: 2,
               }}
             >
-              {buildInfo.displayName}
+              {isMatchup
+                ? `${buildInfo.displayName} vs ${buildInfo.vsChampionDisplayName}`
+                : buildInfo.displayName}
             </div>
           </div>
           <div style={{ display: "flex", flex: 1 }} />
@@ -553,11 +590,42 @@ export async function generateBuildImage(buildInfo: BuildRecommendation): Promis
           leftUrls={strongUrls}
           rightUrls={weakUrls}
         />
+
+        {isMatchup && buildInfo.matchupTip ? (
+          <div
+            style={{
+              display: "flex",
+              marginTop: 12,
+              padding: "10px 14px",
+              background: "rgba(239,68,68,0.08)",
+              border: "1px solid rgba(239,68,68,0.35)",
+              borderRadius: 10,
+              alignItems: "flex-start",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                color: "#ef4444",
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: 1,
+                width: 110,
+                marginRight: 12,
+              }}
+            >
+              TIP เลน
+            </div>
+            <div style={{ display: "flex", color: "#e6e8ef", fontSize: 13, flex: 1 }}>
+              {buildInfo.matchupTip}
+            </div>
+          </div>
+        ) : null}
       </div>
     ),
     {
       width: 1100,
-      height: 580,
+      height: isMatchup ? 640 : 580,
       fonts: thaiFont
         ? [{ name: "Noto Sans Thai", data: thaiFont, weight: 600, style: "normal" }]
         : undefined,
