@@ -119,6 +119,14 @@ export interface ActiveGameParticipant {
   teamId: number;
   puuid: string;
   riotId: string; // format: gameName#tagLine
+  spell1Id: number;
+  spell2Id: number;
+  bot?: boolean;
+  perks?: {
+    perkIds: number[];
+    perkStyle: number;
+    perkSubStyle: number;
+  };
 }
 
 export interface ActiveGameInfo {

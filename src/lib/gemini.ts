@@ -302,6 +302,110 @@ export async function getAiBuildRecommendation(championQuery: string): Promise<B
   }
 }
 
+export interface LiveGamePrediction {
+  blueWinChance: number;
+  redWinChance: number;
+  keyMatchups: string[];
+  userAdvice: string;
+}
+
+interface LiveTeamInput {
+  champions: string[];
+}
+
+const PREDICTION_MODEL_CHAIN = [
+  "gemini-flash-latest",
+  "gemini-2.0-flash",
+  "gemini-1.5-flash",
+];
+
+async function callGeminiForPrediction(prompt: string): Promise<LiveGamePrediction> {
+  const client = getGeminiClient();
+  let lastErr: any = null;
+  for (const modelName of PREDICTION_MODEL_CHAIN) {
+    const model = client.getGenerativeModel({
+      model: modelName,
+      generationConfig: { responseMimeType: "application/json" },
+    });
+    try {
+      const result = await model.generateContent(prompt);
+      const jsonText = (await result.response).text();
+      if (!jsonText) throw new Error("Empty");
+      const cleaned = jsonText
+        .replace(/^```(?:json)?\s*/i, "")
+        .replace(/\s*```\s*$/i, "")
+        .trim();
+      return JSON.parse(cleaned) as LiveGamePrediction;
+    } catch (e: any) {
+      lastErr = e;
+      console.warn(`[prediction/${modelName}] failed (status ${e?.status ?? "?"}): ${e?.message ?? e}`);
+      const overloaded = e?.status === 503 || e?.status === 429;
+      if (!overloaded) await new Promise(r => setTimeout(r, 400));
+    }
+  }
+
+  if (process.env.GROQ_API_KEY) {
+    try {
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: [
+            { role: "system", content: "Respond with VALID JSON only. No prose, no fences." },
+            { role: "user", content: prompt },
+          ],
+          response_format: { type: "json_object" },
+          temperature: 0.5,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const content = data?.choices?.[0]?.message?.content;
+        if (content) return JSON.parse(content) as LiveGamePrediction;
+      }
+    } catch (e) {
+      console.warn("[prediction/groq] fallback failed:", e);
+    }
+  }
+
+  throw lastErr ?? new Error("Prediction failed across all models");
+}
+
+export async function getAiLiveGamePrediction(
+  blueTeam: LiveTeamInput,
+  redTeam: LiveTeamInput,
+  userTeamColor: "blue" | "red",
+  userChampion: string
+): Promise<LiveGamePrediction> {
+  const prompt = `
+  You are a professional League of Legends analyst. Predict the outcome of an ongoing match based on team compositions alone (no rank/player skill info).
+
+  BLUE TEAM champions: ${blueTeam.champions.join(", ")}
+  RED TEAM champions: ${redTeam.champions.join(", ")}
+
+  The user is playing on the ${userTeamColor.toUpperCase()} team as ${userChampion}.
+
+  Respond with VALID JSON only, schema:
+  {
+    "blueWinChance": <integer 0-100>,
+    "redWinChance": <integer 0-100, must sum with blueWinChance to 100>,
+    "keyMatchups": ["<1-2 sentence Thai sentence about an important matchup or comp strength>", "...", "..."],
+    "userAdvice": "<1-2 sentence Thai advice for the user about how to win this specific game>"
+  }
+
+  Rules:
+  - "keyMatchups" must contain exactly 3 short Thai sentences. Each focuses on either a key lane matchup or a team-comp dynamic (engage vs. peel, AP/AD balance, scaling, etc.).
+  - "userAdvice" is concrete and tailored to the user's champion in this draft.
+  - All Thai text. Win chances must be integers summing to 100.
+  `;
+
+  return await callGeminiForPrediction(prompt);
+}
+
 /**
  * Generates a matchup-specific build for a champion VS another champion.
  */

@@ -11,11 +11,12 @@ import {
   LeagueEntry
 } from "@/lib/riot";
 import { getChampionName, getChampionInternalId } from "@/lib/champions";
-import { getAiCoachingReport, MatchSummary, getAiBuildRecommendation, getAiMatchupBuildRecommendation } from "@/lib/gemini";
+import { getAiCoachingReport, MatchSummary, getAiBuildRecommendation, getAiMatchupBuildRecommendation, getAiLiveGamePrediction } from "@/lib/gemini";
 import { generateBuildImage } from "@/lib/imageGenerator";
 import { generateProfileImage } from "@/lib/profileImage";
 import { generateHistoryImage, HistoryMatchEntry } from "@/lib/historyImage";
 import { generateDetailGameImage, DetailPlayerEntry } from "@/lib/detailGameImage";
+import { generateLiveGameImage, LivePlayerEntry } from "@/lib/liveGameImage";
 
 const DISCORD_PUBLIC_KEY = process.env.DISCORD_PUBLIC_KEY || "";
 const DISCORD_APP_ID = process.env.DISCORD_APP_ID || "";
@@ -418,11 +419,8 @@ async function handleCoachCommand(summonerInput: string, token: string) {
 // Handler for `/livegame`
 async function handleLiveGameCommand(summonerInput: string, token: string) {
   const { gameName, tagLine } = parseRiotId(summonerInput);
-  
-  // A: Fetch Riot account details
-  const account = await getRiotAccount(gameName, tagLine);
 
-  // B: Fetch active game spectator info
+  const account = await getRiotAccount(gameName, tagLine);
   const activeGame = await getActiveGame(account.puuid);
   if (!activeGame) {
     await updateInteractionResponse(token, {
@@ -431,51 +429,102 @@ async function handleLiveGameCommand(summonerInput: string, token: string) {
     return;
   }
 
-  // C: Organize teams (Blue Team = 100, Red Team = 200)
-  const blueTeam = [];
-  const redTeam = [];
+  const durationMin = activeGame.gameLength > 0 ? activeGame.gameLength / 60 : 0;
+
+  const teamBlue: LivePlayerEntry[] = [];
+  const teamRed: LivePlayerEntry[] = [];
 
   for (const part of activeGame.participants) {
     const champName = await getChampionName(part.championId);
-    
-    // Split names in case they have hash tag or formats
-    const displayName = part.riotId || part.summonerId || "Unknown Player";
-    const line = `• **${displayName}** - เล่น **${champName}**`;
-    
-    if (part.teamId === 100) {
-      blueTeam.push(line);
-    } else {
-      redTeam.push(line);
-    }
+    const champIdName = await getChampionInternalId(part.championId);
+    const riotName = part.riotId
+      ? part.riotId.split("#")[0]
+      : part.summonerId || "Unknown";
+
+    const entry: LivePlayerEntry = {
+      riotName,
+      championDisplayName: champName,
+      championIdName: champIdName,
+      spell1Id: part.spell1Id ?? 0,
+      spell2Id: part.spell2Id ?? 0,
+      keystoneId: part.perks?.perkIds?.[0] ?? null,
+      subStyleId: part.perks?.perkSubStyle ?? null,
+      isMe: part.puuid === account.puuid,
+    };
+    if (part.teamId === 100) teamBlue.push(entry);
+    else teamRed.push(entry);
   }
 
-  const durationMin = activeGame.gameLength > 0 ? activeGame.gameLength / 60 : 0;
-  
-  const embed = {
+  const userIsBlue = teamBlue.some(p => p.isMe);
+  const userTeamColor: "blue" | "red" = userIsBlue ? "blue" : "red";
+  const userChamp = (userIsBlue ? teamBlue : teamRed).find(p => p.isMe)?.championDisplayName ?? "Unknown";
+
+  let prediction = null;
+  try {
+    prediction = await getAiLiveGamePrediction(
+      { champions: teamBlue.map(p => p.championDisplayName) },
+      { champions: teamRed.map(p => p.championDisplayName) },
+      userTeamColor,
+      userChamp
+    );
+  } catch (e) {
+    console.warn("AI live game prediction failed, rendering without it:", e);
+  }
+
+  let imageBuffer: Buffer | undefined;
+  try {
+    imageBuffer = await generateLiveGameImage({
+      gameName: account.gameName,
+      tagLine: account.tagLine,
+      gameMode: activeGame.gameMode,
+      gameMinutes: durationMin,
+      teamBlue,
+      teamRed,
+      prediction,
+      userTeamColor,
+    });
+  } catch (e) {
+    console.error("Failed to generate live game image:", e);
+  }
+
+  const embed: any = {
     title: `🎮 Live Match: ${account.gameName}#${account.tagLine}`,
-    color: 0x00FFCC, // Live Game Color (Cyan)
-    description: `• **Game Mode:** ${activeGame.gameMode}\n• **Time Elapsed:** ~${Math.floor(durationMin)} นาที`,
-    fields: [
+    color: 0x00FFCC,
+    image: imageBuffer ? { url: "attachment://livegame.png" } : undefined,
+    footer: { text: "League of Legends Live Spectator" },
+    timestamp: new Date().toISOString(),
+  };
+
+  if (!imageBuffer) {
+    embed.fields = [
       {
         name: "🔵 Blue Team",
-        value: blueTeam.length > 0 ? blueTeam.join("\n") : "ไม่มีข้อมูล",
+        value: teamBlue.map(p => `• **${p.riotName}** - ${p.championDisplayName}`).join("\n") || "—",
         inline: false,
       },
       {
         name: "🔴 Red Team",
-        value: redTeam.length > 0 ? redTeam.join("\n") : "ไม่มีข้อมูล",
+        value: teamRed.map(p => `• **${p.riotName}** - ${p.championDisplayName}`).join("\n") || "—",
         inline: false,
       },
-    ],
-    footer: {
-      text: "League of Legends Live Spectator Status",
-    },
-    timestamp: new Date().toISOString(),
-  };
+    ];
+    if (prediction) {
+      embed.fields.push({
+        name: `🤖 AI Prediction (${prediction.blueWinChance}% Blue / ${prediction.redWinChance}% Red)`,
+        value:
+          prediction.keyMatchups.map(k => `• ${k}`).join("\n") +
+          `\n\n**TIP:** ${prediction.userAdvice}`,
+        inline: false,
+      });
+    }
+  }
 
-  await updateInteractionResponse(token, {
-    embeds: [embed],
-  });
+  await updateInteractionResponse(
+    token,
+    { embeds: [embed] },
+    imageBuffer,
+    "livegame.png"
+  );
 }
 
 async function handleHistoryCommand(summonerInput: string, token: string) {
