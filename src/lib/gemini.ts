@@ -118,6 +118,75 @@ const BUILD_MODEL_CHAIN = [
   "gemini-1.5-flash",
 ];
 
+const GROQ_MODEL_CHAIN = [
+  "llama-3.3-70b-versatile",
+  "llama-3.1-8b-instant",
+];
+
+async function callGroqForBuild(prompt: string, label: string): Promise<BuildRecommendation> {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) {
+    throw new Error("GROQ_API_KEY not configured; cannot fall back to Groq.");
+  }
+
+  let lastErr: any = null;
+  for (const modelName of GROQ_MODEL_CHAIN) {
+    try {
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: modelName,
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are a League of Legends build assistant. Respond with VALID JSON only — no prose, no markdown fences. The JSON shape is dictated by the user message.",
+            },
+            { role: "user", content: prompt },
+          ],
+          response_format: { type: "json_object" },
+          temperature: 0.6,
+        }),
+      });
+
+      if (!res.ok) {
+        const txt = await res.text().catch(() => "");
+        console.warn(`[${label}/groq:${modelName}] HTTP ${res.status}: ${txt.slice(0, 300)}`);
+        lastErr = new Error(`Groq ${modelName} returned ${res.status}`);
+        continue;
+      }
+
+      const data = await res.json();
+      const content: string | undefined = data?.choices?.[0]?.message?.content;
+      if (!content) {
+        console.warn(`[${label}/groq:${modelName}] empty content`);
+        lastErr = new Error("Empty Groq response");
+        continue;
+      }
+
+      const cleaned = content
+        .replace(/^```(?:json)?\s*/i, "")
+        .replace(/\s*```\s*$/i, "")
+        .trim();
+      try {
+        return JSON.parse(cleaned) as BuildRecommendation;
+      } catch (parseErr) {
+        console.warn(`[${label}/groq:${modelName}] JSON parse failed. First 400: ${content.slice(0, 400)}`);
+        lastErr = parseErr;
+        continue;
+      }
+    } catch (e: any) {
+      lastErr = e;
+      console.warn(`[${label}/groq:${modelName}] threw: ${e?.message ?? e}`);
+    }
+  }
+  throw lastErr ?? new Error("All Groq models failed");
+}
+
 async function callGeminiForBuild(prompt: string, label: string): Promise<BuildRecommendation> {
   const client = getGeminiClient();
   let lastErr: any = null;
@@ -163,6 +232,17 @@ async function callGeminiForBuild(prompt: string, label: string): Promise<BuildR
     }
     // brief pause before falling back to next model
     await new Promise(r => setTimeout(r, 300));
+  }
+
+  // All Gemini models failed → try Groq as final fallback if configured
+  if (process.env.GROQ_API_KEY) {
+    console.warn(`[${label}] all Gemini models failed, falling back to Groq`);
+    try {
+      return await callGroqForBuild(prompt, label);
+    } catch (e: any) {
+      console.warn(`[${label}] Groq fallback also failed: ${e?.message ?? e}`);
+      lastErr = e;
+    }
   }
 
   throw lastErr ?? new Error(`${label} failed across all models`);
