@@ -496,9 +496,9 @@ You are an experienced LoL coach reviewing a finished match. Reply in Thai. Be D
 ทีมที่แพ้: ${losingColorTh}
 Duration: ${Math.floor(input.gameMinutes)} min, Mode: ${input.gameMode}
 
-${teamLine(myTeam, playerTeamColorEn)}
+${teamLine(myTeam, playerTeamColorEn, playerOnBlue ? blueKills : redKills)}
 
-${teamLine(enemyTeam, enemyTeamColorEn)}
+${teamLine(enemyTeam, enemyTeamColorEn, playerOnBlue ? redKills : blueKills)}
 
 เมื่ออ้างถึงทีม ให้ใช้ "ทีมน้ำเงิน" หรือ "ทีมแดง" — ห้ามใช้คำว่า [ME] หรือ "ทีมของผู้เล่น" / "ทีมตรงข้าม" ในข้อความออก
 
