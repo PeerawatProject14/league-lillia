@@ -17,6 +17,7 @@ import { generateProfileImage } from "@/lib/profileImage";
 import { generateHistoryImage, HistoryMatchEntry } from "@/lib/historyImage";
 import { generateDetailGameImage, DetailPlayerEntry } from "@/lib/detailGameImage";
 import { generateLiveGameImage, LivePlayerEntry } from "@/lib/liveGameImage";
+import { generateMvpImage } from "@/lib/mvpImage";
 
 const DISCORD_PUBLIC_KEY = process.env.DISCORD_PUBLIC_KEY || "";
 const DISCORD_APP_ID = process.env.DISCORD_APP_ID || "";
@@ -825,9 +826,9 @@ async function handleMatchReviewCommand(
     else red.push(row);
   }
 
-  let reviewText = "";
+  let reviewResult;
   try {
-    reviewText = await getAiMatchReview({
+    reviewResult = await getAiMatchReview({
       scope,
       myChampion: champName,
       myRole: playerStats.individualPosition || "?",
@@ -855,17 +856,35 @@ async function handleMatchReviewCommand(
     return;
   }
 
+  let mvpImageBuffer: Buffer | null = null;
+  if (reviewResult.mvpChampion) {
+    try {
+      mvpImageBuffer = await generateMvpImage({
+        championDisplayName: reviewResult.mvpChampion,
+        isPlayerMvp: reviewResult.mvpChampion.toLowerCase() === champName.toLowerCase(),
+      });
+    } catch (e) {
+      console.warn("MVP image generation failed:", e);
+    }
+  }
+
   const embed: any = {
     title: scope === "self"
       ? `🔍 รีวิวเฉพาะเรา: ${champName} (${playerStats.win ? "🟢 ชนะ" : "🔴 แพ้"})`
       : `👥 รีวิวทั้งทีม: เกม ${champName} (${playerStats.win ? "🟢 ชนะ" : "🔴 แพ้"})`,
-    description: safeTruncate(reviewText, 4000),
+    description: safeTruncate(reviewResult.review, 4000),
     color: scope === "self" ? 0xF1C40F : 0x5865F2,
+    image: mvpImageBuffer ? { url: "attachment://mvp.png" } : undefined,
     footer: { text: `Match ID: ${matchId} • วิเคราะห์โดย AI` },
     timestamp: new Date().toISOString(),
   };
 
-  await updateInteractionResponse(token, { embeds: [embed] });
+  await updateInteractionResponse(
+    token,
+    { embeds: [embed] },
+    mvpImageBuffer ?? undefined,
+    "mvp.png"
+  );
 }
 
 // Handler for `/build`
