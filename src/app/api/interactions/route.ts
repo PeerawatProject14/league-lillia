@@ -861,9 +861,8 @@ async function handleMatchReviewCommand(
     return;
   }
 
-  const mvpSplashUrl = reviewResult.mvpChampion
-    ? await getChampionSplashUrl(reviewResult.mvpChampion)
-    : null;
+  const splashChampion = scope === "self" ? champName : reviewResult.mvpChampion;
+  const splashUrl = splashChampion ? await getChampionSplashUrl(splashChampion) : null;
 
   const embed: any = {
     title: scope === "self"
@@ -871,7 +870,7 @@ async function handleMatchReviewCommand(
       : `👥 รีวิวทั้งทีม: เกม ${champName} (${playerStats.win ? "🟢 ชนะ" : "🔴 แพ้"})`,
     description: safeTruncate(reviewResult.review, 4000),
     color: scope === "self" ? 0xF1C40F : 0x5865F2,
-    image: mvpSplashUrl ? { url: mvpSplashUrl } : undefined,
+    image: splashUrl ? { url: splashUrl } : undefined,
     footer: { text: `Match ID: ${matchId} • วิเคราะห์โดย AI` },
     timestamp: new Date().toISOString(),
   };
