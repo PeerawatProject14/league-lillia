@@ -11,7 +11,7 @@ import {
   LeagueEntry
 } from "@/lib/riot";
 import { getChampionName, getChampionInternalId } from "@/lib/champions";
-import { getAiCoachingReport, MatchSummary, getAiBuildRecommendation, getAiMatchupBuildRecommendation, getAiLiveGamePrediction } from "@/lib/gemini";
+import { getAiCoachingReport, MatchSummary, getAiBuildRecommendation, getAiMatchupBuildRecommendation, getAiLiveGamePrediction, getAiMatchReview, MatchReviewInput } from "@/lib/gemini";
 import { generateBuildImage } from "@/lib/imageGenerator";
 import { generateProfileImage } from "@/lib/profileImage";
 import { generateHistoryImage, HistoryMatchEntry } from "@/lib/historyImage";
@@ -193,6 +193,12 @@ export async function POST(req: NextRequest) {
             await handleBuildCommand(summonerInput, interactionToken);
           } else if (commandName === "buildvs") {
             await handleBuildVsCommand(summonerInput, vsInput, interactionToken);
+          } else if (commandName === "reviewself" || commandName === "reviewteam") {
+            const scope = commandName === "reviewself" ? "self" : "team";
+            const sepIdx = summonerInput.indexOf("|");
+            const reviewMatchId = sepIdx !== -1 ? summonerInput.substring(0, sepIdx) : "";
+            const reviewSummoner = sepIdx !== -1 ? summonerInput.substring(sepIdx + 1) : summonerInput;
+            await handleMatchReviewCommand(scope, reviewMatchId, reviewSummoner, interactionToken);
           } else {
             await updateInteractionResponse(interactionToken, {
               content: `❌ ไม่พบคำสั่ง: ${commandName}`,
@@ -744,12 +750,115 @@ async function handleDetailGameCommand(summonerInput: string, matchId: string, t
     ];
   }
 
+  const reviewIdSuffix = `${matchId}|${account.gameName}#${account.tagLine}`;
+  const components = [
+    {
+      type: 1,
+      components: [
+        {
+          type: 2,
+          style: 1,
+          label: "🔍 รีวิวเฉพาะเรา",
+          custom_id: `reviewself:${reviewIdSuffix}`,
+        },
+        {
+          type: 2,
+          style: 2,
+          label: "👥 รีวิวทั้งทีม",
+          custom_id: `reviewteam:${reviewIdSuffix}`,
+        },
+      ],
+    },
+  ];
+
   await updateInteractionResponse(
     token,
-    { embeds: [embed] },
+    { embeds: [embed], components },
     imageBuffer,
     "detail.png"
   );
+}
+
+async function handleMatchReviewCommand(
+  scope: "self" | "team",
+  matchId: string,
+  summonerInput: string,
+  token: string
+) {
+  const { gameName, tagLine } = parseRiotId(summonerInput);
+  const account = await getRiotAccount(gameName, tagLine);
+  const match = await getMatchDetail(matchId);
+  const playerStats = match.info.participants.find(p => p.puuid === account.puuid);
+  if (!playerStats) {
+    await updateInteractionResponse(token, {
+      content: `❌ ไม่พบข้อมูลผู้เล่นในเกมนี้`,
+    });
+    return;
+  }
+
+  const champName = await getChampionName(playerStats.championId);
+  const durationMin = match.info.gameDuration / 60;
+  const totalCs = playerStats.totalMinionsKilled + playerStats.neutralMinionsKilled;
+  const csPerMin = durationMin > 0 ? totalCs / durationMin : 0;
+
+  const blue: MatchReviewInput["blue"] = [];
+  const red: typeof blue = [];
+  for (const part of match.info.participants) {
+    const pName = await getChampionName(part.championId);
+    const row = {
+      name: part.riotIdGameName || part.summonerId,
+      champion: pName,
+      role: part.individualPosition || "?",
+      kda: `${part.kills}/${part.deaths}/${part.assists}`,
+      cs: part.totalMinionsKilled + part.neutralMinionsKilled,
+      win: part.win,
+      isMe: part.puuid === account.puuid,
+    };
+    if (part.teamId === 100) blue.push(row);
+    else red.push(row);
+  }
+
+  let reviewText = "";
+  try {
+    reviewText = await getAiMatchReview({
+      scope,
+      myChampion: champName,
+      myRole: playerStats.individualPosition || "?",
+      myWin: playerStats.win,
+      myStats: {
+        kills: playerStats.kills,
+        deaths: playerStats.deaths,
+        assists: playerStats.assists,
+        cs: totalCs,
+        csPerMin,
+        visionScore: playerStats.visionScore,
+        damage: playerStats.totalDamageDealtToChampions,
+        gold: playerStats.goldEarned,
+      },
+      gameMinutes: durationMin,
+      gameMode: match.info.gameMode,
+      blue,
+      red,
+    });
+  } catch (e: any) {
+    console.error("Match review failed:", e);
+    await updateInteractionResponse(token, {
+      content: `❌ ขอโทษด้วย ตอนนี้ AI ตอบไม่ได้: ${e.message || e}`,
+    });
+    return;
+  }
+
+  const embed: any = {
+    title: scope === "self"
+      ? `🔍 รีวิวเฉพาะเรา: ${champName} (${playerStats.win ? "🟢 ชนะ" : "🔴 แพ้"})`
+      : `👥 รีวิวทั้งทีม: เกม ${champName} (${playerStats.win ? "🟢 ชนะ" : "🔴 แพ้"})`,
+    description: safeTruncate(reviewText, 4000),
+    color: scope === "self" ? 0xF1C40F : 0x5865F2,
+    footer: { text: `Match ID: ${matchId} • วิเคราะห์โดย AI` },
+    timestamp: new Date().toISOString(),
+  };
+
+  await updateInteractionResponse(token, { embeds: [embed] });
 }
 
 // Handler for `/build`

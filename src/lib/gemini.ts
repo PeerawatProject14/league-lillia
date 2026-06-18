@@ -302,6 +302,124 @@ export async function getAiBuildRecommendation(championQuery: string): Promise<B
   }
 }
 
+export interface MatchReviewInput {
+  scope: "self" | "team";
+  myChampion: string;
+  myRole: string;
+  myWin: boolean;
+  myStats: {
+    kills: number;
+    deaths: number;
+    assists: number;
+    cs: number;
+    csPerMin: number;
+    visionScore: number;
+    damage: number;
+    gold: number;
+  };
+  gameMinutes: number;
+  gameMode: string;
+  // team summary used for both scopes (gives context for self review too)
+  blue: Array<{ name: string; champion: string; role: string; kda: string; cs: number; win: boolean; isMe: boolean }>;
+  red: Array<{ name: string; champion: string; role: string; kda: string; cs: number; win: boolean; isMe: boolean }>;
+}
+
+async function callGeminiForText(prompt: string, label: string, maxTokens = 600): Promise<string> {
+  const client = getGeminiClient();
+  let lastErr: any = null;
+  for (const modelName of BUILD_MODEL_CHAIN) {
+    const model = client.getGenerativeModel({
+      model: modelName,
+      generationConfig: { maxOutputTokens: maxTokens },
+    });
+    try {
+      const result = await model.generateContent(prompt);
+      const text = (await result.response).text();
+      if (text) return text;
+      throw new Error("Empty response");
+    } catch (e: any) {
+      lastErr = e;
+      console.warn(`[${label}/${modelName}] failed (status ${e?.status ?? "?"}): ${e?.message ?? e}`);
+      const overloaded = e?.status === 503 || e?.status === 429;
+      if (!overloaded) await new Promise(r => setTimeout(r, 400));
+    }
+  }
+
+  if (process.env.GROQ_API_KEY) {
+    try {
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: [{ role: "user", content: prompt }],
+          max_tokens: maxTokens,
+          temperature: 0.5,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const content = data?.choices?.[0]?.message?.content;
+        if (content) return content;
+      }
+    } catch (e) {
+      console.warn(`[${label}/groq] fallback failed:`, e);
+    }
+  }
+  throw lastErr ?? new Error(`${label} text gen failed`);
+}
+
+export async function getAiMatchReview(input: MatchReviewInput): Promise<string> {
+  const teamSummary = (team: typeof input.blue, label: string) =>
+    `${label}: ` +
+    team.map(p => `${p.champion}(${p.role}) ${p.kda}${p.isMe ? " [ME]" : ""}`).join(", ");
+
+  if (input.scope === "self") {
+    const prompt = `
+You are a concise LoL coach. Review this player's performance in ONE match. Reply in Thai, KEEP IT SHORT.
+
+Player: ${input.myChampion} (${input.myRole}) — ${input.myWin ? "WIN" : "LOSS"}
+KDA: ${input.myStats.kills}/${input.myStats.deaths}/${input.myStats.assists}
+CS: ${input.myStats.cs} (${input.myStats.csPerMin.toFixed(1)}/min)
+Vision: ${input.myStats.visionScore}, Damage: ${input.myStats.damage.toLocaleString()}, Gold: ${input.myStats.gold.toLocaleString()}
+Duration: ${Math.floor(input.gameMinutes)} min, Mode: ${input.gameMode}
+${teamSummary(input.blue, "BLUE")}
+${teamSummary(input.red, "RED")}
+
+Format (Markdown, no headings, ใช้ bold สำหรับหัวข้อ):
+**✅ ทำได้ดี:** 1-2 bullets (ใช้ • ขึ้นต้น)
+**⚠️ ควรปรับ:** 1-2 bullets
+**🎯 แนะนำ:** 1 ประโยคสั้นๆ สำหรับเกมหน้า
+
+Total under 100 Thai words. Be specific to numbers (e.g. "CS 4.2/min ต่ำสำหรับ ADC ควรขึ้น 7+").
+`.trim();
+    return (await callGeminiForText(prompt, "review:self", 400)).trim();
+  }
+
+  // team scope
+  const prompt = `
+You are a concise LoL coach. Review THE WHOLE TEAM's performance in this match. Reply in Thai, KEEP IT SHORT.
+
+Result: ${input.myWin ? "ทีมของผู้เล่นชนะ" : "ทีมของผู้เล่นแพ้"}
+Duration: ${Math.floor(input.gameMinutes)} min, Mode: ${input.gameMode}
+The player is marked [ME].
+${teamSummary(input.blue, "BLUE")}
+${teamSummary(input.red, "RED")}
+
+Format (Markdown):
+**📊 ภาพรวม:** 1-2 ประโยค (ใครเป็นตัวพา/ตัวถ่วงของทีม [ME])
+**👤 ผู้เล่นเด่นของทีม:** ชื่อแชม + 1 ประโยคสั้น
+**👥 จุดที่ทีมพลาด:** 1-2 bullets (ใช้ • ขึ้นต้น)
+**🎯 ถ้าจะชนะ/รักษาชัย:** 1 ประโยค
+
+Total under 120 Thai words. Be specific to the data given.
+`.trim();
+  return (await callGeminiForText(prompt, "review:team", 500)).trim();
+}
+
 export interface LiveGamePrediction {
   blueWinChance: number;
   redWinChance: number;
