@@ -71,6 +71,7 @@ function IconBox({
   ring?: string;
   rounded?: boolean;
 }) {
+  const isEmpty = !url;
   return (
     <div
       style={{
@@ -79,8 +80,12 @@ function IconBox({
         height: size,
         borderRadius: rounded ? size / 2 : 4,
         overflow: "hidden",
-        background: "#1f2230",
-        border: ring ? `1px solid ${ring}` : "1px solid #2b2d35",
+        background: isEmpty ? "rgba(31,34,48,0.35)" : "#1f2230",
+        border: isEmpty
+          ? "1px dashed rgba(43,45,53,0.5)"
+          : ring
+          ? `1px solid ${ring}`
+          : "1px solid #2b2d35",
       }}
     >
       {url ? (
@@ -210,14 +215,14 @@ function TeamColumn({
         flexDirection: "column",
         flex: 1,
         background: "#161823",
-        border: "1px solid #2b2d35",
+        border: `1px solid ${color}40`,
+        borderTop: `3px solid ${color}`,
         borderRadius: 12,
         padding: "10px 8px",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", marginBottom: 8, paddingLeft: 6 }}>
-        <div style={{ display: "flex", width: 4, height: 18, background: color, borderRadius: 2, marginRight: 8 }} />
-        <div style={{ display: "flex", color: "#ffffff", fontSize: 13, fontWeight: 700, letterSpacing: 1 }}>
+        <div style={{ display: "flex", color, fontSize: 13, fontWeight: 700, letterSpacing: 2 }}>
           {label}
         </div>
       </div>
@@ -260,6 +265,7 @@ async function buildPlayerRows(players: DetailPlayerEntry[], version: string): P
 export async function generateDetailGameImage(input: DetailGameImageInput): Promise<Buffer> {
   const version = await getLatestVersion();
   const champIconUrl = `https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${input.player.championIdName}.png`;
+  const champSplashUrl = `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${input.player.championIdName}_0.jpg`;
 
   const p = input.player;
 
@@ -321,7 +327,10 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
               padding: "16px 20px",
               marginBottom: 14,
               border: `2px solid ${resultColor}`,
-              background: "#161823",
+              backgroundColor: "#0f1117",
+              backgroundImage: `linear-gradient(90deg, rgba(15,17,23,0.96) 0%, rgba(15,17,23,0.7) 55%, rgba(15,17,23,0.35) 100%), url(${champSplashUrl})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center 30%",
             }}
           >
             <div

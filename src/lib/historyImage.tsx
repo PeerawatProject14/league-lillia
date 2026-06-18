@@ -34,7 +34,7 @@ function formatKDA(k: number, d: number, a: number): string {
   return (((k + a) / d).toFixed(2)) + ":1";
 }
 
-function MatchRow({ m, iconUrl }: { m: HistoryMatchEntry; iconUrl: string | null }) {
+function MatchRow({ m, iconUrl, index }: { m: HistoryMatchEntry; iconUrl: string | null; index: number }) {
   const kdaRatio = formatKDA(m.kills, m.deaths, m.assists);
   const role = ROLE_LABEL[m.role] ?? m.role.slice(0, 3);
   const winColor = m.win ? "#22c55e" : "#ef4444";
@@ -52,29 +52,43 @@ function MatchRow({ m, iconUrl }: { m: HistoryMatchEntry; iconUrl: string | null
         marginBottom: 8,
       }}
     >
-      <div style={{ display: "flex", width: 6, height: 48, background: winColor, borderRadius: 3, marginRight: 12 }} />
+      <div style={{ display: "flex", width: 6, height: 56, background: winColor, borderRadius: 3, marginRight: 14 }} />
 
       <div
         style={{
           display: "flex",
-          width: 52,
-          height: 52,
-          borderRadius: 8,
-          overflow: "hidden",
-          background: "#1f2230",
-          border: "1px solid #2b2d35",
-          marginRight: 12,
+          width: 24,
+          color: "#6b7280",
+          fontSize: 14,
+          fontWeight: 700,
+          justifyContent: "center",
+          marginRight: 8,
         }}
       >
-        {iconUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={iconUrl} width={52} height={52} alt="" />
-        )}
+        {`${index + 1}`}
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", width: 160 }}>
+      <div
+        style={{
+          display: "flex",
+          width: 56,
+          height: 56,
+          borderRadius: 10,
+          overflow: "hidden",
+          background: "#1f2230",
+          border: `2px solid ${winColor}40`,
+          marginRight: 14,
+        }}
+      >
+        {iconUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={iconUrl} width={56} height={56} alt="" />
+        ) : null}
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", width: 170 }}>
         <div style={{ display: "flex", alignItems: "center" }}>
-          <div style={{ display: "flex", color: "#ffffff", fontSize: 16, fontWeight: 700 }}>{m.championName}</div>
+          <div style={{ display: "flex", color: "#ffffff", fontSize: 17, fontWeight: 700 }}>{m.championName}</div>
           <div
             style={{
               display: "flex",
@@ -91,26 +105,30 @@ function MatchRow({ m, iconUrl }: { m: HistoryMatchEntry; iconUrl: string | null
             {role}
           </div>
         </div>
-        <div style={{ display: "flex", color: winColor, fontSize: 13, fontWeight: 700, marginTop: 2 }}>
+        <div style={{ display: "flex", color: winColor, fontSize: 13, fontWeight: 700, marginTop: 3, letterSpacing: 1 }}>
           {m.win ? "VICTORY" : "DEFEAT"}
         </div>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", width: 140 }}>
-        <div style={{ display: "flex", color: "#ffffff", fontSize: 16, fontWeight: 700 }}>
-          {m.kills} / <span style={{ color: "#ef4444" }}>{m.deaths}</span> / {m.assists}
+      <div style={{ display: "flex", flexDirection: "column", width: 150 }}>
+        <div style={{ display: "flex", fontSize: 17, fontWeight: 700 }}>
+          <div style={{ display: "flex", color: "#ffffff" }}>{`${m.kills}`}</div>
+          <div style={{ display: "flex", color: "#9aa0b4", margin: "0 4px" }}>/</div>
+          <div style={{ display: "flex", color: "#ef4444" }}>{`${m.deaths}`}</div>
+          <div style={{ display: "flex", color: "#9aa0b4", margin: "0 4px" }}>/</div>
+          <div style={{ display: "flex", color: "#ffffff" }}>{`${m.assists}`}</div>
         </div>
-        <div style={{ display: "flex", color: "#9aa0b4", fontSize: 12, marginTop: 2 }}>{kdaRatio} KDA</div>
+        <div style={{ display: "flex", color: "#9aa0b4", fontSize: 12, marginTop: 3 }}>{`${kdaRatio} KDA`}</div>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", width: 130 }}>
-        <div style={{ display: "flex", color: "#ffffff", fontSize: 15 }}>{m.cs} CS</div>
-        <div style={{ display: "flex", color: "#9aa0b4", fontSize: 12, marginTop: 2 }}>{m.csPerMin.toFixed(1)} / min</div>
+        <div style={{ display: "flex", color: "#ffffff", fontSize: 15, fontWeight: 600 }}>{`${m.cs} CS`}</div>
+        <div style={{ display: "flex", color: "#9aa0b4", fontSize: 12, marginTop: 3 }}>{`${m.csPerMin.toFixed(1)} / min`}</div>
       </div>
 
       <div style={{ display: "flex", flex: 1 }} />
 
-      <div style={{ display: "flex", color: "#9aa0b4", fontSize: 13 }}>{Math.floor(m.durationMinutes)} นาที</div>
+      <div style={{ display: "flex", color: "#9aa0b4", fontSize: 13 }}>{`${Math.floor(m.durationMinutes)} นาที`}</div>
     </div>
   );
 }
@@ -179,7 +197,7 @@ export async function generateHistoryImage(input: HistoryImageInput): Promise<Bu
 
           <div style={{ display: "flex", flexDirection: "column" }}>
             {matches.map((m, i) => (
-              <MatchRow key={m.matchId} m={m} iconUrl={iconUrls[i]} />
+              <MatchRow key={m.matchId} m={m} iconUrl={iconUrls[i]} index={i} />
             ))}
           </div>
         </div>
