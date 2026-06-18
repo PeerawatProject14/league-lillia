@@ -145,13 +145,22 @@ export async function generateTierListImage(
   };
   for (const e of entries) byTier[e.tier].push(e);
 
-  // Estimate height based on champion count
-  let neededHeight = 130; // header + padding
+  // Estimate height based on champion count.
+  // Icon (56) + 3 margin + 11 WR text + 8 margin-bottom = 78 per row of icons.
+  // Tier row padding+border+margin add ~28.
+  // Width budget for icons ≈ 1200 - 28*2 (padding) - 130 (badge) - 14 (margin) = 1000
+  // Each icon takes 56 + 8 marginRight = 64 → 1000/64 ≈ 15. Use 14 to stay safe.
+  const ICON_HEIGHT = 78;
+  const ROW_OVERHEAD = 28;
+  const ICONS_PER_ROW = 14;
+
+  let neededHeight = 140; // header + padding top
   for (const t of TIERS) {
     const count = byTier[t].length || 1;
-    const rows = Math.ceil(count / 16);
-    neededHeight += rows * 72 + 30;
+    const rows = Math.max(1, Math.ceil(count / ICONS_PER_ROW));
+    neededHeight += rows * ICON_HEIGHT + ROW_OVERHEAD;
   }
+  neededHeight += 30; // bottom padding
 
   return Buffer.from(
     await new ImageResponse(
