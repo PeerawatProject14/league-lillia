@@ -25,13 +25,22 @@ interface RawEntry {
   role: string;
 }
 
-function assignTier(sorted: { score: number }[], idx: number): TierLetter {
-  const ratio = idx / sorted.length;
-  if (ratio < 0.05) return "S+";
-  if (ratio < 0.15) return "S";
-  if (ratio < 0.3) return "A";
-  if (ratio < 0.55) return "B";
-  if (ratio < 0.8) return "C";
+// Score blends win rate (dominant), pick rate (popularity proxy), and ban rate
+// (community-perceived strength). This is the formula most public LoL tier sites
+// converge on — different weights, but the same three signals.
+function computeScore(winRate: number, pickRate: number, banRate: number): number {
+  return (winRate - 50) * 5 + pickRate * 1.5 + banRate * 0.8;
+}
+
+// Percentile-based tier buckets so the distribution stays consistent across roles
+// regardless of how many champs the role has.
+function assignTierByRank(idx: number, total: number): TierLetter {
+  const ratio = idx / total;
+  if (ratio < 0.07) return "S+";
+  if (ratio < 0.22) return "S";
+  if (ratio < 0.45) return "A";
+  if (ratio < 0.68) return "B";
+  if (ratio < 0.88) return "C";
   return "D";
 }
 
@@ -49,11 +58,11 @@ export async function fetchTierList(role: RoleKey): Promise<TierEntry[]> {
   }
 
   // Drop noise: champs with very low pick rate (single-game 100% WR samples).
-  const filtered = raws.filter(r => r.pickRate >= 0.2);
+  const filtered = raws.filter(r => r.pickRate >= 0.5);
 
   const scored = filtered.map(r => ({
     raw: r,
-    score: (r.winRate - 50) * 6 + r.pickRate * 3 + r.banRate * 1.5,
+    score: computeScore(r.winRate, r.pickRate, r.banRate),
   }));
   scored.sort((a, b) => b.score - a.score);
 
@@ -69,7 +78,7 @@ export async function fetchTierList(role: RoleKey): Promise<TierEntry[]> {
       winRate: raw.winRate,
       pickRate: raw.pickRate,
       banRate: raw.banRate,
-      tier: assignTier(scored, i),
+      tier: assignTierByRank(i, scored.length),
       score,
     });
   }

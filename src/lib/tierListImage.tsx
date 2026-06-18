@@ -201,7 +201,10 @@ export async function generateTierListImage(
                 {ROLE_LABEL[role]}
               </div>
               <div style={{ display: "flex", color: "#9aa0b4", fontSize: 13, marginTop: 4 }}>
-                Master+ · ตัวเลข % คือ Win Rate · ข้อมูลจาก u.gg
+                {`Master+ · stats จาก u.gg · % คือ Win Rate`}
+              </div>
+              <div style={{ display: "flex", color: "#6b7280", fontSize: 11, marginTop: 2 }}>
+                {`tier คำนวนจาก Win Rate + Pick Rate + Ban Rate รวมกัน (ไม่ใช่ WR อย่างเดียว)`}
               </div>
             </div>
             <div style={{ display: "flex", flex: 1 }} />
