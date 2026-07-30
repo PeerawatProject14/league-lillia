@@ -1,10 +1,10 @@
 {
-  "fetchedAt": "2026-07-30T08:18:38.433Z",
+  "fetchedAt": "2026-07-30T13:50:07.834Z",
   "roles": {
-    "top": "error: curl exited 22: curl: (22) The requested URL returned error: 403\n",
+    "top": "error: curl exited 35: curl: (35) Recv failure: Connection reset by peer\n",
     "jungle": "error: curl exited 22: curl: (22) The requested URL returned error: 403\n",
     "mid": "error: curl exited 22: curl: (22) The requested URL returned error: 403\n",
     "adc": "error: curl exited 22: curl: (22) The requested URL returned error: 403\n",
-    "support": "error: curl exited 22: curl: (22) The requested URL returned error: 403\n"
+    "support": "error: curl exited 35: curl: (35) Recv failure: Connection reset by peer\n"
   }
 }
