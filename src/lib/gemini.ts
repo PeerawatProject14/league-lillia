@@ -38,9 +38,6 @@ export async function getAiCoachingReport(
   summonerName: string,
   matches: MatchSummary[]
 ): Promise<string> {
-  const client = getGeminiClient();
-  const model = client.getGenerativeModel({ model: "gemini-flash-latest" });
-
   // Format matches statistics for the prompt
   let matchDataText = "";
   matches.forEach((match, index) => {
@@ -76,14 +73,8 @@ Please write a coaching review that is:
 3. **Format:** Use markdown formatting with bullet points and bold text where appropriate to make it highly readable. Write in Thai. Keep the length concise (about 3-4 paragraphs) suitable for a Discord message. Do not use generic filler.
 `;
 
-  try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text() || "ไม่สามารถดึงคำแนะนำการโค้ชชิ่งได้ในขณะนี้";
-  } catch (error) {
-    console.error("Failed to generate AI coaching report:", error);
-    throw new Error("Failed to generate coaching analysis from Gemini API.");
-  }
+  const text = await callGeminiForText(prompt, "coach", 2000);
+  return text || "ไม่สามารถดึงคำแนะนำการโค้ชชิ่งได้ในขณะนี้";
 }
 
 export interface BuildRecommendation {

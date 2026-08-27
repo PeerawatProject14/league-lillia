@@ -32,6 +32,14 @@ async function riotFetch(url: string): Promise<Response> {
   return res;
 }
 
+/** Carries the HTTP status so callers can turn it into a human message. */
+export class RiotApiError extends Error {
+  constructor(public readonly status: number, public readonly endpoint: string) {
+    super(`${endpoint} returned status ${status}`);
+    this.name = "RiotApiError";
+  }
+}
+
 export interface RiotAccount {
   puuid: string;
   gameName: string;
@@ -168,10 +176,7 @@ export async function getRiotAccount(gameName: string, tagLine: string): Promise
   const res = await riotFetch(url);
   
   if (!res.ok) {
-    if (res.status === 404) {
-      throw new Error(`Riot ID ${gameName}#${tagLine} not found`);
-    }
-    throw new Error(`Riot Account API returned status ${res.status}`);
+    throw new RiotApiError(res.status, "Riot Account API");
   }
   
   return res.json();
@@ -185,7 +190,7 @@ export async function getSummonerByPuuid(puuid: string): Promise<Summoner> {
   const res = await riotFetch(url);
   
   if (!res.ok) {
-    throw new Error(`Summoner API returned status ${res.status} for PUUID ${puuid}`);
+    throw new RiotApiError(res.status, "Summoner API");
   }
   
   return res.json();
@@ -199,7 +204,7 @@ export async function getLeagueEntries(puuid: string): Promise<LeagueEntry[]> {
   const res = await riotFetch(url);
   
   if (!res.ok) {
-    throw new Error(`League API returned status ${res.status} for PUUID ${puuid}`);
+    throw new RiotApiError(res.status, "League API");
   }
   
   return res.json();
@@ -213,7 +218,7 @@ export async function getTopChampionMasteries(puuid: string, count: number = 3):
   const res = await riotFetch(url);
   
   if (!res.ok) {
-    throw new Error(`Champion Mastery API returned status ${res.status} for PUUID ${puuid}`);
+    throw new RiotApiError(res.status, "Champion Mastery API");
   }
   
   return res.json();
@@ -228,7 +233,7 @@ export async function getMatchIds(puuid: string, count: number = 5, start: numbe
   const res = await riotFetch(url);
   
   if (!res.ok) {
-    throw new Error(`Match IDs API returned status ${res.status} for PUUID ${puuid}`);
+    throw new RiotApiError(res.status, "Match IDs API");
   }
   
   return res.json();
@@ -250,7 +255,7 @@ export async function getMatchDetail(matchId: string): Promise<MatchDetail> {
   const res = await riotFetch(url);
   
   if (!res.ok) {
-    throw new Error(`Match Detail API returned status ${res.status} for Match ID ${matchId}`);
+    throw new RiotApiError(res.status, "Match Detail API");
   }
   
   const match: MatchDetail = await res.json();
@@ -303,7 +308,7 @@ export async function getActiveGame(puuid: string): Promise<ActiveGameInfo | nul
   }
   
   if (!res.ok) {
-    throw new Error(`Spectator API returned status ${res.status} for PUUID ${puuid}`);
+    throw new RiotApiError(res.status, "Spectator API");
   }
   
   return res.json();

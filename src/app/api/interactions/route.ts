@@ -9,7 +9,8 @@ import {
   getMatchDetail,
   getMatchDetails,
   getActiveGame,
-  LeagueEntry
+  LeagueEntry,
+  RiotApiError,
 } from "@/lib/riot";
 import { getChampionName, getChampionInternalId } from "@/lib/champions";
 import { getAiRoast, getAiVersusVerdict, getAiCoachingReport, MatchSummary, getAiBuildRecommendation, getAiMatchupBuildRecommendation, getAiLiveGamePrediction, getAiMatchReview, MatchReviewInput } from "@/lib/gemini";
@@ -27,7 +28,6 @@ import { generateVersusImage } from "@/lib/versusImage";
 import {
   parseRiotId,
   collectRecentForm,
-  kdaRatio,
   averageKda,
   mostPlayedChampion,
   toMatchSummaries,
@@ -86,6 +86,38 @@ function safeTruncate(text: string, maxLength: number = 4000): string {
 
 function getRankColor(tier: string): number {
   return RANK_COLORS[tier.toUpperCase()] || 0xFFFFFF;
+}
+
+/**
+ * Turns an internal failure into something a player can act on. Riot dev keys
+ * expire every 24h, so 403 in particular needs to say what actually happened.
+ */
+function describeError(error: unknown): string {
+  if (error instanceof RiotApiError) {
+    switch (error.status) {
+      case 401:
+      case 403:
+        return "🔑 คีย์ Riot API หมดอายุหรือไม่มีสิทธิ์เรียกข้อมูลส่วนนี้ ฝากแจ้งคนดูแลบอทให้เปลี่ยนคีย์ใหม่ครับ";
+      case 404:
+        return "❌ ไม่พบข้อมูลนี้ ลองเช็คชื่อ Riot ID อีกครั้ง (ต้องเป็นรูปแบบ Name#Tag)";
+      case 429:
+        return "⏳ ตอนนี้เรียกข้อมูลถี่เกินไป Riot จำกัดโควต้าอยู่ รอสักครู่แล้วลองใหม่ครับ";
+      case 500:
+      case 502:
+      case 503:
+      case 504:
+        return "⚠️ เซิร์ฟเวอร์ Riot มีปัญหาชั่วคราว ลองใหม่อีกสักครู่ครับ";
+    }
+  }
+
+  const message = error instanceof Error ? error.message : String(error);
+  if (message.includes("GEMINI_API_KEY")) {
+    return "❌ ยังไม่ได้ตั้งค่า Gemini API key ฝากแจ้งคนดูแลบอทครับ";
+  }
+  if (/gemini|GoogleGenerativeAI|Groq/i.test(message)) {
+    return "🤖 ตอนนี้ AI คิวเต็มอยู่ ลองใหม่อีกครั้งในอีกสักครู่ครับ";
+  }
+  return `❌ เกิดข้อผิดพลาด: ${message}`;
 }
 
 // Function to update Discord deferred message
@@ -275,10 +307,10 @@ export async function POST(req: NextRequest) {
               content: `❌ ไม่พบคำสั่ง: ${commandName}`,
             });
           }
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error(`Error processing command ${commandName}:`, error);
           await updateInteractionResponse(interactionToken, {
-            content: `❌ เกิดข้อผิดพลาด: ${error.message || error}`,
+            content: describeError(error),
           });
         }
       }
