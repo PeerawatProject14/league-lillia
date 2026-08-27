@@ -12,7 +12,7 @@ import { MatchParticipant } from "./riot";
 // Hero banner: 1040 wide inside the card's 1044px content box (2px border each
 // side). The splash is 1215x717, so covering 1040 wide makes it 614 tall; the
 // offset puts the art's 30% line on the banner's centre.
-const BANNER_W = 852;
+const BANNER_W = 866;
 const BANNER_H = 96;
 const BANNER_ART_H = Math.round(BANNER_W * (717 / 1215));
 const BANNER_ART_TOP = Math.round(BANNER_H / 2 - BANNER_ART_H * 0.3);
@@ -126,6 +126,31 @@ const BADGE_GREY = "#5B5A56";
 const STAR_SVG =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'>" +
   "<path d='M5 0 L6.2 3.6 L10 3.6 L6.9 5.85 L8.1 9.5 L5 7.2 L1.9 9.5 L3.1 5.85 L0 3.6 L3.8 3.6 Z' fill='%23C8AA6E'/></svg>";
+
+/** Horizontal budget for the badge lane. */
+const BADGE_STRIP_W = 344;
+
+/**
+ * satori gives no text metrics, so badge widths are estimated: Thai and Latin
+ * glyphs both run about 6.3px at fontSize 10, plus padding, border, gap and
+ * the crown or star. Badges arrive sorted by importance, so anything that does
+ * not fit is dropped whole — clipping used to slice the last one mid-word.
+ */
+function fitBadges<T extends { text: string; tone: string; top: boolean; legendary: boolean }>(
+  badges: T[]
+): T[] {
+  const fitted: T[] = [];
+  let used = 0;
+  for (const b of badges) {
+    const mark = b.legendary || (b.top && b.tone === "good") ? 15 : 0;
+    const width = 21 + mark + b.text.length * 6.3;
+    if (used + width > BADGE_STRIP_W) break;
+    used += width;
+    fitted.push(b);
+  }
+  // never show an empty lane just because the first badge is unusually long
+  return fitted.length > 0 ? fitted : badges.slice(0, 1);
+}
 
 /** Crown marks the rare purple tier, the way the star marks gold. */
 const CROWN_SVG =
@@ -279,8 +304,8 @@ function PlayerRow({ data }: { data: PlayerRowData }) {
       </div>
 
       {/* one line only: the teams stack vertically so there is room for it */}
-      <div style={{ display: "flex", alignItems: "center", width: 330, overflow: "hidden", marginRight: 4 }}>
-        {(p.titles ?? []).map((t, i) => (
+      <div style={{ display: "flex", alignItems: "center", width: BADGE_STRIP_W, overflow: "hidden", marginRight: 4 }}>
+        {fitBadges(p.titles ?? []).map((t, i) => (
           <Badge key={i} text={t.text} tone={t.tone} top={t.top} legendary={t.legendary} />
         ))}
       </div>
@@ -604,7 +629,7 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
           </div>
 
           <div style={{ display: "flex", marginBottom: 10 }}>
-            <GoldRule width={852} />
+            <GoldRule width={866} />
           </div>
 
           <div style={{ display: "flex", flexDirection: "column" }}>
@@ -618,7 +643,7 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
         </div>
       ),
       {
-        width: 900,
+        width: 914,
         height: 806,
         fonts: fonts.length ? fonts : undefined,
       }
