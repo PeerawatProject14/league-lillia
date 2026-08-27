@@ -119,6 +119,31 @@ export function toMatchSummaries(games: RecentGame[]): MatchSummary[] {
   }));
 }
 
+const ROLE_ORDER = ["TOP", "JUNGLE", "MIDDLE", "BOTTOM", "UTILITY"];
+
+/** Every champion played in the sample, most games first. */
+export function championTallies(games: RecentGame[]): { name: string; games: number; wins: number }[] {
+  const byChampion = new Map<string, { name: string; games: number; wins: number }>();
+  for (const g of games) {
+    const entry = byChampion.get(g.championName) ?? { name: g.championName, games: 0, wins: 0 };
+    entry.games += 1;
+    if (g.win) entry.wins += 1;
+    byChampion.set(g.championName, entry);
+  }
+  return [...byChampion.values()].sort((a, b) => b.games - a.games || b.wins - a.wins);
+}
+
+/** Games per lane, in map order, skipping lanes never played. */
+export function roleTallies(games: RecentGame[]): { role: string; games: number }[] {
+  const counts = new Map<string, number>();
+  for (const g of games) counts.set(g.role, (counts.get(g.role) ?? 0) + 1);
+  const known = ROLE_ORDER.filter(r => counts.has(r)).map(r => ({ role: r, games: counts.get(r)! }));
+  const other = [...counts.entries()]
+    .filter(([r]) => !ROLE_ORDER.includes(r))
+    .map(([role, games]) => ({ role, games }));
+  return [...known, ...other];
+}
+
 export function versusSide(form: RecentForm): VersusSideInput {
   const games = form.games;
   const n = Math.max(games.length, 1);
@@ -133,6 +158,8 @@ export function versusSide(form: RecentForm): VersusSideInput {
     csPerMin: games.reduce((s, g) => s + g.csPerMin, 0) / n,
     visionScore: games.reduce((s, g) => s + g.visionScore, 0) / n,
     damage: games.reduce((s, g) => s + g.damage, 0) / n,
+    champions: championTallies(games),
+    roles: roleTallies(games),
   };
 }
 

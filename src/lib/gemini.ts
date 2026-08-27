@@ -852,6 +852,8 @@ export interface VersusSide {
   csPerMin: number;
   visionScore: number;
   topChampion: string;
+  championPool: string[];
+  roleSplit: string[];
 }
 
 export interface VersusVerdict {
@@ -864,7 +866,9 @@ export interface VersusVerdict {
 export async function getAiVersusVerdict(a: VersusSide, b: VersusSide): Promise<VersusVerdict> {
   const describe = (s: VersusSide) =>
     `name: ${s.name} | winrate ${s.winRate}% | KDA ${s.avgKda} | deaths/game ${s.avgDeaths.toFixed(1)} | ` +
-    `CS/min ${s.csPerMin.toFixed(1)} | vision ${s.visionScore.toFixed(0)} | most played ${s.topChampion}`;
+    `CS/min ${s.csPerMin.toFixed(1)} | vision ${s.visionScore.toFixed(0)} | most played ${s.topChampion}\n` +
+    `    champion pool: ${s.championPool.join(", ") || "n/a"}\n` +
+    `    lanes: ${s.roleSplit.join(", ") || "n/a"}`;
 
   const prompt = `
   Two friends are comparing their recent League of Legends stats. Call the duel.
@@ -880,6 +884,8 @@ export async function getAiVersusVerdict(a: VersusSide, b: VersusSide): Promise<
   }
 
   Pick the winner from the numbers, weighting win rate and KDA most.
+  The verdict should also say something about the champion pool or lane spread —
+  a one-trick, a scattered pool, or a lane they clearly cannot play.
   ${ROAST_GUARDRAIL}
   `;
 

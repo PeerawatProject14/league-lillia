@@ -1185,6 +1185,7 @@ async function handleTierCommand(role: RoleKey, token: string) {
 
 const ROAST_SAMPLE = 10;
 const SHAME_SAMPLE = 20;
+const VERSUS_SAMPLE = 20;
 
 // Handler for `/roast`
 async function handleRoastCommand(summonerInput: string, token: string) {
@@ -1270,8 +1271,8 @@ async function handleHallOfShameCommand(summonerInput: string, token: string) {
 // Handler for `/versus`
 async function handleVersusCommand(inputA: string, inputB: string, token: string) {
   const [formA, formB] = await Promise.all([
-    collectRecentForm(inputA, ROAST_SAMPLE),
-    collectRecentForm(inputB, ROAST_SAMPLE),
+    collectRecentForm(inputA, VERSUS_SAMPLE),
+    collectRecentForm(inputB, VERSUS_SAMPLE),
   ]);
 
   if (formA.games.length === 0 || formB.games.length === 0) {
@@ -1294,6 +1295,8 @@ async function handleVersusCommand(inputA: string, inputB: string, token: string
       csPerMin: sideA.csPerMin,
       visionScore: sideA.visionScore,
       topChampion: sideA.topChampion,
+      championPool: sideA.champions.map(c => `${c.name} ${c.games} เกม ${Math.round((c.wins / c.games) * 100)}%`),
+      roleSplit: sideA.roles.map(r => `${r.role} ${r.games}`),
     },
     {
       name: `${sideB.gameName}#${sideB.tagLine}`,
@@ -1303,6 +1306,8 @@ async function handleVersusCommand(inputA: string, inputB: string, token: string
       csPerMin: sideB.csPerMin,
       visionScore: sideB.visionScore,
       topChampion: sideB.topChampion,
+      championPool: sideB.champions.map(c => `${c.name} ${c.games} เกม ${Math.round((c.wins / c.games) * 100)}%`),
+      roleSplit: sideB.roles.map(r => `${r.role} ${r.games}`),
     }
   );
 
@@ -1324,7 +1329,7 @@ async function handleVersusCommand(inputA: string, inputB: string, token: string
           title: `⚔️ ดวลสถิติ: ${sideA.gameName} vs ${sideB.gameName}`,
           color: 0xC8AA6E,
           image: { url: "attachment://versus.png" },
-          footer: { text: "เทียบจาก 10 เกมล่าสุดของแต่ละคน" },
+          footer: { text: `เทียบจาก ${sideA.games} vs ${sideB.games} เกมล่าสุด` },
           timestamp: new Date().toISOString(),
         },
       ],
