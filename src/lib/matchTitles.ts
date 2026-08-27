@@ -58,23 +58,34 @@ function qualify(condition: boolean, value: number): number | null {
   return condition ? value : null;
 }
 
+function isSupport(p: TitleCandidate): boolean {
+  return p.role === "UTILITY";
+}
+
+/** Nobody sweeps the podium; three gold badges on one player reads as a bug. */
+const MAX_GOLD = 2;
+
 /**
  * Ordered by how much the badge is worth saying out loud. "top" rules crown the
  * best in the match and render gold; the rest fill in around them.
  */
 const RULES: Rule[] = [
   // --- best in the match (gold) -----------------------------------------
-  { kind: "top", text: "เทพเกมนี้", tone: "good", score: p => qualify(kda(p) >= 3, kda(p)) },
+  // KDA, assists and vision are won by a support in ~80% of games simply
+  // because of the role, so those three are contested among the other lanes
+  // and supports get one gold of their own instead.
+  { kind: "top", text: "เทพเกมนี้", tone: "good", score: p => qualify(!isSupport(p) && kda(p) >= 3, kda(p)) },
+  { kind: "top", text: "ซัพเทพ", tone: "good", score: p => qualify(isSupport(p), p.visionScore + p.assists * 1.5) },
   { kind: "top", text: "ดาเมจสูงสุด", tone: "good", score: p => p.damage },
   { kind: "top", text: "นักล่า", tone: "good", score: p => p.kills },
-  { kind: "top", text: "พี่เลี้ยง", tone: "good", score: p => p.assists },
+  { kind: "top", text: "พี่เลี้ยง", tone: "good", score: p => qualify(!isSupport(p), p.assists) },
   { kind: "top", text: "ชาวนา", tone: "good", score: p => p.csPerMin },
-  { kind: "top", text: "ตาทิพย์", tone: "good", score: p => p.visionScore },
+  { kind: "top", text: "ตาทิพย์", tone: "good", score: p => qualify(!isSupport(p), p.visionScore) },
 
   // --- worst in the match (red) -----------------------------------------
   { kind: "top", text: "ตู้ ATM", tone: "bad", score: (p, c) => qualify(p.deaths >= 7 && p.deaths >= c.avgDeaths * 1.3, p.deaths) },
-  { kind: "top", text: "ตีเบา", tone: "bad", score: p => qualify(p.role !== "UTILITY", -p.damage) },
-  { kind: "top", text: "ไม่ฟาร์ม", tone: "bad", score: p => qualify(p.role !== "UTILITY" && p.csPerMin < 5.5, -p.csPerMin) },
+  { kind: "top", text: "ตีเบา", tone: "bad", score: p => qualify(!isSupport(p), -p.damage) },
+  { kind: "top", text: "ไม่ฟาร์ม", tone: "bad", score: p => qualify(!isSupport(p) && p.csPerMin < 5.5, -p.csPerMin) },
   { kind: "top", text: "ตาบอด", tone: "bad", score: p => -p.visionScore },
   { kind: "top", text: "รวยเปล่า", tone: "bad", score: (p, c) => qualify(p.damage < c.avgDamage, p.gold) },
 
@@ -83,10 +94,10 @@ const RULES: Rule[] = [
   { kind: "all", text: "ตายเกินงาน", tone: "bad", score: p => qualify(p.deaths > p.kills + p.assists, p.deaths) },
   { kind: "all", text: "แจกยับ", tone: "bad", score: p => qualify(kda(p) < 1, -kda(p)) },
   { kind: "all", text: "โดนแบก", tone: "bad", score: p => qualify(p.win && kda(p) < 1.5, -kda(p)) },
-  { kind: "all", text: "ตีไม่ออก", tone: "bad", score: (p, c) => qualify(p.role !== "UTILITY" && p.damage <= c.avgDamage * 0.4, -p.damage) },
+  { kind: "all", text: "ตีไม่ออก", tone: "bad", score: (p, c) => qualify(!isSupport(p) && p.damage <= c.avgDamage * 0.4, -p.damage) },
   { kind: "all", text: "ไม่มีคิล", tone: "bad", score: p => qualify(p.kills === 0, 1) },
   { kind: "all", text: "เล่นคนเดียว", tone: "bad", score: p => qualify(p.assists <= 2, -p.assists) },
-  { kind: "all", text: "ไม่มี CS", tone: "bad", score: p => qualify(p.role !== "UTILITY" && p.csPerMin < 3, -p.csPerMin) },
+  { kind: "all", text: "ไม่มี CS", tone: "bad", score: p => qualify(!isSupport(p) && p.csPerMin < 3, -p.csPerMin) },
   { kind: "all", text: "ไม่ปักวอร์ด", tone: "bad", score: p => qualify(p.visionScore <= 5, -p.visionScore) },
   { kind: "all", text: "ถือของเปล่า", tone: "bad", score: (p, c) => qualify(p.gold >= 12000 && p.damage < c.avgDamage * 0.7, p.gold) },
 
@@ -96,7 +107,7 @@ const RULES: Rule[] = [
   { kind: "all", text: "ดาเมจโหด", tone: "good", score: (p, c) => qualify(p.damage >= c.avgDamage * 1.6, p.damage) },
   { kind: "all", text: "ล่าหัวโหด", tone: "good", score: p => qualify(p.kills >= 12, p.kills) },
   { kind: "all", text: "ฟาร์มโหด", tone: "good", score: p => qualify(p.csPerMin >= 8, p.csPerMin) },
-  { kind: "all", text: "ซัพตัวจริง", tone: "good", score: (p, c) => qualify(p.role === "UTILITY" && p.visionScore >= c.avgVision * 1.5, p.visionScore) },
+  { kind: "all", text: "ซัพตัวจริง", tone: "good", score: (p, c) => qualify(isSupport(p) && p.visionScore >= c.avgVision * 1.5, p.visionScore) },
   { kind: "all", text: "ตัวหลัก", tone: "good", score: p => qualify(kda(p) >= 2.5, kda(p)) },
   { kind: "all", text: "หัวเย็น", tone: "good", score: (p, c) => qualify(p.deaths <= Math.max(3, c.avgDeaths * 0.5), -p.deaths) },
   { kind: "all", text: "ช่วยเยอะ", tone: "good", score: p => qualify(p.assists >= 10, p.assists) },
@@ -127,6 +138,7 @@ export function assignMatchTitles(players: TitleCandidate[]): Record<string, Ass
   for (const p of players) titles[p.key] = [];
 
   const hasRoom = (p: TitleCandidate) => titles[p.key].length < MAX_TITLES;
+  const goldCount = (p: TitleCandidate) => titles[p.key].filter(t => t.top && t.tone === "good").length;
 
   for (const rule of RULES) {
     if (rule.kind === "all") {
@@ -138,10 +150,12 @@ export function assignMatchTitles(players: TitleCandidate[]): Record<string, Ass
       continue;
     }
 
+    const isGold = rule.tone === "good";
     let best: TitleCandidate | null = null;
     let bestScore = -Infinity;
     for (const p of players) {
       if (!hasRoom(p)) continue;
+      if (isGold && goldCount(p) >= MAX_GOLD) continue;
       const score = rule.score(p, ctx);
       if (score === null) continue;
       if (score > bestScore) {
