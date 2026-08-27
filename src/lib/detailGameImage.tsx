@@ -38,6 +38,13 @@ export interface DetailPlayerEntry {
   summoner2Id: number;
   keystoneId: number | null;
   subStyleId: number | null;
+  visionScore: number;
+  damage: number;
+  gold: number;
+  role: string;
+  /** Earned nickname for this match, filled in by the handler. */
+  title?: string;
+  titleTone?: "good" | "bad" | "neutral";
 }
 
 export interface DetailGameImageInput {
@@ -172,7 +179,7 @@ function PlayerRow({ data }: { data: PlayerRowData }) {
         </div>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", width: 100, marginRight: 4 }}>
+      <div style={{ display: "flex", flexDirection: "column", width: 148, marginRight: 4 }}>
         <div
           style={{
             display: "flex",
@@ -191,6 +198,18 @@ function PlayerRow({ data }: { data: PlayerRowData }) {
           <div style={{ display: "flex", color: "#A09B8C", margin: "0 2px" }}>/</div>
           <div style={{ display: "flex", color: "#F0E6D2" }}>{`${p.assists}`}</div>
         </div>
+        {p.title && (
+          <div
+            style={{
+              display: "flex",
+              color: p.titleTone === "good" ? "#C8AA6E" : p.titleTone === "bad" ? "#C6443E" : "#5B5A56",
+              fontSize: 10,
+              marginTop: 3,
+            }}
+          >
+            {p.title}
+          </div>
+        )}
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", width: 38, marginRight: 4, alignItems: "flex-end" }}>
@@ -525,7 +544,7 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
       ),
       {
         width: 1100,
-        height: 643,
+        height: 723,
         fonts: fonts.length ? fonts : undefined,
       }
     ).arrayBuffer()

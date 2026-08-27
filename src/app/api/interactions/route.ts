@@ -18,6 +18,7 @@ import { generateBuildImage } from "@/lib/imageGenerator";
 import { generateProfileImage } from "@/lib/profileImage";
 import { generateHistoryImage, HistoryMatchEntry } from "@/lib/historyImage";
 import { generateDetailGameImage, DetailPlayerEntry } from "@/lib/detailGameImage";
+import { assignMatchTitles, TitleCandidate } from "@/lib/matchTitles";
 import { generateLiveGameImage, LivePlayerEntry } from "@/lib/liveGameImage";
 import { getChampionSplashUrl, getItemNameById } from "@/lib/ddragon";
 import { fetchTierList, RoleKey } from "@/lib/tierList";
@@ -872,10 +873,39 @@ async function handleDetailGameCommand(summonerInput: string, matchId: string, t
       summoner2Id: part.summoner2Id,
       keystoneId: primaryStyle?.selections?.[0]?.perk ?? null,
       subStyleId: subStyle?.style ?? null,
+      visionScore: part.visionScore,
+      damage: part.totalDamageDealtToChampions,
+      gold: part.goldEarned,
+      role: part.individualPosition || "UNKNOWN",
     };
     if (part.teamId === 100) teamBlue.push(row);
     else teamRed.push(row);
   }
+
+  // every player leaves the match with a nickname earned from their own stats
+  const everyone = [...teamBlue, ...teamRed];
+  const candidates: TitleCandidate[] = everyone.map((r, i) => ({
+    key: `${i}`,
+    kills: r.kills,
+    deaths: r.deaths,
+    assists: r.assists,
+    cs: r.cs,
+    csPerMin: durationMin > 0 ? r.cs / durationMin : 0,
+    visionScore: r.visionScore,
+    damage: r.damage,
+    gold: r.gold,
+    win: false,
+    role: r.role,
+    isMe: r.isMe,
+  }));
+  const titles = assignMatchTitles(candidates);
+  everyone.forEach((r, i) => {
+    const t = titles[`${i}`];
+    if (t) {
+      r.title = t.text;
+      r.titleTone = t.tone;
+    }
+  });
 
   let imageBuffer: Buffer | undefined;
   try {
