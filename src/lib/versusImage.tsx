@@ -45,8 +45,20 @@ interface Row {
   label: string;
   aText: string;
   bText: string;
+  aValue: number;
+  bValue: number;
   aWins: boolean;
   bWins: boolean;
+}
+
+// Each row draws a bar growing outward from the centre label, so the two
+// sides read as a tug of war instead of two lonely numbers.
+const VALUE_W = 84;
+const BAR_MAX = 300;
+
+function barWidth(value: number, other: number): number {
+  const peak = Math.max(value, other, 0.0001);
+  return Math.max(4, Math.round((value / peak) * BAR_MAX));
 }
 
 function buildRows(a: VersusSideInput, b: VersusSideInput): Row[] {
@@ -69,15 +81,41 @@ function buildRows(a: VersusSideInput, b: VersusSideInput): Row[] {
   const [ga, gb] = cmp(a.damage, b.damage);
 
   return [
-    { label: "WIN RATE", aText: `${Math.round(wrA)}%`, bText: `${Math.round(wrB)}%`, aWins: wa, bWins: wb },
-    { label: "KDA", aText: a.avgKda, bText: b.avgKda, aWins: ka, bWins: kb },
-    { label: "ตาย / เกม", aText: a.avgDeaths.toFixed(1), bText: b.avgDeaths.toFixed(1), aWins: da, bWins: db },
-    { label: "CS / MIN", aText: a.csPerMin.toFixed(1), bText: b.csPerMin.toFixed(1), aWins: ca, bWins: cb },
-    { label: "VISION", aText: a.visionScore.toFixed(0), bText: b.visionScore.toFixed(0), aWins: va, bWins: vb },
+    { label: "WIN RATE", aText: `${Math.round(wrA)}%`, bText: `${Math.round(wrB)}%`, aValue: wrA, bValue: wrB, aWins: wa, bWins: wb },
+    { label: "KDA", aText: a.avgKda, bText: b.avgKda, aValue: kdaA, bValue: kdaB, aWins: ka, bWins: kb },
+    {
+      label: "ตาย / เกม",
+      aText: a.avgDeaths.toFixed(1),
+      bText: b.avgDeaths.toFixed(1),
+      aValue: a.avgDeaths,
+      bValue: b.avgDeaths,
+      aWins: da,
+      bWins: db,
+    },
+    {
+      label: "CS / MIN",
+      aText: a.csPerMin.toFixed(1),
+      bText: b.csPerMin.toFixed(1),
+      aValue: a.csPerMin,
+      bValue: b.csPerMin,
+      aWins: ca,
+      bWins: cb,
+    },
+    {
+      label: "VISION",
+      aText: a.visionScore.toFixed(0),
+      bText: b.visionScore.toFixed(0),
+      aValue: a.visionScore,
+      bValue: b.visionScore,
+      aWins: va,
+      bWins: vb,
+    },
     {
       label: "DAMAGE",
       aText: `${(a.damage / 1000).toFixed(1)}k`,
       bText: `${(b.damage / 1000).toFixed(1)}k`,
+      aValue: a.damage,
+      bValue: b.damage,
       aWins: ga,
       bWins: gb,
     },
@@ -289,19 +327,20 @@ function SideHeader({
 }
 
 function StatRow({ row }: { row: Row }) {
+  const aBar = barWidth(row.aValue, row.bValue);
+  const bBar = barWidth(row.bValue, row.aValue);
+  const aColor = row.aWins ? LOL.gold : "rgba(160,155,140,0.30)";
+  const bColor = row.bWins ? LOL.gold : "rgba(160,155,140,0.30)";
+
   return (
     <div style={{ display: "flex", alignItems: "center", height: 46 }}>
-      <div
-        style={{
-          display: "flex",
-          width: COL_W,
-          justifyContent: "flex-end",
-          alignItems: "center",
-        }}
-      >
+      <div style={{ display: "flex", width: COL_W, alignItems: "center", justifyContent: "flex-end" }}>
+        <div style={{ display: "flex", width: aBar, height: 9, background: aColor }} />
         <div
           style={{
             display: "flex",
+            width: VALUE_W,
+            justifyContent: "flex-end",
             color: row.aWins ? LOL.gold : LOL.textMuted,
             fontSize: row.aWins ? 22 : 19,
             fontWeight: 700,
@@ -312,14 +351,7 @@ function StatRow({ row }: { row: Row }) {
         </div>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          width: 192,
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
+      <div style={{ display: "flex", width: 192, justifyContent: "center", alignItems: "center" }}>
         <div
           style={{
             display: "flex",
@@ -338,6 +370,7 @@ function StatRow({ row }: { row: Row }) {
         <div
           style={{
             display: "flex",
+            width: VALUE_W,
             color: row.bWins ? LOL.gold : LOL.textMuted,
             fontSize: row.bWins ? 22 : 19,
             fontWeight: 700,
@@ -346,6 +379,7 @@ function StatRow({ row }: { row: Row }) {
         >
           {row.bText}
         </div>
+        <div style={{ display: "flex", width: bBar, height: 9, background: bColor }} />
       </div>
     </div>
   );
