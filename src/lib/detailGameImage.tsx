@@ -12,8 +12,8 @@ import { MatchParticipant } from "./riot";
 // Hero banner: 1040 wide inside the card's 1044px content box (2px border each
 // side). The splash is 1215x717, so covering 1040 wide makes it 614 tall; the
 // offset puts the art's 30% line on the banner's centre.
-const BANNER_W = 936;
-const BANNER_H = 120;
+const BANNER_W = 852;
+const BANNER_H = 96;
 const BANNER_ART_H = Math.round(BANNER_W * (717 / 1215));
 const BANNER_ART_TOP = Math.round(BANNER_H / 2 - BANNER_ART_H * 0.3);
 
@@ -171,12 +171,12 @@ function PlayerRow({ data }: { data: PlayerRowData }) {
         marginBottom: 2,
       }}
     >
-      <div style={{ display: "flex", position: "relative", width: 42, height: 42, marginRight: 6 }}>
+      <div style={{ display: "flex", position: "relative", width: 38, height: 38, marginRight: 6 }}>
         <div
           style={{
             display: "flex",
-            width: 38,
-            height: 38,
+            width: 34,
+            height: 34,
             borderRadius: 2,
             overflow: "hidden",
             background: "#04101C",
@@ -184,7 +184,7 @@ function PlayerRow({ data }: { data: PlayerRowData }) {
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={data.champIconUrl} width={38} height={38} alt="" />
+          <img src={data.champIconUrl} width={34} height={34} alt="" />
         </div>
         <div
           style={{
@@ -208,23 +208,23 @@ function PlayerRow({ data }: { data: PlayerRowData }) {
 
       <div style={{ display: "flex", flexDirection: "column", marginRight: 4 }}>
         <div style={{ display: "flex", marginBottom: 2 }}>
-          <IconBox url={data.spell1Url} size={18} />
+          <IconBox url={data.spell1Url} size={16} />
         </div>
         <div style={{ display: "flex" }}>
-          <IconBox url={data.spell2Url} size={18} />
+          <IconBox url={data.spell2Url} size={16} />
         </div>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", marginRight: 6 }}>
         <div style={{ display: "flex", marginBottom: 2 }}>
-          <IconBox url={data.keystoneUrl} size={18} ring="#4D9BE655" />
+          <IconBox url={data.keystoneUrl} size={16} ring="#4D9BE655" />
         </div>
         <div style={{ display: "flex" }}>
-          <IconBox url={data.subTreeUrl} size={18} />
+          <IconBox url={data.subTreeUrl} size={16} />
         </div>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", width: 138, marginRight: 8 }}>
+      <div style={{ display: "flex", flexDirection: "column", width: 126, marginRight: 6 }}>
         <div
           style={{
             display: "flex",
@@ -246,7 +246,7 @@ function PlayerRow({ data }: { data: PlayerRowData }) {
       </div>
 
       {/* one line only: the teams stack vertically so there is room for it */}
-      <div style={{ display: "flex", alignItems: "center", width: 392, overflow: "hidden", marginRight: 6 }}>
+      <div style={{ display: "flex", alignItems: "center", width: 330, overflow: "hidden", marginRight: 4 }}>
         {(p.titles ?? []).map((t, i) => (
           <Badge key={i} text={t.text} tone={t.tone} top={t.top} />
         ))}
@@ -254,7 +254,7 @@ function PlayerRow({ data }: { data: PlayerRowData }) {
 
       <div style={{ display: "flex", flex: 1 }} />
 
-      <div style={{ display: "flex", flexDirection: "column", width: 40, marginRight: 8, alignItems: "flex-end" }}>
+      <div style={{ display: "flex", flexDirection: "column", width: 36, marginRight: 6, alignItems: "flex-end" }}>
         <div style={{ display: "flex", color: "#A09B8C", fontSize: 9, fontWeight: 700, letterSpacing: 1, fontFamily: DISPLAY_FONT }}>CS</div>
         <div style={{ display: "flex", color: "#F0E6D2", fontSize: 11, fontWeight: 700, marginTop: 1 }}>{`${p.cs}`}</div>
       </div>
@@ -262,7 +262,7 @@ function PlayerRow({ data }: { data: PlayerRowData }) {
       <div style={{ display: "flex" }}>
         {data.itemUrls.map((u, i) => (
           <div key={i} style={{ display: "flex", marginRight: i === 5 ? 4 : 2 }}>
-            <IconBox url={u} size={22} ring={i === 6 ? "#4D9BE655" : undefined} />
+            <IconBox url={u} size={21} ring={i === 6 ? "#4D9BE655" : undefined} />
           </div>
         ))}
       </div>
@@ -386,7 +386,7 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
             width: "100%",
             height: "100%",
             background: "#010A13",
-            padding: "16px 26px",
+            padding: "14px 22px",
             fontFamily: BODY_FONT,
             border: "1px solid #463714",
           }}
@@ -498,10 +498,10 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
           >
             <div style={{ display: "flex", flexDirection: "column", marginRight: 12 }}>
               <div style={{ display: "flex", marginBottom: 4 }}>
-                <IconBox url={spell1} size={38} />
+                <IconBox url={spell1} size={32} />
               </div>
               <div style={{ display: "flex" }}>
-                <IconBox url={spell2} size={38} />
+                <IconBox url={spell2} size={32} />
               </div>
             </div>
 
@@ -523,25 +523,25 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
 
             <div style={{ display: "flex" }}>
               <div style={{ display: "flex", marginRight: 6 }}>
-                <IconBox url={item0} size={52} />
+                <IconBox url={item0} size={44} />
               </div>
               <div style={{ display: "flex", marginRight: 6 }}>
-                <IconBox url={item1} size={52} />
+                <IconBox url={item1} size={44} />
               </div>
               <div style={{ display: "flex", marginRight: 6 }}>
-                <IconBox url={item2} size={52} />
+                <IconBox url={item2} size={44} />
               </div>
               <div style={{ display: "flex", marginRight: 6 }}>
-                <IconBox url={item3} size={52} />
+                <IconBox url={item3} size={44} />
               </div>
               <div style={{ display: "flex", marginRight: 6 }}>
-                <IconBox url={item4} size={52} />
+                <IconBox url={item4} size={44} />
               </div>
               <div style={{ display: "flex", marginRight: 6 }}>
-                <IconBox url={item5} size={52} />
+                <IconBox url={item5} size={44} />
               </div>
               <div style={{ display: "flex" }}>
-                <IconBox url={item6} size={52} ring="#4D9BE655" />
+                <IconBox url={item6} size={44} ring="#4D9BE655" />
               </div>
             </div>
 
@@ -571,7 +571,7 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
           </div>
 
           <div style={{ display: "flex", marginBottom: 10 }}>
-            <GoldRule width={936} />
+            <GoldRule width={852} />
           </div>
 
           <div style={{ display: "flex", flexDirection: "column" }}>
@@ -585,8 +585,8 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
         </div>
       ),
       {
-        width: 996,
-        height: 892,
+        width: 900,
+        height: 806,
         fonts: fonts.length ? fonts : undefined,
       }
     ).arrayBuffer()
