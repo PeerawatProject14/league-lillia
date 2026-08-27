@@ -12,7 +12,7 @@ import { MatchParticipant } from "./riot";
 // Hero banner: 1040 wide inside the card's 1044px content box (2px border each
 // side). The splash is 1215x717, so covering 1040 wide makes it 614 tall; the
 // offset puts the art's 30% line on the banner's centre.
-const BANNER_W = 1040;
+const BANNER_W = 936;
 const BANNER_H = 120;
 const BANNER_ART_H = Math.round(BANNER_W * (717 / 1215));
 const BANNER_ART_TOP = Math.round(BANNER_H / 2 - BANNER_ART_H * 0.3);
@@ -164,7 +164,7 @@ function PlayerRow({ data }: { data: PlayerRowData }) {
       style={{
         display: "flex",
         alignItems: "center",
-        padding: "5px 6px",
+        padding: "3px 6px",
         background: p.isMe ? "rgba(200,170,110,0.10)" : "transparent",
         borderLeft: p.isMe ? "2px solid #C8AA6E" : "2px solid transparent",
         borderRadius: 2,
@@ -246,7 +246,7 @@ function PlayerRow({ data }: { data: PlayerRowData }) {
       </div>
 
       {/* one line only: the teams stack vertically so there is room for it */}
-      <div style={{ display: "flex", alignItems: "center", width: 476, overflow: "hidden", marginRight: 8 }}>
+      <div style={{ display: "flex", alignItems: "center", width: 392, overflow: "hidden", marginRight: 6 }}>
         {(p.titles ?? []).map((t, i) => (
           <Badge key={i} text={t.text} tone={t.tone} top={t.top} />
         ))}
@@ -289,10 +289,10 @@ function TeamColumn({
         border: `1px solid ${color}40`,
         borderTop: `3px solid ${color}`,
         borderRadius: 3,
-        padding: "10px 8px",
+        padding: "8px 8px",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", marginBottom: 8, paddingLeft: 6 }}>
+      <div style={{ display: "flex", alignItems: "center", marginBottom: 6, paddingLeft: 6 }}>
         <div style={{ display: "flex", color, fontSize: 13, fontWeight: 700, letterSpacing: 2, fontFamily: DISPLAY_FONT }}>
           {label}
         </div>
@@ -386,7 +386,7 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
             width: "100%",
             height: "100%",
             background: "#010A13",
-            padding: "20px 28px",
+            padding: "16px 26px",
             fontFamily: BODY_FONT,
             border: "1px solid #463714",
           }}
@@ -402,7 +402,7 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
               height: BANNER_H,
               overflow: "hidden",
               borderRadius: 3,
-              marginBottom: 14,
+              marginBottom: 10,
               border: `2px solid ${resultColor}`,
               background: "#010A13",
             }}
@@ -491,8 +491,8 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
               background: "#0A1428",
               border: "1px solid #463714",
               borderRadius: 3,
-              padding: "12px 14px",
-              marginBottom: 14,
+              padding: "10px 14px",
+              marginBottom: 10,
               alignItems: "center",
             }}
           >
@@ -570,12 +570,12 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
             </div>
           </div>
 
-          <div style={{ display: "flex", marginBottom: 14 }}>
-            <GoldRule width={1044} />
+          <div style={{ display: "flex", marginBottom: 10 }}>
+            <GoldRule width={936} />
           </div>
 
           <div style={{ display: "flex", flexDirection: "column" }}>
-            <div style={{ display: "flex", marginBottom: 12 }}>
+            <div style={{ display: "flex", marginBottom: 8 }}>
               <TeamColumn label="BLUE TEAM" color="#4D9BE6" rows={blueRows} />
             </div>
             <div style={{ display: "flex" }}>
@@ -585,8 +585,8 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
         </div>
       ),
       {
-        width: 1100,
-        height: 962,
+        width: 996,
+        height: 892,
         fonts: fonts.length ? fonts : undefined,
       }
     ).arrayBuffer()
