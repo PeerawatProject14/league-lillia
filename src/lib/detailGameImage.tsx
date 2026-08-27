@@ -9,6 +9,14 @@ import { loadImageFonts, DISPLAY_FONT, BODY_FONT } from "./imageCommon";
 import { GoldRule } from "./imageParts";
 import { MatchParticipant } from "./riot";
 
+// Hero banner: 1040 wide inside the card's 1044px content box (2px border each
+// side). The splash is 1215x717, so covering 1040 wide makes it 614 tall; the
+// offset puts the art's 30% line on the banner's centre.
+const BANNER_W = 1040;
+const BANNER_H = 120;
+const BANNER_ART_H = Math.round(BANNER_W * (717 / 1215));
+const BANNER_ART_TOP = Math.round(BANNER_H / 2 - BANNER_ART_H * 0.3);
+
 export interface DetailPlayerEntry {
   name: string;
   championDisplayName: string;
@@ -322,20 +330,52 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
             border: "1px solid #463714",
           }}
         >
+          {/* Banner art is a real <img>: satori applies backgroundSize to the
+              first background layer only, so a gradient + url() pair left the
+              splash at natural size and tiled it. */}
           <div
             style={{
               display: "flex",
-              alignItems: "center",
+              position: "relative",
+              width: BANNER_W,
+              height: BANNER_H,
+              overflow: "hidden",
               borderRadius: 3,
-              padding: "16px 20px",
               marginBottom: 14,
               border: `2px solid ${resultColor}`,
-              backgroundColor: "#010A13",
-              backgroundImage: `linear-gradient(90deg, rgba(1,10,19,0.96) 0%, rgba(1,10,19,0.7) 55%, rgba(1,10,19,0.35) 100%), url(${champSplashUrl})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center 30%",
+              background: "#010A13",
             }}
           >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={champSplashUrl}
+              width={BANNER_W}
+              height={BANNER_ART_H}
+              alt=""
+              style={{ position: "absolute", left: 0, top: BANNER_ART_TOP }}
+            />
+            <div
+              style={{
+                display: "flex",
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: BANNER_W,
+                height: BANNER_H,
+                background:
+                  "linear-gradient(90deg, rgba(1,10,19,0.96) 0%, rgba(1,10,19,0.72) 55%, rgba(1,10,19,0.38) 100%)",
+              }}
+            />
+            <div
+              style={{
+                display: "flex",
+                position: "relative",
+                alignItems: "center",
+                width: BANNER_W,
+                height: BANNER_H,
+                padding: "0 20px",
+              }}
+            >
             <div
               style={{
                 display: "flex",
@@ -380,6 +420,7 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
                 <div style={{ display: "flex", color: "#F0E6D2", fontSize: 22, fontWeight: 700, fontFamily: DISPLAY_FONT }}>{`${p.assists}`}</div>
               </div>
               <div style={{ display: "flex", color: "#A09B8C", fontSize: 12, marginTop: 2 }}>{`${kda}:1`}</div>
+            </div>
             </div>
           </div>
 
