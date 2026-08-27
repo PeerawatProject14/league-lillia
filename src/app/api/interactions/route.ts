@@ -7,6 +7,7 @@ import {
   getTopChampionMasteries,
   getMatchIds,
   getMatchDetail,
+  getMatchDetails,
   getActiveGame,
   LeagueEntry
 } from "@/lib/riot";
@@ -37,6 +38,32 @@ const RANK_COLORS: Record<string, number> = {
   BRONZE: 0xA07D5A,
   IRON: 0x6C6C6C,
 };
+
+// Games pulled per /history page. 20 keeps us under Discord's 25-option
+// select menu limit while still being a meaningful chunk of history.
+const HISTORY_PAGE_SIZE = 20;
+
+// Common queue ids -> short label shown on each match row
+const QUEUE_LABELS: Record<number, string> = {
+  400: "Normal Draft",
+  420: "Ranked Solo",
+  430: "Normal Blind",
+  440: "Ranked Flex",
+  450: "ARAM",
+  480: "Swiftplay",
+  490: "Quickplay",
+  700: "Clash",
+  720: "ARAM Clash",
+  900: "ARURF",
+  1020: "One for All",
+  1300: "Nexus Blitz",
+  1700: "Arena",
+  1900: "URF",
+};
+
+function getQueueLabel(queueId: number, gameMode: string): string {
+  return QUEUE_LABELS[queueId] || gameMode || "Custom";
+}
 
 function safeTruncate(text: string, maxLength: number = 4000): string {
   if (!text) return "";
@@ -175,10 +202,15 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 4. Return deferred channel message (shows "Bot is thinking..." in Discord)
+    // 4. Return deferred response (shows "Bot is thinking..." in Discord)
     // This acknowledges the request immediately, avoiding the 3-second timeout limit.
+    // Paging through history edits the existing message in place instead of
+    // posting a new one for every click.
+    const isHistoryPaging = commandName === "historypage";
     const deferredResponse = NextResponse.json({
-      type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
+      type: isHistoryPaging
+        ? InteractionResponseType.DEFERRED_UPDATE_MESSAGE
+        : InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
     });
 
     // Use NextJS after to process async operations after response is sent
@@ -194,6 +226,17 @@ export async function POST(req: NextRequest) {
             await handleLiveGameCommand(summonerInput, interactionToken);
           } else if (commandName === "history") {
             await handleHistoryCommand(summonerInput, interactionToken);
+          } else if (commandName === "historypage") {
+            // custom_id payload is "gameName#tagLine|page"
+            const pageSepIdx = summonerInput.lastIndexOf("|");
+            const historySummoner = pageSepIdx !== -1 ? summonerInput.substring(0, pageSepIdx) : summonerInput;
+            const requestedPage = pageSepIdx !== -1 ? parseInt(summonerInput.substring(pageSepIdx + 1), 10) : 0;
+            await handleHistoryCommand(
+              historySummoner,
+              interactionToken,
+              Number.isNaN(requestedPage) ? 0 : requestedPage,
+              true
+            );
           } else if (commandName === "detailgame") {
             const selectedMatchId = interaction.data.values?.[0] || "";
             await handleDetailGameCommand(summonerInput, selectedMatchId, interactionToken);
@@ -420,7 +463,7 @@ async function handleCoachCommand(summonerInput: string, token: string) {
   const embed = {
     title: `🤖 AI Coach Analysis: ${account.gameName}#${account.tagLine}`,
     description: safeTruncate(coachingReport),
-    color: 0xFF8800, // AI Theme Color (Orange)
+    color: 0xC8AA6E, // hextech gold
     footer: {
       text: "วิเคราะห์อ้างอิงจากข้อมูลสถิติ 5 เกมล่าสุด • ข้อมูลอัปเดตแบบเรียลไทม์",
     },
@@ -505,7 +548,7 @@ async function handleLiveGameCommand(summonerInput: string, token: string) {
 
   const embed: any = {
     title: `🎮 Live Match: ${account.gameName}#${account.tagLine}`,
-    color: 0x00FFCC,
+    color: 0x0AC8B9,
     image: imageBuffer ? { url: "attachment://livegame.png" } : undefined,
     footer: { text: "League of Legends Live Spectator" },
     timestamp: new Date().toISOString(),
@@ -543,17 +586,21 @@ async function handleLiveGameCommand(summonerInput: string, token: string) {
   );
 }
 
-async function handleHistoryCommand(summonerInput: string, token: string) {
+async function handleHistoryCommand(summonerInput: string, token: string, page: number = 0, isEdit: boolean = false) {
   const { gameName, tagLine } = parseRiotId(summonerInput);
-  
+  const safePage = Math.max(0, page);
+
   // A: Fetch Riot account details
   const account = await getRiotAccount(gameName, tagLine);
 
-  // B: Fetch Match history IDs (last 10 games)
-  const matchIds = await getMatchIds(account.puuid, 10);
+  // B: Fetch this page of match IDs (paging further back with the start offset)
+  const matchIds = await getMatchIds(account.puuid, HISTORY_PAGE_SIZE, safePage * HISTORY_PAGE_SIZE);
   if (matchIds.length === 0) {
     await updateInteractionResponse(token, {
-      content: `❌ ไม่พบประวัติการเล่นล่าสุดของ ${account.gameName}#${account.tagLine}`,
+      content:
+        safePage === 0
+          ? `❌ ไม่พบประวัติการเล่นล่าสุดของ ${account.gameName}#${account.tagLine}`
+          : `❌ ไม่มีประวัติย้อนหลังมากกว่านี้แล้วสำหรับ ${account.gameName}#${account.tagLine}`,
     });
     return;
   }
@@ -566,47 +613,64 @@ async function handleHistoryCommand(summonerInput: string, token: string) {
     UTILITY: "SUP",
   };
 
+  // Fetch the whole page in parallel (bounded) instead of one match at a time
+  const details = await getMatchDetails(matchIds);
+
   const matches: HistoryMatchEntry[] = [];
   const selectOptions: any[] = [];
 
-  for (let i = 0; i < matchIds.length; i++) {
-    const matchId = matchIds[i];
-    try {
-      const match = await getMatchDetail(matchId);
-      const playerStats = match.info.participants.find(p => p.puuid === account.puuid);
-      if (!playerStats) continue;
+  for (const match of details) {
+    const matchId = match.metadata.matchId;
+    const playerStats = match.info.participants.find(p => p.puuid === account.puuid);
+    if (!playerStats) continue;
 
-      const champName = await getChampionName(playerStats.championId);
-      const totalCs = playerStats.totalMinionsKilled + playerStats.neutralMinionsKilled;
-      const durationMin = match.info.gameDuration / 60;
-      const csPerMin = durationMin > 0 ? totalCs / durationMin : 0;
+    const champName = await getChampionName(playerStats.championId);
+    const totalCs = playerStats.totalMinionsKilled + playerStats.neutralMinionsKilled;
+    const durationMin = match.info.gameDuration / 60;
+    const csPerMin = durationMin > 0 ? totalCs / durationMin : 0;
+    const queueLabel = getQueueLabel(match.info.queueId, match.info.gameMode);
 
-      matches.push({
-        matchId,
-        championName: champName,
-        role: playerStats.individualPosition || "UNKNOWN",
-        win: playerStats.win,
-        kills: playerStats.kills,
-        deaths: playerStats.deaths,
-        assists: playerStats.assists,
-        cs: totalCs,
-        csPerMin,
-        durationMinutes: durationMin,
-      });
+    matches.push({
+      matchId,
+      championName: champName,
+      champLevel: playerStats.champLevel,
+      role: playerStats.individualPosition || "UNKNOWN",
+      win: playerStats.win,
+      kills: playerStats.kills,
+      deaths: playerStats.deaths,
+      assists: playerStats.assists,
+      cs: totalCs,
+      csPerMin,
+      durationMinutes: durationMin,
+      damage: playerStats.totalDamageDealtToChampions,
+      gold: playerStats.goldEarned,
+      visionScore: playerStats.visionScore,
+      itemIds: [
+        playerStats.item0,
+        playerStats.item1,
+        playerStats.item2,
+        playerStats.item3,
+        playerStats.item4,
+        playerStats.item5,
+        playerStats.item6,
+      ],
+      spell1Id: playerStats.summoner1Id,
+      spell2Id: playerStats.summoner2Id,
+      queueLabel,
+      gameCreation: match.info.gameCreation,
+    });
 
-      const winLabel = playerStats.win ? "ชนะ" : "แพ้";
-      const role = ROLE_MAP[playerStats.individualPosition] || playerStats.individualPosition || "UNKNOWN";
-      const labelText = `เกมที่ ${i + 1}: ${winLabel} - ${champName} (${role})`;
-      const descText = `KDA: ${playerStats.kills}/${playerStats.deaths}/${playerStats.assists} | เวลา: ${Math.floor(durationMin)} นาที`;
+    const gameNumber = safePage * HISTORY_PAGE_SIZE + matches.length;
+    const winLabel = playerStats.win ? "ชนะ" : "แพ้";
+    const role = ROLE_MAP[playerStats.individualPosition] || playerStats.individualPosition || "UNKNOWN";
+    const labelText = `เกมที่ ${gameNumber}: ${winLabel} - ${champName} (${role})`;
+    const descText = `KDA: ${playerStats.kills}/${playerStats.deaths}/${playerStats.assists} | ${queueLabel} | ${Math.floor(durationMin)} นาที`;
 
-      selectOptions.push({
-        label: labelText.substring(0, 100),
-        description: descText.substring(0, 100),
-        value: matchId,
-      });
-    } catch (e) {
-      console.warn(`Failed to load details for match ${matchId}:`, e);
-    }
+    selectOptions.push({
+      label: labelText.substring(0, 100),
+      description: descText.substring(0, 100),
+      value: matchId,
+    });
   }
 
   if (matches.length === 0) {
@@ -622,16 +686,19 @@ async function handleHistoryCommand(summonerInput: string, token: string) {
       gameName: account.gameName,
       tagLine: account.tagLine,
       matches,
+      page: safePage,
+      pageSize: HISTORY_PAGE_SIZE,
     });
   } catch (e) {
     console.error("Failed to generate history image:", e);
   }
 
+  const rangeStart = safePage * HISTORY_PAGE_SIZE + 1;
   const embed: any = {
     title: `📜 Match History: ${account.gameName}#${account.tagLine}`,
-    color: 0x5865F2,
+    color: 0xC8AA6E,
     image: imageBuffer ? { url: "attachment://history.png" } : undefined,
-    footer: { text: "เลือกในเมนูด้านล่างเพื่อดูรายละเอียดเกม" },
+    footer: { text: `เกมที่ ${rangeStart}-${rangeStart + matches.length - 1} · หน้า ${safePage + 1} · เลือกในเมนูด้านล่างเพื่อดูรายละเอียดเกม` },
     timestamp: new Date().toISOString(),
   };
 
@@ -641,11 +708,15 @@ async function handleHistoryCommand(summonerInput: string, token: string) {
         .map((m, i) => {
           const winStatus = m.win ? "🟢 ชนะ" : "🔴 แพ้";
           const role = ROLE_MAP[m.role] || m.role;
-          return `**${i + 1}.** ${winStatus} **${m.championName}** (${role}) — ${m.kills}/${m.deaths}/${m.assists} · ${m.cs} CS · ${Math.floor(m.durationMinutes)} นาที`;
+          return `**${rangeStart + i}.** ${winStatus} **${m.championName}** (${role}) — ${m.kills}/${m.deaths}/${m.assists} · ${m.cs} CS · ${Math.round(m.damage / 100) / 10}k DMG · ${Math.floor(m.durationMinutes)} นาที`;
         })
         .join("\n")
     );
   }
+
+  // A full page means there is very likely more history behind it
+  const hasNextPage = matchIds.length === HISTORY_PAGE_SIZE;
+  const riotId = `${account.gameName}#${account.tagLine}`;
 
   const components = [
     {
@@ -653,17 +724,49 @@ async function handleHistoryCommand(summonerInput: string, token: string) {
       components: [
         {
           type: 3,
-          custom_id: `detailgame:${account.gameName}#${account.tagLine}`,
+          custom_id: `detailgame:${riotId}`,
           placeholder: "เลือกรอบการเล่นเพื่อดูรายละเอียด...",
           options: selectOptions,
         },
       ],
     },
+    {
+      type: 1,
+      components: [
+        {
+          type: 2,
+          style: 2,
+          label: "◀ ใหม่กว่า",
+          custom_id: `historypage:${riotId}|${safePage - 1}`,
+          disabled: safePage === 0,
+        },
+        {
+          type: 2,
+          style: 2,
+          label: `หน้า ${safePage + 1}`,
+          custom_id: `historynoop:${riotId}`,
+          disabled: true,
+        },
+        {
+          type: 2,
+          style: 2,
+          label: "เก่ากว่า ▶",
+          custom_id: `historypage:${riotId}|${safePage + 1}`,
+          disabled: !hasNextPage,
+        },
+      ],
+    },
   ];
+
+  const payload: any = { embeds: [embed], components };
+  if (isEdit) {
+    // Editing an existing message: tell Discord to drop the previous attachment
+    payload.attachments = imageBuffer ? [{ id: 0, filename: "history.png" }] : [];
+  }
 
   await updateInteractionResponse(
     token,
-    { embeds: [embed], components },
+    payload,
     imageBuffer,
     "history.png"
   );
@@ -878,7 +981,7 @@ async function handleMatchReviewCommand(
       ? `🔍 รีวิวเฉพาะเรา: ${champName} (${playerStats.win ? "🟢 ชนะ" : "🔴 แพ้"})`
       : `👥 รีวิวทั้งทีม: เกม ${champName} (${playerStats.win ? "🟢 ชนะ" : "🔴 แพ้"})`,
     description: safeTruncate(reviewResult.review, 4000),
-    color: scope === "self" ? 0xF1C40F : 0x5865F2,
+    color: scope === "self" ? 0xC8AA6E : 0x0AC8B9,
     image: splashUrl ? { url: splashUrl } : undefined,
     footer: { text: `Match ID: ${matchId} • วิเคราะห์โดย AI` },
     timestamp: new Date().toISOString(),
@@ -900,7 +1003,7 @@ async function handleBuildCommand(championQuery: string, token: string) {
 
   const embed: any = {
     title: `🛡️ Build แนะนำสำหรับแชมเปี้ยน: ${buildInfo.displayName}`,
-    color: 0xF1C40F,
+    color: 0xC8AA6E,
     image: imageBuffer
       ? { url: "attachment://build.png" }
       : { url: `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${buildInfo.championIdName}_0.jpg` },
@@ -947,7 +1050,7 @@ async function handleBuildVsCommand(myChampion: string, vsChampion: string, toke
 
   const embed: any = {
     title: `⚔️ ${buildInfo.displayName} vs ${buildInfo.vsChampionDisplayName ?? vsChampion}`,
-    color: 0xEF4444,
+    color: 0xC6443E,
     image: imageBuffer
       ? { url: "attachment://buildvs.png" }
       : { url: `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${buildInfo.championIdName}_0.jpg` },
@@ -1010,7 +1113,7 @@ async function handleTierCommand(role: RoleKey, token: string) {
 
   const embed: any = {
     title: `🏆 Tier List: ${ROLE_TH[role]} (Master+)`,
-    color: 0xF1C40F,
+    color: 0xC8AA6E,
     image: imageBuffer ? { url: "attachment://tier.png" } : undefined,
     footer: { text: "ข้อมูลจาก u.gg • อัพเดตทุก patch" },
     timestamp: new Date().toISOString(),

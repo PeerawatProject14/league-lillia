@@ -5,7 +5,8 @@ import {
   getRuneIconById,
 } from "./ddragon";
 import { getLatestVersion } from "./champions";
-import { fetchThaiFont } from "./imageCommon";
+import { loadImageFonts, DISPLAY_FONT, BODY_FONT } from "./imageCommon";
+import { GoldRule } from "./imageParts";
 import { MatchParticipant } from "./riot";
 
 export interface DetailPlayerEntry {
@@ -78,14 +79,14 @@ function IconBox({
         display: "flex",
         width: size,
         height: size,
-        borderRadius: rounded ? size / 2 : 4,
+        borderRadius: rounded ? size / 2 : 2,
         overflow: "hidden",
-        background: isEmpty ? "rgba(31,34,48,0.35)" : "#1f2230",
+        background: isEmpty ? "rgba(4,16,28,0.5)" : "#04101C",
         border: isEmpty
-          ? "1px dashed rgba(43,45,53,0.5)"
+          ? "1px dashed rgba(70,55,20,0.45)"
           : ring
           ? `1px solid ${ring}`
-          : "1px solid #2b2d35",
+          : "1px solid #463714",
       }}
     >
       {url ? (
@@ -104,8 +105,9 @@ function PlayerRow({ data }: { data: PlayerRowData }) {
         display: "flex",
         alignItems: "center",
         padding: "5px 6px",
-        background: p.isMe ? "rgba(241,196,15,0.10)" : "transparent",
-        borderRadius: 6,
+        background: p.isMe ? "rgba(200,170,110,0.10)" : "transparent",
+        borderLeft: p.isMe ? "2px solid #C8AA6E" : "2px solid transparent",
+        borderRadius: 2,
         marginBottom: 2,
       }}
     >
@@ -115,10 +117,10 @@ function PlayerRow({ data }: { data: PlayerRowData }) {
             display: "flex",
             width: 38,
             height: 38,
-            borderRadius: 6,
+            borderRadius: 2,
             overflow: "hidden",
-            background: "#1f2230",
-            border: "1px solid #2b2d35",
+            background: "#04101C",
+            border: "1px solid #463714",
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -130,13 +132,13 @@ function PlayerRow({ data }: { data: PlayerRowData }) {
             position: "absolute",
             bottom: 0,
             right: 0,
-            background: "#0f1117",
-            color: "#ffffff",
+            background: "#010A13",
+            color: "#F0E6D2",
             fontSize: 9,
             fontWeight: 700,
             padding: "0 3px",
-            borderRadius: 4,
-            border: "1px solid #2b2d35",
+            borderRadius: 2,
+            border: "1px solid #463714",
             justifyContent: "center",
           }}
         >
@@ -155,7 +157,7 @@ function PlayerRow({ data }: { data: PlayerRowData }) {
 
       <div style={{ display: "flex", flexDirection: "column", marginRight: 6 }}>
         <div style={{ display: "flex", marginBottom: 2 }}>
-          <IconBox url={data.keystoneUrl} size={18} ring="#a78bfa55" />
+          <IconBox url={data.keystoneUrl} size={18} ring="#4D9BE655" />
         </div>
         <div style={{ display: "flex" }}>
           <IconBox url={data.subTreeUrl} size={18} />
@@ -166,7 +168,7 @@ function PlayerRow({ data }: { data: PlayerRowData }) {
         <div
           style={{
             display: "flex",
-            color: "#ffffff",
+            color: "#F0E6D2",
             fontSize: 11,
             fontWeight: p.isMe ? 700 : 500,
             overflow: "hidden",
@@ -175,23 +177,23 @@ function PlayerRow({ data }: { data: PlayerRowData }) {
           {p.name.length > 13 ? p.name.slice(0, 12) + "…" : p.name}
         </div>
         <div style={{ display: "flex", fontSize: 11, fontWeight: 700, marginTop: 2 }}>
-          <div style={{ display: "flex", color: "#ffffff" }}>{`${p.kills}`}</div>
-          <div style={{ display: "flex", color: "#9aa0b4", margin: "0 2px" }}>/</div>
-          <div style={{ display: "flex", color: "#ef4444" }}>{`${p.deaths}`}</div>
-          <div style={{ display: "flex", color: "#9aa0b4", margin: "0 2px" }}>/</div>
-          <div style={{ display: "flex", color: "#ffffff" }}>{`${p.assists}`}</div>
+          <div style={{ display: "flex", color: "#F0E6D2" }}>{`${p.kills}`}</div>
+          <div style={{ display: "flex", color: "#A09B8C", margin: "0 2px" }}>/</div>
+          <div style={{ display: "flex", color: "#C6443E" }}>{`${p.deaths}`}</div>
+          <div style={{ display: "flex", color: "#A09B8C", margin: "0 2px" }}>/</div>
+          <div style={{ display: "flex", color: "#F0E6D2" }}>{`${p.assists}`}</div>
         </div>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", width: 38, marginRight: 4, alignItems: "flex-end" }}>
-        <div style={{ display: "flex", color: "#9aa0b4", fontSize: 9, fontWeight: 700, letterSpacing: 1 }}>CS</div>
-        <div style={{ display: "flex", color: "#ffffff", fontSize: 11, fontWeight: 700, marginTop: 1 }}>{`${p.cs}`}</div>
+        <div style={{ display: "flex", color: "#A09B8C", fontSize: 9, fontWeight: 700, letterSpacing: 1, fontFamily: DISPLAY_FONT }}>CS</div>
+        <div style={{ display: "flex", color: "#F0E6D2", fontSize: 11, fontWeight: 700, marginTop: 1 }}>{`${p.cs}`}</div>
       </div>
 
       <div style={{ display: "flex" }}>
         {data.itemUrls.map((u, i) => (
           <div key={i} style={{ display: "flex", marginRight: i === 5 ? 4 : 2 }}>
-            <IconBox url={u} size={22} ring={i === 6 ? "#a78bfa55" : undefined} />
+            <IconBox url={u} size={22} ring={i === 6 ? "#4D9BE655" : undefined} />
           </div>
         ))}
       </div>
@@ -214,15 +216,15 @@ function TeamColumn({
         display: "flex",
         flexDirection: "column",
         flex: 1,
-        background: "#161823",
+        background: "#0A1428",
         border: `1px solid ${color}40`,
         borderTop: `3px solid ${color}`,
-        borderRadius: 12,
+        borderRadius: 3,
         padding: "10px 8px",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", marginBottom: 8, paddingLeft: 6 }}>
-        <div style={{ display: "flex", color, fontSize: 13, fontWeight: 700, letterSpacing: 2 }}>
+        <div style={{ display: "flex", color, fontSize: 13, fontWeight: 700, letterSpacing: 2, fontFamily: DISPLAY_FONT }}>
           {label}
         </div>
       </div>
@@ -298,12 +300,12 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
   const totalCs = p.totalMinionsKilled + p.neutralMinionsKilled;
   const csPerMin = input.gameDurationMinutes > 0 ? totalCs / input.gameDurationMinutes : 0;
   const kda = p.deaths === 0 ? "Perfect" : ((p.kills + p.assists) / p.deaths).toFixed(2);
-  const resultColor = p.win ? "#22c55e" : "#ef4444";
+  const resultColor = p.win ? "#0AC8B9" : "#C6443E";
   const resultLabel = p.win ? "VICTORY" : "DEFEAT";
   const resultLabelTh = p.win ? "ชนะ" : "แพ้";
   const role = ROLE_LABEL[p.individualPosition] ?? p.individualPosition;
 
-  const thaiFont = await fetchThaiFont();
+  const fonts = await loadImageFonts();
 
   return Buffer.from(
     await new ImageResponse(
@@ -314,21 +316,22 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
             flexDirection: "column",
             width: "100%",
             height: "100%",
-            background: "#0f1117",
+            background: "#010A13",
             padding: "20px 28px",
-            fontFamily: "Noto Sans Thai, sans-serif",
+            fontFamily: BODY_FONT,
+            border: "1px solid #463714",
           }}
         >
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              borderRadius: 14,
+              borderRadius: 3,
               padding: "16px 20px",
               marginBottom: 14,
               border: `2px solid ${resultColor}`,
-              backgroundColor: "#0f1117",
-              backgroundImage: `linear-gradient(90deg, rgba(15,17,23,0.96) 0%, rgba(15,17,23,0.7) 55%, rgba(15,17,23,0.35) 100%), url(${champSplashUrl})`,
+              backgroundColor: "#010A13",
+              backgroundImage: `linear-gradient(90deg, rgba(1,10,19,0.96) 0%, rgba(1,10,19,0.7) 55%, rgba(1,10,19,0.35) 100%), url(${champSplashUrl})`,
               backgroundSize: "cover",
               backgroundPosition: "center 30%",
             }}
@@ -338,7 +341,7 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
                 display: "flex",
                 width: 84,
                 height: 84,
-                borderRadius: 12,
+                borderRadius: 3,
                 overflow: "hidden",
                 border: `2px solid ${resultColor}`,
                 marginRight: 18,
@@ -349,18 +352,18 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
             </div>
 
             <div style={{ display: "flex", flexDirection: "column" }}>
-              <div style={{ display: "flex", color: resultColor, fontSize: 14, fontWeight: 700, letterSpacing: 2 }}>
+              <div style={{ display: "flex", color: resultColor, fontSize: 14, fontWeight: 700, letterSpacing: 2, fontFamily: DISPLAY_FONT }}>
                 {`${resultLabel} · ${resultLabelTh}`}
               </div>
               <div style={{ display: "flex", marginTop: 2 }}>
-                <div style={{ display: "flex", color: "#ffffff", fontSize: 26, fontWeight: 700 }}>
+                <div style={{ display: "flex", color: "#F0E6D2", fontSize: 26, fontWeight: 700, fontFamily: DISPLAY_FONT }}>
                   {input.gameName}
                 </div>
-                <div style={{ display: "flex", color: "#9aa0b4", fontSize: 18, marginLeft: 4, alignItems: "center" }}>
+                <div style={{ display: "flex", color: "#A09B8C", fontSize: 18, marginLeft: 4, alignItems: "center" }}>
                   {`#${input.tagLine}`}
                 </div>
               </div>
-              <div style={{ display: "flex", color: "#9aa0b4", fontSize: 13, marginTop: 3 }}>
+              <div style={{ display: "flex", color: "#A09B8C", fontSize: 13, marginTop: 3 }}>
                 {`เล่น ${input.player.championDisplayName} · ${role} · ${input.gameMode} · ${Math.floor(input.gameDurationMinutes)} นาที`}
               </div>
             </div>
@@ -368,24 +371,24 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
             <div style={{ display: "flex", flex: 1 }} />
 
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-              <div style={{ display: "flex", color: "#9aa0b4", fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>KDA</div>
+              <div style={{ display: "flex", color: "#A09B8C", fontSize: 11, fontWeight: 700, letterSpacing: 1, fontFamily: DISPLAY_FONT }}>KDA</div>
               <div style={{ display: "flex", marginTop: 2 }}>
-                <div style={{ display: "flex", color: "#ffffff", fontSize: 22, fontWeight: 700 }}>{`${p.kills}`}</div>
-                <div style={{ display: "flex", color: "#9aa0b4", fontSize: 22, margin: "0 4px" }}>/</div>
-                <div style={{ display: "flex", color: "#ef4444", fontSize: 22, fontWeight: 700 }}>{`${p.deaths}`}</div>
-                <div style={{ display: "flex", color: "#9aa0b4", fontSize: 22, margin: "0 4px" }}>/</div>
-                <div style={{ display: "flex", color: "#ffffff", fontSize: 22, fontWeight: 700 }}>{`${p.assists}`}</div>
+                <div style={{ display: "flex", color: "#F0E6D2", fontSize: 22, fontWeight: 700, fontFamily: DISPLAY_FONT }}>{`${p.kills}`}</div>
+                <div style={{ display: "flex", color: "#A09B8C", fontSize: 22, margin: "0 4px" }}>/</div>
+                <div style={{ display: "flex", color: "#C6443E", fontSize: 22, fontWeight: 700, fontFamily: DISPLAY_FONT }}>{`${p.deaths}`}</div>
+                <div style={{ display: "flex", color: "#A09B8C", fontSize: 22, margin: "0 4px" }}>/</div>
+                <div style={{ display: "flex", color: "#F0E6D2", fontSize: 22, fontWeight: 700, fontFamily: DISPLAY_FONT }}>{`${p.assists}`}</div>
               </div>
-              <div style={{ display: "flex", color: "#9aa0b4", fontSize: 12, marginTop: 2 }}>{`${kda}:1`}</div>
+              <div style={{ display: "flex", color: "#A09B8C", fontSize: 12, marginTop: 2 }}>{`${kda}:1`}</div>
             </div>
           </div>
 
           <div
             style={{
               display: "flex",
-              background: "#161823",
-              border: "1px solid #2b2d35",
-              borderRadius: 12,
+              background: "#0A1428",
+              border: "1px solid #463714",
+              borderRadius: 3,
               padding: "12px 14px",
               marginBottom: 14,
               alignItems: "center",
@@ -402,7 +405,7 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
 
             <div style={{ display: "flex", alignItems: "center", marginRight: 14 }}>
               <div style={{ display: "flex", marginRight: 6 }}>
-                <IconBox url={keystoneUrl} size={48} ring="#a78bfa" rounded />
+                <IconBox url={keystoneUrl} size={48} ring="#4D9BE6" rounded />
               </div>
               <div style={{ display: "flex", flexDirection: "column" }}>
                 <div style={{ display: "flex", marginBottom: 4 }}>
@@ -414,7 +417,7 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
               </div>
             </div>
 
-            <div style={{ display: "flex", width: 1, height: 56, background: "#2b2d35", marginRight: 14 }} />
+            <div style={{ display: "flex", width: 1, height: 56, background: "#463714", marginRight: 14 }} />
 
             <div style={{ display: "flex" }}>
               <div style={{ display: "flex", marginRight: 6 }}>
@@ -436,51 +439,53 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
                 <IconBox url={item5} size={52} />
               </div>
               <div style={{ display: "flex" }}>
-                <IconBox url={item6} size={52} ring="#a78bfa55" />
+                <IconBox url={item6} size={52} ring="#4D9BE655" />
               </div>
             </div>
 
             <div style={{ display: "flex", flex: 1 }} />
 
             <div style={{ display: "flex", flexDirection: "column", marginRight: 16, alignItems: "flex-end" }}>
-              <div style={{ display: "flex", color: "#9aa0b4", fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>CS</div>
-              <div style={{ display: "flex", color: "#ffffff", fontSize: 16, fontWeight: 700 }}>{`${totalCs}`}</div>
-              <div style={{ display: "flex", color: "#9aa0b4", fontSize: 11 }}>{`${csPerMin.toFixed(1)}/min`}</div>
+              <div style={{ display: "flex", color: "#A09B8C", fontSize: 11, fontWeight: 700, letterSpacing: 1, fontFamily: DISPLAY_FONT }}>CS</div>
+              <div style={{ display: "flex", color: "#F0E6D2", fontSize: 16, fontWeight: 700 }}>{`${totalCs}`}</div>
+              <div style={{ display: "flex", color: "#A09B8C", fontSize: 11 }}>{`${csPerMin.toFixed(1)}/min`}</div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", marginRight: 16, alignItems: "flex-end" }}>
-              <div style={{ display: "flex", color: "#9aa0b4", fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>VISION</div>
-              <div style={{ display: "flex", color: "#ffffff", fontSize: 16, fontWeight: 700 }}>{`${p.visionScore}`}</div>
+              <div style={{ display: "flex", color: "#A09B8C", fontSize: 11, fontWeight: 700, letterSpacing: 1, fontFamily: DISPLAY_FONT }}>VISION</div>
+              <div style={{ display: "flex", color: "#F0E6D2", fontSize: 16, fontWeight: 700 }}>{`${p.visionScore}`}</div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", marginRight: 16, alignItems: "flex-end" }}>
-              <div style={{ display: "flex", color: "#9aa0b4", fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>DMG</div>
-              <div style={{ display: "flex", color: "#ffffff", fontSize: 16, fontWeight: 700 }}>
+              <div style={{ display: "flex", color: "#A09B8C", fontSize: 11, fontWeight: 700, letterSpacing: 1, fontFamily: DISPLAY_FONT }}>DMG</div>
+              <div style={{ display: "flex", color: "#F0E6D2", fontSize: 16, fontWeight: 700 }}>
                 {`${(p.totalDamageDealtToChampions / 1000).toFixed(1)}k`}
               </div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-              <div style={{ display: "flex", color: "#9aa0b4", fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>GOLD</div>
-              <div style={{ display: "flex", color: "#ffffff", fontSize: 16, fontWeight: 700 }}>
+              <div style={{ display: "flex", color: "#A09B8C", fontSize: 11, fontWeight: 700, letterSpacing: 1, fontFamily: DISPLAY_FONT }}>GOLD</div>
+              <div style={{ display: "flex", color: "#F0E6D2", fontSize: 16, fontWeight: 700 }}>
                 {`${(p.goldEarned / 1000).toFixed(1)}k`}
               </div>
             </div>
           </div>
 
+          <div style={{ display: "flex", marginBottom: 14 }}>
+            <GoldRule width={1044} />
+          </div>
+
           <div style={{ display: "flex" }}>
             <div style={{ display: "flex", flex: 1, marginRight: 6 }}>
-              <TeamColumn label="BLUE TEAM" color="#60a5fa" rows={blueRows} />
+              <TeamColumn label="BLUE TEAM" color="#4D9BE6" rows={blueRows} />
             </div>
             <div style={{ display: "flex", flex: 1, marginLeft: 6 }}>
-              <TeamColumn label="RED TEAM" color="#ef4444" rows={redRows} />
+              <TeamColumn label="RED TEAM" color="#C6443E" rows={redRows} />
             </div>
           </div>
         </div>
       ),
       {
         width: 1100,
-        height: 620,
-        fonts: thaiFont
-          ? [{ name: "Noto Sans Thai", data: thaiFont, weight: 600, style: "normal" }]
-          : undefined,
+        height: 643,
+        fonts: fonts.length ? fonts : undefined,
       }
     ).arrayBuffer()
   );

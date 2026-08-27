@@ -8,17 +8,18 @@ import {
 } from "./ddragon";
 import { BuildRecommendation } from "./gemini";
 import { getLatestVersion } from "./champions";
-import { fetchThaiFont } from "./imageCommon";
+import { loadImageFonts, DISPLAY_FONT, BODY_FONT } from "./imageCommon";
+import { GoldRule } from "./imageParts";
 
 const SECTIONS = {
-  starter: { label: "STARTER", sub: "ไอเทมเริ่มต้น", color: "#4ade80" },
-  core: { label: "CORE", sub: "ช่อง 1-3 (ของใหญ่-รองเท้า-ของใหญ่)", color: "#60a5fa" },
-  situational: { label: "SITUATIONAL", sub: "ช่อง 4-6 ตามรูปเกม", color: "#fbbf24" },
-  optional: { label: "OPTIONAL", sub: "ทางเลือกสำรอง", color: "#2dd4bf" },
-  runes: { label: "RUNES", sub: "รูนแนะนำ", color: "#a78bfa" },
-  skills: { label: "SKILL ORDER", sub: "ลำดับการอัพสกิล", color: "#f472b6" },
-  strong: { label: "STRONG VS", sub: "ชนะทาง", color: "#22c55e" },
-  weak: { label: "WEAK VS", sub: "แพ้ทาง", color: "#ef4444" },
+  starter: { label: "STARTER", sub: "ไอเทมเริ่มต้น", color: "#0AC8B9" },
+  core: { label: "CORE", sub: "ช่อง 1-3 (ของใหญ่-รองเท้า-ของใหญ่)", color: "#C8AA6E" },
+  situational: { label: "SITUATIONAL", sub: "ช่อง 4-6 ตามรูปเกม", color: "#4D9BE6" },
+  optional: { label: "OPTIONAL", sub: "ทางเลือกสำรอง", color: "#0397AB" },
+  runes: { label: "RUNES", sub: "รูนแนะนำ", color: "#9D8CD8" },
+  skills: { label: "SKILL ORDER", sub: "ลำดับการอัพสกิล", color: "#E0836A" },
+  strong: { label: "STRONG VS", sub: "ชนะทาง", color: "#0AC8B9" },
+  weak: { label: "WEAK VS", sub: "แพ้ทาง", color: "#C6443E" },
 };
 
 function IconCell({ url, size = 48 }: { url: string | null; size?: number }) {
@@ -29,10 +30,10 @@ function IconCell({ url, size = 48 }: { url: string | null; size?: number }) {
         display: "flex",
         width: size,
         height: size,
-        borderRadius: 8,
+        borderRadius: 2,
         overflow: "hidden",
-        background: "#1f2230",
-        border: "1px solid #2b2d35",
+        background: "#04101C",
+        border: "1px solid #463714",
         marginRight: 6,
       }}
     >
@@ -61,15 +62,15 @@ function SectionLabel({ section, labelWidth = 150 }: { section: Section; labelWi
         <div
           style={{
             display: "flex",
-            color: "#ffffff",
+            color: "#F0E6D2",
             fontSize: 17,
             fontWeight: 700,
-            letterSpacing: 1,
+            letterSpacing: 1, fontFamily: DISPLAY_FONT,
           }}
         >
           {section.label}
         </div>
-        <div style={{ display: "flex", color: "#9aa0b4", fontSize: 12, marginTop: 1 }}>
+        <div style={{ display: "flex", color: "#A09B8C", fontSize: 12, marginTop: 1 }}>
           {section.sub}
         </div>
       </div>
@@ -84,7 +85,7 @@ function FullRow({ section, urls }: { section: Section; urls: (string | null)[] 
         display: "flex",
         alignItems: "center",
         padding: "10px 0",
-        borderBottom: "1px solid #1f222b",
+        borderBottom: "1px solid #04101C",
       }}
     >
       <SectionLabel section={section} />
@@ -102,7 +103,7 @@ function Arrow() {
     <div
       style={{
         display: "flex",
-        color: "#4b5563",
+        color: "#5B5A56",
         fontSize: 24,
         marginRight: 6,
         alignItems: "center",
@@ -128,7 +129,7 @@ function CoreRow({
         display: "flex",
         alignItems: "center",
         padding: "10px 0",
-        borderBottom: "1px solid #1f222b",
+        borderBottom: "1px solid #04101C",
       }}
     >
       <SectionLabel section={section} />
@@ -143,10 +144,10 @@ function CoreRow({
                 display: "flex",
                 width: 52,
                 height: 52,
-                borderRadius: 8,
+                borderRadius: 2,
                 overflow: "hidden",
-                background: "#1f2230",
-                border: isBoots ? "2px solid #fb923c" : "1px solid #2b2d35",
+                background: "#04101C",
+                border: isBoots ? "2px solid #E0836A" : "1px solid #463714",
                 marginRight: 6,
                 position: "relative",
               }}
@@ -197,11 +198,11 @@ function SplitRow({
         display: "flex",
         alignItems: "center",
         padding: "10px 0",
-        borderBottom: "1px solid #1f222b",
+        borderBottom: "1px solid #04101C",
       }}
     >
       <HalfCell section={left} urls={leftUrls} />
-      <div style={{ display: "flex", width: 1, height: 48, background: "#2b2d35", marginRight: 12 }} />
+      <div style={{ display: "flex", width: 1, height: 48, background: "#463714", marginRight: 12 }} />
       <HalfCell section={right} urls={rightUrls} />
     </div>
   );
@@ -222,10 +223,10 @@ function SkillIcon({ url, letter }: { url: string | null; letter: string }) {
           display: "flex",
           width: 48,
           height: 48,
-          borderRadius: 8,
+          borderRadius: 2,
           overflow: "hidden",
-          background: "#1f2230",
-          border: "1px solid #2b2d35",
+          background: "#04101C",
+          border: "1px solid #463714",
           position: "relative",
         }}
       >
@@ -242,7 +243,7 @@ function SkillIcon({ url, letter }: { url: string | null; letter: string }) {
             width: 16,
             height: 16,
             background: "#000000cc",
-            color: "#ffffff",
+            color: "#F0E6D2",
             fontSize: 11,
             fontWeight: 700,
             alignItems: "center",
@@ -281,7 +282,7 @@ function SkillOrderRow({
         display: "flex",
         alignItems: "center",
         padding: "10px 0",
-        borderBottom: "1px solid #1f222b",
+        borderBottom: "1px solid #04101C",
       }}
     >
       <SectionLabel section={section} />
@@ -290,7 +291,7 @@ function SkillOrderRow({
           <SkillIcon key={k} url={urlByKey[k]} letter={k} />
         ))}
       </div>
-      <div style={{ display: "flex", width: 1, height: 44, background: "#2b2d35", marginRight: 14 }} />
+      <div style={{ display: "flex", width: 1, height: 44, background: "#463714", marginRight: 14 }} />
       <div style={{ display: "flex", alignItems: "center" }}>
         {safePriority.map((k, i) => (
           <div key={i} style={{ display: "flex", alignItems: "center" }}>
@@ -298,7 +299,7 @@ function SkillOrderRow({
               <div
                 style={{
                   display: "flex",
-                  color: "#4b5563",
+                  color: "#5B5A56",
                   fontSize: 20,
                   margin: "0 6px",
                 }}
@@ -311,9 +312,9 @@ function SkillOrderRow({
                 display: "flex",
                 width: 32,
                 height: 32,
-                borderRadius: 16,
-                background: i === 0 ? section.color : "#1f2230",
-                color: i === 0 ? "#0f1117" : "#ffffff",
+                borderRadius: 4,
+                background: i === 0 ? section.color : "#04101C",
+                color: i === 0 ? "#010A13" : "#F0E6D2",
                 fontSize: 14,
                 fontWeight: 700,
                 alignItems: "center",
@@ -348,7 +349,7 @@ function RuneRow({
         display: "flex",
         alignItems: "center",
         padding: "10px 0",
-        borderBottom: "1px solid #1f222b",
+        borderBottom: "1px solid #04101C",
       }}
     >
       <SectionLabel section={section} />
@@ -360,7 +361,7 @@ function RuneRow({
             height: 54,
             borderRadius: 27,
             overflow: "hidden",
-            background: "#1f2230",
+            background: "#04101C",
             border: `2px solid ${section.color}`,
             marginRight: 10,
           }}
@@ -377,9 +378,9 @@ function RuneRow({
               display: "flex",
               width: 24,
               height: 24,
-              borderRadius: 12,
+              borderRadius: 3,
               overflow: "hidden",
-              background: "#1f2230",
+              background: "#04101C",
               marginBottom: i === 0 ? 4 : 0,
             }}
           >
@@ -388,7 +389,7 @@ function RuneRow({
           </div>
         ))}
       </div>
-      <div style={{ display: "flex", width: 1, height: 44, background: "#2b2d35", marginRight: 10 }} />
+      <div style={{ display: "flex", width: 1, height: 44, background: "#463714", marginRight: 10 }} />
       <div style={{ display: "flex", flex: 1, flexWrap: "wrap", alignItems: "center" }}>
         {details.filter(Boolean).map((u, i) => (
           <IconCell key={i} url={u} size={40} />
@@ -439,7 +440,7 @@ export async function generateBuildImage(buildInfo: BuildRecommendation): Promis
 
   const skillPriority = buildInfo.skillPriority ?? ["Q", "E", "W"];
 
-  const thaiFont = await fetchThaiFont();
+  const fonts = await loadImageFonts();
 
   const response = new ImageResponse(
     (
@@ -449,9 +450,10 @@ export async function generateBuildImage(buildInfo: BuildRecommendation): Promis
           flexDirection: "column",
           width: "100%",
           height: "100%",
-          background: "linear-gradient(135deg, #0f1117 0%, #161823 100%)",
+          background: "linear-gradient(135deg, #010A13 0%, #0A1428 100%)",
           padding: "20px 28px",
-          fontFamily: "Noto Sans Thai, sans-serif",
+          fontFamily: BODY_FONT,
+          border: "1px solid #463714",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", marginBottom: 12 }}>
@@ -460,9 +462,9 @@ export async function generateBuildImage(buildInfo: BuildRecommendation): Promis
               display: "flex",
               width: 64,
               height: 64,
-              borderRadius: 12,
+              borderRadius: 3,
               overflow: "hidden",
-              border: "2px solid #f1c40f",
+              border: "2px solid #C8AA6E",
               marginRight: isMatchup ? 12 : 16,
             }}
           >
@@ -475,10 +477,10 @@ export async function generateBuildImage(buildInfo: BuildRecommendation): Promis
               <div
                 style={{
                   display: "flex",
-                  color: "#ef4444",
+                  color: "#C6443E",
                   fontSize: 18,
                   fontWeight: 700,
-                  letterSpacing: 2,
+                  letterSpacing: 2, fontFamily: DISPLAY_FONT,
                   margin: "0 10px",
                 }}
               >
@@ -489,9 +491,9 @@ export async function generateBuildImage(buildInfo: BuildRecommendation): Promis
                   display: "flex",
                   width: 64,
                   height: 64,
-                  borderRadius: 12,
+                  borderRadius: 3,
                   overflow: "hidden",
-                  border: "2px solid #ef4444",
+                  border: "2px solid #C6443E",
                 }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -504,10 +506,10 @@ export async function generateBuildImage(buildInfo: BuildRecommendation): Promis
             <div
               style={{
                 display: "flex",
-                color: isMatchup ? "#ef4444" : "#f1c40f",
+                color: isMatchup ? "#C6443E" : "#C8AA6E",
                 fontSize: 14,
                 fontWeight: 700,
-                letterSpacing: 2,
+                letterSpacing: 2, fontFamily: DISPLAY_FONT,
               }}
             >
               {isMatchup ? "MATCHUP BUILD" : "BUILD GUIDE"}
@@ -515,7 +517,7 @@ export async function generateBuildImage(buildInfo: BuildRecommendation): Promis
             <div
               style={{
                 display: "flex",
-                color: "#ffffff",
+                color: "#F0E6D2",
                 fontSize: isMatchup ? 22 : 28,
                 fontWeight: 700,
                 marginTop: 2,
@@ -531,10 +533,10 @@ export async function generateBuildImage(buildInfo: BuildRecommendation): Promis
             <div
               style={{
                 display: "flex",
-                color: "#9aa0b4",
+                color: "#A09B8C",
                 fontSize: 11,
                 fontWeight: 700,
-                letterSpacing: 1,
+                letterSpacing: 1, fontFamily: DISPLAY_FONT,
                 marginBottom: 4,
               }}
             >
@@ -548,10 +550,10 @@ export async function generateBuildImage(buildInfo: BuildRecommendation): Promis
                     display: "flex",
                     width: 40,
                     height: 40,
-                    borderRadius: 6,
+                    borderRadius: 2,
                     overflow: "hidden",
-                    background: "#1f2230",
-                    border: "1px solid #2b2d35",
+                    background: "#04101C",
+                    border: "1px solid #463714",
                     marginLeft: i === 0 ? 0 : 6,
                   }}
                 >
@@ -561,8 +563,12 @@ export async function generateBuildImage(buildInfo: BuildRecommendation): Promis
               ))}
             </div>
           </div>
-          <div style={{ display: "flex", color: "#6b7280", fontSize: 13 }}>by Gemini AI</div>
+          <div style={{ display: "flex", color: "#5B5A56", fontSize: 13 }}>by Gemini AI</div>
         </div>
+
+          <div style={{ display: "flex", marginBottom: 6 }}>
+            <GoldRule width={1044} />
+          </div>
 
         <FullRow section={SECTIONS.starter} urls={starterUrls} />
         <CoreRow section={SECTIONS.core} urls={coreUrls} bootsIndex={bootsIndex} />
@@ -597,26 +603,26 @@ export async function generateBuildImage(buildInfo: BuildRecommendation): Promis
               display: "flex",
               marginTop: 12,
               padding: "10px 14px",
-              background: "rgba(239,68,68,0.08)",
-              border: "1px solid rgba(239,68,68,0.35)",
-              borderRadius: 10,
+              background: "rgba(198,68,62,0.08)",
+              border: "1px solid rgba(198,68,62,0.35)",
+              borderRadius: 2,
               alignItems: "flex-start",
             }}
           >
             <div
               style={{
                 display: "flex",
-                color: "#ef4444",
+                color: "#C6443E",
                 fontSize: 12,
                 fontWeight: 700,
-                letterSpacing: 1,
+                letterSpacing: 1, fontFamily: DISPLAY_FONT,
                 width: 110,
                 marginRight: 12,
               }}
             >
               TIP เลน
             </div>
-            <div style={{ display: "flex", color: "#e6e8ef", fontSize: 13, flex: 1 }}>
+            <div style={{ display: "flex", color: "#F0E6D2", fontSize: 13, flex: 1 }}>
               {buildInfo.matchupTip}
             </div>
           </div>
@@ -625,10 +631,8 @@ export async function generateBuildImage(buildInfo: BuildRecommendation): Promis
     ),
     {
       width: 1100,
-      height: isMatchup ? 640 : 580,
-      fonts: thaiFont
-        ? [{ name: "Noto Sans Thai", data: thaiFont, weight: 600, style: "normal" }]
-        : undefined,
+      height: isMatchup ? 655 : 595,
+      fonts: fonts.length ? fonts : undefined,
     }
   );
 

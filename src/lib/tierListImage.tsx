@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import { getLatestVersion } from "./champions";
-import { fetchThaiFont } from "./imageCommon";
+import { loadImageFonts, DISPLAY_FONT, BODY_FONT } from "./imageCommon";
+import { GoldRule } from "./imageParts";
 import { TierEntry, TierLetter, RoleKey } from "./tierList";
 
 const ROLE_LABEL: Record<RoleKey, string> = {
@@ -11,13 +12,14 @@ const ROLE_LABEL: Record<RoleKey, string> = {
   support: "SUPPORT",
 };
 
+// Dark plates with a coloured edge, the way the League client badges rank
 const TIER_COLOR: Record<TierLetter, { bg: string; fg: string }> = {
-  "S+": { bg: "#ef4444", fg: "#ffffff" },
-  S: { bg: "#fb923c", fg: "#0f1117" },
-  A: { bg: "#f1c40f", fg: "#0f1117" },
-  B: { bg: "#22c55e", fg: "#0f1117" },
-  C: { bg: "#60a5fa", fg: "#0f1117" },
-  D: { bg: "#9aa0b4", fg: "#0f1117" },
+  "S+": { bg: "rgba(200,170,110,0.18)", fg: "#F0D8A8" },
+  S: { bg: "rgba(200,170,110,0.12)", fg: "#C8AA6E" },
+  A: { bg: "rgba(10,200,185,0.12)", fg: "#0AC8B9" },
+  B: { bg: "rgba(3,151,171,0.12)", fg: "#4D9BE6" },
+  C: { bg: "rgba(160,155,140,0.10)", fg: "#A09B8C" },
+  D: { bg: "rgba(198,68,62,0.12)", fg: "#C6443E" },
 };
 
 const TIER_LABEL_TH: Record<TierLetter, string> = {
@@ -33,7 +35,7 @@ const TIERS: TierLetter[] = ["S+", "S", "A", "B", "C", "D"];
 
 function ChampIcon({ entry, version }: { entry: TierEntry; version: string }) {
   const iconUrl = `https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${entry.championIdName}.png`;
-  const winColor = entry.winRate >= 52 ? "#22c55e" : entry.winRate >= 49 ? "#fbbf24" : "#ef4444";
+  const winColor = entry.winRate >= 52 ? "#0AC8B9" : entry.winRate >= 49 ? "#C8AA6E" : "#C6443E";
   return (
     <div
       style={{
@@ -49,10 +51,10 @@ function ChampIcon({ entry, version }: { entry: TierEntry; version: string }) {
           display: "flex",
           width: 56,
           height: 56,
-          borderRadius: 10,
+          borderRadius: 2,
           overflow: "hidden",
-          background: "#1f2230",
-          border: "1px solid #2b2d35",
+          background: "#04101C",
+          border: "1px solid #463714",
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -89,9 +91,9 @@ function TierRow({
         display: "flex",
         alignItems: "flex-start",
         padding: "10px 12px",
-        background: "#161823",
-        border: "1px solid #2b2d35",
-        borderRadius: 10,
+        background: "#0A1428",
+        border: "1px solid #463714",
+        borderRadius: 2,
         marginBottom: 8,
       }}
     >
@@ -100,8 +102,9 @@ function TierRow({
           display: "flex",
           width: 130,
           minHeight: 60,
-          borderRadius: 8,
+          borderRadius: 2,
           background: colors.bg,
+          border: `1px solid ${colors.fg}`,
           color: colors.fg,
           fontSize: 18,
           fontWeight: 700,
@@ -119,7 +122,7 @@ function TierRow({
         {entries.length > 0 ? (
           entries.map(e => <ChampIcon key={e.championId} entry={e} version={version} />)
         ) : (
-          <div style={{ display: "flex", color: "#6b7280", fontSize: 13, paddingTop: 20 }}>
+          <div style={{ display: "flex", color: "#5B5A56", fontSize: 13, paddingTop: 20 }}>
             ไม่มีแชมเปี้ยนในระดับนี้
           </div>
         )}
@@ -133,7 +136,7 @@ export async function generateTierListImage(
   entries: TierEntry[]
 ): Promise<Buffer> {
   const version = await getLatestVersion();
-  const thaiFont = await fetchThaiFont();
+  const fonts = await loadImageFonts();
 
   const byTier: Record<TierLetter, TierEntry[]> = {
     "S+": [],
@@ -154,7 +157,7 @@ export async function generateTierListImage(
   const ROW_OVERHEAD = 28;
   const ICONS_PER_ROW = 14;
 
-  let neededHeight = 140; // header + padding top
+  let neededHeight = 163; // header + rule + padding top
   for (const t of TIERS) {
     const count = byTier[t].length || 1;
     const rows = Math.max(1, Math.ceil(count / ICONS_PER_ROW));
@@ -171,9 +174,10 @@ export async function generateTierListImage(
             flexDirection: "column",
             width: "100%",
             height: "100%",
-            background: "linear-gradient(135deg, #0f1117 0%, #161823 100%)",
+            background: "linear-gradient(135deg, #010A13 0%, #0A1428 100%)",
             padding: "20px 28px",
-            fontFamily: "Noto Sans Thai, sans-serif",
+            fontFamily: BODY_FONT,
+            border: "1px solid #463714",
           }}
         >
           <div style={{ display: "flex", alignItems: "center", marginBottom: 16 }}>
@@ -181,10 +185,10 @@ export async function generateTierListImage(
               <div
                 style={{
                   display: "flex",
-                  color: "#f1c40f",
+                  color: "#C8AA6E",
                   fontSize: 14,
                   fontWeight: 700,
-                  letterSpacing: 2,
+                  letterSpacing: 2, fontFamily: DISPLAY_FONT,
                 }}
               >
                 TIER LIST
@@ -192,7 +196,7 @@ export async function generateTierListImage(
               <div
                 style={{
                   display: "flex",
-                  color: "#ffffff",
+                  color: "#F0E6D2",
                   fontSize: 30,
                   fontWeight: 700,
                   marginTop: 2,
@@ -200,17 +204,21 @@ export async function generateTierListImage(
               >
                 {ROLE_LABEL[role]}
               </div>
-              <div style={{ display: "flex", color: "#9aa0b4", fontSize: 13, marginTop: 4 }}>
+              <div style={{ display: "flex", color: "#A09B8C", fontSize: 13, marginTop: 4 }}>
                 {`Master+ · stats จาก u.gg · % คือ Win Rate`}
               </div>
-              <div style={{ display: "flex", color: "#6b7280", fontSize: 11, marginTop: 2 }}>
+              <div style={{ display: "flex", color: "#5B5A56", fontSize: 11, marginTop: 2 }}>
                 {`tier คำนวนจาก Win Rate + Pick Rate + Ban Rate รวมกัน (ไม่ใช่ WR อย่างเดียว)`}
               </div>
             </div>
             <div style={{ display: "flex", flex: 1 }} />
-            <div style={{ display: "flex", color: "#6b7280", fontSize: 13 }}>
+            <div style={{ display: "flex", color: "#5B5A56", fontSize: 13 }}>
               อัพเดตทุก patch
             </div>
+          </div>
+
+          <div style={{ display: "flex", marginBottom: 14 }}>
+            <GoldRule width={1144} />
           </div>
 
           {TIERS.map(t => (
@@ -221,9 +229,7 @@ export async function generateTierListImage(
       {
         width: 1200,
         height: Math.max(neededHeight, 600),
-        fonts: thaiFont
-          ? [{ name: "Noto Sans Thai", data: thaiFont, weight: 600, style: "normal" }]
-          : undefined,
+        fonts: fonts.length ? fonts : undefined,
       }
     ).arrayBuffer()
   );

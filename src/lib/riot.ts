@@ -14,6 +14,24 @@ function getHeaders(): HeadersInit {
   };
 }
 
+/**
+ * Fetches a Riot endpoint, retrying once when we get rate limited (429).
+ * Match history pages fire ~20 requests at a time, so hitting the per-second
+ * bucket is realistic — honour Retry-After instead of failing the whole page.
+ */
+async function riotFetch(url: string): Promise<Response> {
+  let res = await fetch(url, { headers: getHeaders() });
+
+  if (res.status === 429) {
+    const retryAfter = Number(res.headers.get("Retry-After") ?? "1");
+    const waitMs = Math.min(Math.max(retryAfter, 1), 10) * 1000;
+    await new Promise(resolve => setTimeout(resolve, waitMs));
+    res = await fetch(url, { headers: getHeaders() });
+  }
+
+  return res;
+}
+
 export interface RiotAccount {
   puuid: string;
   gameName: string;
@@ -108,6 +126,8 @@ export interface MatchDetail {
   info: {
     gameMode: string;
     gameDuration: number; // in seconds
+    gameCreation: number; // epoch ms the game started
+    queueId: number;
     participants: MatchParticipant[];
   };
 }
@@ -145,7 +165,7 @@ export interface ActiveGameInfo {
  */
 export async function getRiotAccount(gameName: string, tagLine: string): Promise<RiotAccount> {
   const url = `${ACCOUNT_REGION_URL}/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`;
-  const res = await fetch(url, { headers: getHeaders() });
+  const res = await riotFetch(url);
   
   if (!res.ok) {
     if (res.status === 404) {
@@ -162,7 +182,7 @@ export async function getRiotAccount(gameName: string, tagLine: string): Promise
  */
 export async function getSummonerByPuuid(puuid: string): Promise<Summoner> {
   const url = `${PLATFORM_URL}/lol/summoner/v4/summoners/by-puuid/${puuid}`;
-  const res = await fetch(url, { headers: getHeaders() });
+  const res = await riotFetch(url);
   
   if (!res.ok) {
     throw new Error(`Summoner API returned status ${res.status} for PUUID ${puuid}`);
@@ -176,7 +196,7 @@ export async function getSummonerByPuuid(puuid: string): Promise<Summoner> {
  */
 export async function getLeagueEntries(puuid: string): Promise<LeagueEntry[]> {
   const url = `${PLATFORM_URL}/lol/league/v4/entries/by-puuid/${puuid}`;
-  const res = await fetch(url, { headers: getHeaders() });
+  const res = await riotFetch(url);
   
   if (!res.ok) {
     throw new Error(`League API returned status ${res.status} for PUUID ${puuid}`);
@@ -190,7 +210,7 @@ export async function getLeagueEntries(puuid: string): Promise<LeagueEntry[]> {
  */
 export async function getTopChampionMasteries(puuid: string, count: number = 3): Promise<ChampionMastery[]> {
   const url = `${PLATFORM_URL}/lol/champion-mastery/v4/champion-masteries/by-puuid/${puuid}/top?count=${count}`;
-  const res = await fetch(url, { headers: getHeaders() });
+  const res = await riotFetch(url);
   
   if (!res.ok) {
     throw new Error(`Champion Mastery API returned status ${res.status} for PUUID ${puuid}`);
@@ -200,11 +220,12 @@ export async function getTopChampionMasteries(puuid: string, count: number = 3):
 }
 
 /**
- * Gets match IDs list for a PUUID
+ * Gets match IDs list for a PUUID.
+ * `start` is the offset into the player's history, used to page further back.
  */
-export async function getMatchIds(puuid: string, count: number = 5): Promise<string[]> {
-  const url = `${MATCH_REGION_URL}/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=${count}`;
-  const res = await fetch(url, { headers: getHeaders() });
+export async function getMatchIds(puuid: string, count: number = 5, start: number = 0): Promise<string[]> {
+  const url = `${MATCH_REGION_URL}/lol/match/v5/matches/by-puuid/${puuid}/ids?start=${start}&count=${count}`;
+  const res = await riotFetch(url);
   
   if (!res.ok) {
     throw new Error(`Match IDs API returned status ${res.status} for PUUID ${puuid}`);
@@ -213,18 +234,61 @@ export async function getMatchIds(puuid: string, count: number = 5): Promise<str
   return res.json();
 }
 
+// Finished matches never change, so a warm instance can serve repeat paging
+// (and the same match showing up in /history, /coach and /detailgame) for free.
+const matchDetailCache = new Map<string, MatchDetail>();
+const MATCH_CACHE_LIMIT = 200;
+
 /**
  * Gets specific match details by Match ID
  */
 export async function getMatchDetail(matchId: string): Promise<MatchDetail> {
+  const cached = matchDetailCache.get(matchId);
+  if (cached) return cached;
+
   const url = `${MATCH_REGION_URL}/lol/match/v5/matches/${matchId}`;
-  const res = await fetch(url, { headers: getHeaders() });
+  const res = await riotFetch(url);
   
   if (!res.ok) {
     throw new Error(`Match Detail API returned status ${res.status} for Match ID ${matchId}`);
   }
   
-  return res.json();
+  const match: MatchDetail = await res.json();
+
+  if (matchDetailCache.size >= MATCH_CACHE_LIMIT) {
+    const oldest = matchDetailCache.keys().next().value;
+    if (oldest) matchDetailCache.delete(oldest);
+  }
+  matchDetailCache.set(matchId, match);
+
+  return match;
+}
+
+/**
+ * Fetches many match details with a bounded concurrency so we stay inside the
+ * Riot rate limit. Matches that fail to load are dropped rather than throwing.
+ */
+export async function getMatchDetails(matchIds: string[], concurrency: number = 8): Promise<MatchDetail[]> {
+  const results: MatchDetail[] = [];
+
+  for (let i = 0; i < matchIds.length; i += concurrency) {
+    const chunk = matchIds.slice(i, i + concurrency);
+    const settled = await Promise.all(
+      chunk.map(async id => {
+        try {
+          return await getMatchDetail(id);
+        } catch (e) {
+          console.warn(`Failed to load details for match ${id}:`, e);
+          return null;
+        }
+      })
+    );
+    for (const match of settled) {
+      if (match) results.push(match);
+    }
+  }
+
+  return results;
 }
 
 /**
@@ -232,7 +296,7 @@ export async function getMatchDetail(matchId: string): Promise<MatchDetail> {
  */
 export async function getActiveGame(puuid: string): Promise<ActiveGameInfo | null> {
   const url = `${PLATFORM_URL}/lol/spectator/v5/active-games/by-puuid/${puuid}`;
-  const res = await fetch(url, { headers: getHeaders() });
+  const res = await riotFetch(url);
   
   if (res.status === 404) {
     return null; // Not currently in a game
