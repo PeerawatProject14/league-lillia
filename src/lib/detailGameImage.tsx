@@ -42,9 +42,9 @@ export interface DetailPlayerEntry {
   damage: number;
   gold: number;
   role: string;
-  /** Earned nickname for this match, filled in by the handler. */
-  title?: string;
-  titleTone?: "good" | "bad" | "neutral";
+  win: boolean;
+  /** Earned badges for this match, filled in by the handler. */
+  titles?: { text: string; tone: "good" | "bad" | "neutral"; top: boolean }[];
 }
 
 export interface DetailGameImageInput {
@@ -108,6 +108,51 @@ function IconBox({
         // eslint-disable-next-line @next/next/no-img-element
         <img src={url} width={size} height={size} alt="" />
       ) : null}
+    </div>
+  );
+}
+
+
+const BADGE_GOLD = "#C8AA6E";
+const BADGE_GREEN = "#4FCF8B";
+const BADGE_RED = "#C6443E";
+const BADGE_GREY = "#5B5A56";
+
+/** Inline SVG so the star does not depend on the font having the glyph. */
+const STAR_SVG =
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'>" +
+  "<path d='M5 0 L6.2 3.6 L10 3.6 L6.9 5.85 L8.1 9.5 L5 7.2 L1.9 9.5 L3.1 5.85 L0 3.6 L3.8 3.6 Z' fill='%23C8AA6E'/></svg>";
+
+function Badge({ text, tone, top }: { text: string; tone: "good" | "bad" | "neutral"; top: boolean }) {
+  const colour = top && tone === "good" ? BADGE_GOLD : tone === "good" ? BADGE_GREEN : tone === "bad" ? BADGE_RED : BADGE_GREY;
+  const tint =
+    top && tone === "good"
+      ? "rgba(200,170,110,0.12)"
+      : tone === "good"
+      ? "rgba(79,207,139,0.10)"
+      : tone === "bad"
+      ? "rgba(198,68,62,0.12)"
+      : "rgba(1,10,19,0.6)";
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        flexShrink: 0,
+        color: colour,
+        fontSize: 10,
+        border: `1px solid ${colour}66`,
+        background: tint,
+        padding: "2px 7px",
+        marginRight: 5,
+      }}
+    >
+      {top && tone === "good" && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={STAR_SVG} width={9} height={9} alt="" style={{ marginRight: 4 }} />
+      )}
+      {text}
     </div>
   );
 }
@@ -179,7 +224,7 @@ function PlayerRow({ data }: { data: PlayerRowData }) {
         </div>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", width: 148, marginRight: 4 }}>
+      <div style={{ display: "flex", flexDirection: "column", width: 150, marginRight: 10 }}>
         <div
           style={{
             display: "flex",
@@ -198,21 +243,18 @@ function PlayerRow({ data }: { data: PlayerRowData }) {
           <div style={{ display: "flex", color: "#A09B8C", margin: "0 2px" }}>/</div>
           <div style={{ display: "flex", color: "#F0E6D2" }}>{`${p.assists}`}</div>
         </div>
-        {p.title && (
-          <div
-            style={{
-              display: "flex",
-              color: p.titleTone === "good" ? "#C8AA6E" : p.titleTone === "bad" ? "#C6443E" : "#5B5A56",
-              fontSize: 10,
-              marginTop: 3,
-            }}
-          >
-            {p.title}
-          </div>
-        )}
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", width: 38, marginRight: 4, alignItems: "flex-end" }}>
+      {/* one line only: the teams stack vertically so there is room for it */}
+      <div style={{ display: "flex", alignItems: "center", width: 430, overflow: "hidden", marginRight: 8 }}>
+        {(p.titles ?? []).map((t, i) => (
+          <Badge key={i} text={t.text} tone={t.tone} top={t.top} />
+        ))}
+      </div>
+
+      <div style={{ display: "flex", flex: 1 }} />
+
+      <div style={{ display: "flex", flexDirection: "column", width: 40, marginRight: 8, alignItems: "flex-end" }}>
         <div style={{ display: "flex", color: "#A09B8C", fontSize: 9, fontWeight: 700, letterSpacing: 1, fontFamily: DISPLAY_FONT }}>CS</div>
         <div style={{ display: "flex", color: "#F0E6D2", fontSize: 11, fontWeight: 700, marginTop: 1 }}>{`${p.cs}`}</div>
       </div>
@@ -532,11 +574,11 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
             <GoldRule width={1044} />
           </div>
 
-          <div style={{ display: "flex" }}>
-            <div style={{ display: "flex", flex: 1, marginRight: 6 }}>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", marginBottom: 12 }}>
               <TeamColumn label="BLUE TEAM" color="#4D9BE6" rows={blueRows} />
             </div>
-            <div style={{ display: "flex", flex: 1, marginLeft: 6 }}>
+            <div style={{ display: "flex" }}>
               <TeamColumn label="RED TEAM" color="#C6443E" rows={redRows} />
             </div>
           </div>
@@ -544,7 +586,7 @@ export async function generateDetailGameImage(input: DetailGameImageInput): Prom
       ),
       {
         width: 1100,
-        height: 723,
+        height: 962,
         fonts: fonts.length ? fonts : undefined,
       }
     ).arrayBuffer()
