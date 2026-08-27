@@ -24,7 +24,7 @@ import { fetchTierList, RoleKey } from "@/lib/tierList";
 import { generateTierListImage } from "@/lib/tierListImage";
 import { generateRoastImage } from "@/lib/roastImage";
 import { generateHallOfShameImage } from "@/lib/hallOfShameImage";
-import { generateVersusImage } from "@/lib/versusImage";
+import { generateVersusImage, decideVersusWinner } from "@/lib/versusImage";
 import {
   parseRiotId,
   collectRecentForm,
@@ -1286,6 +1286,14 @@ async function handleVersusCommand(inputA: string, inputB: string, token: string
   const sideA = versusSide(formA);
   const sideB = versusSide(formB);
 
+  const score = decideVersusWinner(sideA, sideB);
+  sideA.categoriesWon = score.aCategories;
+  sideB.categoriesWon = score.bCategories;
+
+  const categorySummary = score.categories
+    .map(c => `${c.label}: ${c.winner === "tie" ? "เสมอ" : c.winner === "a" ? sideA.gameName : sideB.gameName}`)
+    .join(", ");
+
   const verdict = await getAiVersusVerdict(
     {
       name: `${sideA.gameName}#${sideA.tagLine}`,
@@ -1308,15 +1316,15 @@ async function handleVersusCommand(inputA: string, inputB: string, token: string
       topChampion: sideB.topChampion,
       championPool: sideB.champions.map(c => `${c.name} ${c.games} เกม ${Math.round((c.wins / c.games) * 100)}%`),
       roleSplit: sideB.roles.map(r => `${r.role} ${r.games}`),
-    }
+    },
+    score.winner,
+    categorySummary
   );
-
-  const winner: "a" | "b" = verdict.winner === "b" ? "b" : "a";
 
   const imageBuffer = await generateVersusImage({
     a: sideA,
     b: sideB,
-    winner,
+    winner: score.winner,
     verdict: verdict.verdict,
     loserTitle: verdict.loserTitle,
   });

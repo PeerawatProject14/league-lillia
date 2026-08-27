@@ -857,13 +857,21 @@ export interface VersusSide {
 }
 
 export interface VersusVerdict {
-  winner: "a" | "b";
   verdict: string;
   loserTitle: string;
 }
 
-/** Decides who lost the stat duel and hands the loser a title. */
-export async function getAiVersusVerdict(a: VersusSide, b: VersusSide): Promise<VersusVerdict> {
+/**
+ * Narrates a duel that has already been decided by the numbers and hands the
+ * loser a title. The model is deliberately not allowed to pick the winner —
+ * it used to choose the side with fewer category wins.
+ */
+export async function getAiVersusVerdict(
+  a: VersusSide,
+  b: VersusSide,
+  winner: "a" | "b",
+  categorySummary: string
+): Promise<VersusVerdict> {
   const describe = (s: VersusSide) =>
     `name: ${s.name} | winrate ${s.winRate}% | KDA ${s.avgKda} | deaths/game ${s.avgDeaths.toFixed(1)} | ` +
     `CS/min ${s.csPerMin.toFixed(1)} | vision ${s.visionScore.toFixed(0)} | most played ${s.topChampion}\n` +
@@ -876,14 +884,17 @@ export async function getAiVersusVerdict(a: VersusSide, b: VersusSide): Promise<
   Player A -> ${describe(a)}
   Player B -> ${describe(b)}
 
+  The duel has ALREADY been scored on the stats: ${winner === "a" ? a.name : b.name} won.
+  Category by category: ${categorySummary}
+
   Respond with VALID JSON only, schema:
   {
-    "winner": "a" | "b",
-    "verdict": "<2 Thai sentences explaining who came out on top and why, citing numbers>",
+    "verdict": "<2 Thai sentences explaining why the winner came out on top, citing numbers>",
     "loserTitle": "<a short mocking Thai title for the loser, max 24 characters>"
   }
 
-  Pick the winner from the numbers, weighting win rate and KDA most.
+  Do NOT contradict the result above — explain it. Acknowledge any category the
+  loser actually won before saying why it was not enough.
   The verdict should also say something about the champion pool or lane spread —
   a one-trick, a scattered pool, or a lane they clearly cannot play.
   ${ROAST_GUARDRAIL}

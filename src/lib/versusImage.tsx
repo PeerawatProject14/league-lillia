@@ -27,6 +27,8 @@ export interface VersusSideInput {
   damage: number;
   champions: ChampionTally[];
   roles: RoleTally[];
+  /** Filled in by the handler once the duel has been scored. */
+  categoriesWon?: number;
 }
 
 export interface VersusImageInput {
@@ -61,67 +63,80 @@ function barWidth(value: number, other: number): number {
   return Math.max(4, Math.round((value / peak) * BAR_MAX));
 }
 
+/**
+ * Rows are compared on the *rounded* numbers that actually appear on the card.
+ * Comparing the raw values highlighted a winner on rows that read as a tie.
+ */
 function buildRows(a: VersusSideInput, b: VersusSideInput): Row[] {
   const wrA = a.games ? (a.wins / a.games) * 100 : 0;
   const wrB = b.games ? (b.wins / b.games) * 100 : 0;
-  const kdaA = parseFloat(a.avgKda) || 0;
-  const kdaB = parseFloat(b.avgKda) || 0;
 
-  const cmp = (x: number, y: number, higherIsBetter = true): [boolean, boolean] => {
-    if (x === y) return [false, false];
-    const aBetter = higherIsBetter ? x > y : x < y;
-    return [aBetter, !aBetter];
+  const make = (label: string, aText: string, bText: string, higherIsBetter = true): Row => {
+    const aValue = parseFloat(aText) || 0;
+    const bValue = parseFloat(bText) || 0;
+    const tied = aText === bText;
+    const aBetter = higherIsBetter ? aValue > bValue : aValue < bValue;
+    return {
+      label,
+      aText,
+      bText,
+      aValue,
+      bValue,
+      aWins: !tied && aBetter,
+      bWins: !tied && !aBetter,
+    };
   };
 
-  const [wa, wb] = cmp(wrA, wrB);
-  const [ka, kb] = cmp(kdaA, kdaB);
-  const [da, db] = cmp(a.avgDeaths, b.avgDeaths, false);
-  const [ca, cb] = cmp(a.csPerMin, b.csPerMin);
-  const [va, vb] = cmp(a.visionScore, b.visionScore);
-  const [ga, gb] = cmp(a.damage, b.damage);
-
   return [
-    { label: "WIN RATE", aText: `${Math.round(wrA)}%`, bText: `${Math.round(wrB)}%`, aValue: wrA, bValue: wrB, aWins: wa, bWins: wb },
-    { label: "KDA", aText: a.avgKda, bText: b.avgKda, aValue: kdaA, bValue: kdaB, aWins: ka, bWins: kb },
-    {
-      label: "ตาย / เกม",
-      aText: a.avgDeaths.toFixed(1),
-      bText: b.avgDeaths.toFixed(1),
-      aValue: a.avgDeaths,
-      bValue: b.avgDeaths,
-      aWins: da,
-      bWins: db,
-    },
-    {
-      label: "CS / MIN",
-      aText: a.csPerMin.toFixed(1),
-      bText: b.csPerMin.toFixed(1),
-      aValue: a.csPerMin,
-      bValue: b.csPerMin,
-      aWins: ca,
-      bWins: cb,
-    },
-    {
-      label: "VISION",
-      aText: a.visionScore.toFixed(0),
-      bText: b.visionScore.toFixed(0),
-      aValue: a.visionScore,
-      bValue: b.visionScore,
-      aWins: va,
-      bWins: vb,
-    },
-    {
-      label: "DAMAGE",
-      aText: `${(a.damage / 1000).toFixed(1)}k`,
-      bText: `${(b.damage / 1000).toFixed(1)}k`,
-      aValue: a.damage,
-      bValue: b.damage,
-      aWins: ga,
-      bWins: gb,
-    },
+    make("WIN RATE", `${Math.round(wrA)}%`, `${Math.round(wrB)}%`),
+    make("KDA", a.avgKda, b.avgKda),
+    make("ตาย / เกม", a.avgDeaths.toFixed(1), b.avgDeaths.toFixed(1), false),
+    make("CS / MIN", a.csPerMin.toFixed(1), b.csPerMin.toFixed(1)),
+    make("VISION", a.visionScore.toFixed(0), b.visionScore.toFixed(0)),
+    make("DAMAGE", `${(a.damage / 1000).toFixed(1)}k`, `${(b.damage / 1000).toFixed(1)}k`),
   ];
 }
 
+export interface VersusScore {
+  winner: "a" | "b";
+  aCategories: number;
+  bCategories: number;
+  categories: { label: string; winner: "a" | "b" | "tie" }[];
+}
+
+/**
+ * The card decides the duel, not the model: whoever takes more stat rows wins,
+ * with win rate then KDA breaking a tie. Leaving it to the AI produced cards
+ * whose verdict contradicted their own bars.
+ */
+export function decideVersusWinner(a: VersusSideInput, b: VersusSideInput): VersusScore {
+  const rows = buildRows(a, b);
+  const aCategories = rows.filter(r => r.aWins).length;
+  const bCategories = rows.filter(r => r.bWins).length;
+
+  let winner: "a" | "b";
+  if (aCategories !== bCategories) {
+    winner = aCategories > bCategories ? "a" : "b";
+  } else {
+    const wrA = a.games ? a.wins / a.games : 0;
+    const wrB = b.games ? b.wins / b.games : 0;
+    if (wrA !== wrB) {
+      winner = wrA > wrB ? "a" : "b";
+    } else {
+      winner = (parseFloat(a.avgKda) || 0) >= (parseFloat(b.avgKda) || 0) ? "a" : "b";
+    }
+  }
+
+  return {
+    winner,
+    aCategories,
+    bCategories,
+    categories: rows.map(r => ({
+      label: r.label,
+      winner: r.aWins ? "a" : r.bWins ? "b" : "tie",
+    })),
+  };
+}
 
 const ROLE_LABEL: Record<string, string> = {
   TOP: "TOP",
@@ -320,6 +335,11 @@ function SideHeader({
           }}
         >
           WINNER
+        </div>
+      )}
+      {typeof side.categoriesWon === "number" && (
+        <div style={{ display: "flex", color: LOL.textFaint, fontSize: 11, marginTop: 6 }}>
+          {`ชนะ ${side.categoriesWon} จาก 6 หมวด`}
         </div>
       )}
     </div>
