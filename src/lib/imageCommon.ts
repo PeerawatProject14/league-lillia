@@ -164,11 +164,3 @@ export function getMasteryCrestUrl(level: number): string {
   const clamped = Math.min(Math.max(Math.floor(level) || 1, 1), 10);
   return `https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/mastery-${clamped}.png`;
 }
-
-export function getRankedBannerUrl(tier: string | undefined): string | null {
-  if (!tier) return null;
-  const key = tier.toLowerCase();
-  const VALID = ["iron", "bronze", "silver", "gold", "platinum", "emerald", "diamond", "master", "grandmaster", "challenger"];
-  if (!VALID.includes(key)) return null;
-  return `${CDRAGON_BASE}/regalia/regalia-banner-${key}.png`;
-}
