@@ -224,7 +224,7 @@ function PlayerRow({ data }: { data: PlayerRowData }) {
         </div>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", width: 150, marginRight: 10 }}>
+      <div style={{ display: "flex", flexDirection: "column", width: 138, marginRight: 8 }}>
         <div
           style={{
             display: "flex",
@@ -246,7 +246,7 @@ function PlayerRow({ data }: { data: PlayerRowData }) {
       </div>
 
       {/* one line only: the teams stack vertically so there is room for it */}
-      <div style={{ display: "flex", alignItems: "center", width: 430, overflow: "hidden", marginRight: 8 }}>
+      <div style={{ display: "flex", alignItems: "center", width: 476, overflow: "hidden", marginRight: 8 }}>
         {(p.titles ?? []).map((t, i) => (
           <Badge key={i} text={t.text} tone={t.tone} top={t.top} />
         ))}
