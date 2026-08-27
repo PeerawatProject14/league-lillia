@@ -43,8 +43,11 @@ export interface DetailPlayerEntry {
   gold: number;
   role: string;
   win: boolean;
+  pentaKills: number;
+  soloKills: number;
+  teamDamageShare: number;
   /** Earned badges for this match, filled in by the handler. */
-  titles?: { text: string; tone: "good" | "bad" | "neutral"; top: boolean }[];
+  titles?: { text: string; tone: "good" | "bad" | "neutral"; top: boolean; legendary: boolean }[];
 }
 
 export interface DetailGameImageInput {
@@ -113,6 +116,7 @@ function IconBox({
 }
 
 
+const BADGE_PURPLE = "#B084E8";
 const BADGE_GOLD = "#C8AA6E";
 const BADGE_GREEN = "#4FCF8B";
 const BADGE_RED = "#C6443E";
@@ -123,16 +127,40 @@ const STAR_SVG =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'>" +
   "<path d='M5 0 L6.2 3.6 L10 3.6 L6.9 5.85 L8.1 9.5 L5 7.2 L1.9 9.5 L3.1 5.85 L0 3.6 L3.8 3.6 Z' fill='%23C8AA6E'/></svg>";
 
-function Badge({ text, tone, top }: { text: string; tone: "good" | "bad" | "neutral"; top: boolean }) {
-  const colour = top && tone === "good" ? BADGE_GOLD : tone === "good" ? BADGE_GREEN : tone === "bad" ? BADGE_RED : BADGE_GREY;
-  const tint =
-    top && tone === "good"
-      ? "rgba(200,170,110,0.12)"
-      : tone === "good"
-      ? "rgba(79,207,139,0.10)"
-      : tone === "bad"
-      ? "rgba(198,68,62,0.12)"
-      : "rgba(1,10,19,0.6)";
+/** Crown marks the rare purple tier, the way the star marks gold. */
+const CROWN_SVG =
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 10'>" +
+  "<path d='M0 2.2 L2.6 5 L6 0.6 L9.4 5 L12 2.2 L10.6 9.4 L1.4 9.4 Z' fill='%23B084E8'/></svg>";
+
+function Badge({
+  text,
+  tone,
+  top,
+  legendary,
+}: {
+  text: string;
+  tone: "good" | "bad" | "neutral";
+  top: boolean;
+  legendary: boolean;
+}) {
+  const colour = legendary
+    ? BADGE_PURPLE
+    : top && tone === "good"
+    ? BADGE_GOLD
+    : tone === "good"
+    ? BADGE_GREEN
+    : tone === "bad"
+    ? BADGE_RED
+    : BADGE_GREY;
+  const tint = legendary
+    ? "rgba(176,132,232,0.16)"
+    : top && tone === "good"
+    ? "rgba(200,170,110,0.12)"
+    : tone === "good"
+    ? "rgba(79,207,139,0.10)"
+    : tone === "bad"
+    ? "rgba(198,68,62,0.12)"
+    : "rgba(1,10,19,0.6)";
 
   return (
     <div
@@ -142,13 +170,18 @@ function Badge({ text, tone, top }: { text: string; tone: "good" | "bad" | "neut
         flexShrink: 0,
         color: colour,
         fontSize: 10,
-        border: `1px solid ${colour}66`,
+        border: `1px solid ${legendary ? colour : colour + "66"}`,
         background: tint,
         padding: "2px 7px",
         marginRight: 5,
+        fontWeight: legendary ? 700 : 400,
       }}
     >
-      {top && tone === "good" && (
+      {legendary && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={CROWN_SVG} width={11} height={9} alt="" style={{ marginRight: 4 }} />
+      )}
+      {!legendary && top && tone === "good" && (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={STAR_SVG} width={9} height={9} alt="" style={{ marginRight: 4 }} />
       )}
@@ -248,7 +281,7 @@ function PlayerRow({ data }: { data: PlayerRowData }) {
       {/* one line only: the teams stack vertically so there is room for it */}
       <div style={{ display: "flex", alignItems: "center", width: 330, overflow: "hidden", marginRight: 4 }}>
         {(p.titles ?? []).map((t, i) => (
-          <Badge key={i} text={t.text} tone={t.tone} top={t.top} />
+          <Badge key={i} text={t.text} tone={t.tone} top={t.top} legendary={t.legendary} />
         ))}
       </div>
 

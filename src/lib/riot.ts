@@ -124,6 +124,14 @@ export interface MatchParticipant {
     styles: PerkStyle[];
     statPerks?: { defense: number; flex: number; offense: number };
   };
+  pentaKills: number;
+  quadraKills: number;
+  /** Riot's derived stats. Present on modern matches but treated as optional. */
+  challenges?: {
+    teamDamagePercentage?: number;
+    killParticipation?: number;
+    soloKills?: number;
+  };
 }
 
 export interface MatchDetail {

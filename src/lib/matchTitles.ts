@@ -21,6 +21,11 @@ export interface TitleCandidate {
   win: boolean;
   role: string;
   isMe: boolean;
+  pentaKills: number;
+  soloKills: number;
+  /** 0-1 share of the team's damage to champions. */
+  teamDamageShare: number;
+  gameMinutes: number;
 }
 
 export type TitleTone = "good" | "bad" | "neutral";
@@ -30,6 +35,8 @@ export interface AssignedTitle {
   tone: TitleTone;
   /** True for "best in the match" awards, which get a star on the card. */
   top: boolean;
+  /** True for the rare tier above gold. */
+  legendary: boolean;
 }
 
 interface Rule {
@@ -37,6 +44,8 @@ interface Rule {
   tone: TitleTone;
   /** "top" gives the badge to the single highest scorer, "all" to everyone who qualifies. */
   kind: "top" | "all";
+  /** Rare tier above gold; ignores the gold ceiling and always sorts first. */
+  legendary?: boolean;
   score: (p: TitleCandidate, ctx: Context) => number | null;
 }
 
@@ -70,6 +79,14 @@ const MAX_GOLD = 2;
  * best in the match and render gold; the rest fill in around them.
  */
 const RULES: Rule[] = [
+  // --- legendary (purple): hard, but every one of these happens on a real
+  // ladder. Thresholds were tuned against real matches, not guessed.
+  { kind: "all", legendary: true, text: "PENTAKILL", tone: "good", score: p => qualify(p.pentaKills >= 1, p.pentaKills) },
+  { kind: "all", legendary: true, text: "ไร้เทียมทาน", tone: "good", score: p => qualify(p.deaths === 0 && p.kills + p.assists >= 12 && p.gameMinutes >= 20, p.kills + p.assists) },
+  { kind: "all", legendary: true, text: "1v9", tone: "good", score: p => qualify(p.teamDamageShare >= 0.35 && kda(p) >= 5, p.teamDamageShare) },
+  { kind: "all", legendary: true, text: "โคตรเทพ", tone: "good", score: p => qualify(kda(p) >= 14 && p.kills + p.assists >= 20, kda(p)) },
+  { kind: "all", legendary: true, text: "นักล่าเดี่ยว", tone: "good", score: p => qualify(p.soloKills >= 12, p.soloKills) },
+
   // --- best in the match (gold) -----------------------------------------
   // KDA, assists and vision are won by a support in ~80% of games simply
   // because of the role, so those three are contested among the other lanes
@@ -117,11 +134,12 @@ const RULES: Rule[] = [
 /** Only reached by someone who was unremarkable at literally everything. */
 const FILLERS = ["ไม่มีอะไรเด่น", "ตัวประกอบ", "มาให้ครบทีม", "NPC ประจำเลน", "ผ่านมาเฉยๆ"];
 
-/** Gold first, then green, then red, then filler. */
+/** Legendary first, then gold, then green, then red, then filler. */
 function badgeRank(t: AssignedTitle): number {
-  if (t.tone === "neutral") return 3;
-  if (t.tone === "good") return t.top ? 0 : 1;
-  return 2;
+  if (t.legendary) return 0;
+  if (t.tone === "neutral") return 4;
+  if (t.tone === "good") return t.top ? 1 : 2;
+  return 3;
 }
 
 export function assignMatchTitles(players: TitleCandidate[]): Record<string, AssignedTitle[]> {
@@ -143,14 +161,14 @@ export function assignMatchTitles(players: TitleCandidate[]): Record<string, Ass
   for (const rule of RULES) {
     if (rule.kind === "all") {
       for (const p of players) {
-        if (!hasRoom(p)) continue;
+        if (!hasRoom(p) && !rule.legendary) continue;
         if (rule.score(p, ctx) === null) continue;
-        titles[p.key].push({ text: rule.text, tone: rule.tone, top: false });
+        titles[p.key].push({ text: rule.text, tone: rule.tone, top: false, legendary: rule.legendary === true });
       }
       continue;
     }
 
-    const isGold = rule.tone === "good";
+    const isGold = rule.tone === "good" && !rule.legendary;
     let best: TitleCandidate | null = null;
     let bestScore = -Infinity;
     for (const p of players) {
@@ -163,19 +181,20 @@ export function assignMatchTitles(players: TitleCandidate[]): Record<string, Ass
         bestScore = score;
       }
     }
-    if (best) titles[best.key].push({ text: rule.text, tone: rule.tone, top: true });
+    if (best) titles[best.key].push({ text: rule.text, tone: rule.tone, top: true, legendary: rule.legendary === true });
   }
 
   // deterministic filler so the same match always reads the same
   let fillerIndex = 0;
   for (const p of players) {
     if (titles[p.key].length > 0) continue;
-    titles[p.key].push({ text: FILLERS[fillerIndex % FILLERS.length], tone: "neutral", top: false });
+    titles[p.key].push({ text: FILLERS[fillerIndex % FILLERS.length], tone: "neutral", top: false, legendary: false });
     fillerIndex += 1;
   }
 
   for (const key of Object.keys(titles)) {
     titles[key].sort((a, b) => badgeRank(a) - badgeRank(b));
+    if (titles[key].length > MAX_TITLES) titles[key] = titles[key].slice(0, MAX_TITLES);
   }
 
   return titles;

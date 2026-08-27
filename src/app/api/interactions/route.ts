@@ -878,6 +878,9 @@ async function handleDetailGameCommand(summonerInput: string, matchId: string, t
       gold: part.goldEarned,
       role: part.individualPosition || "UNKNOWN",
       win: part.win,
+      pentaKills: part.pentaKills ?? 0,
+      soloKills: part.challenges?.soloKills ?? 0,
+      teamDamageShare: part.challenges?.teamDamagePercentage ?? 0,
     };
     if (part.teamId === 100) teamBlue.push(row);
     else teamRed.push(row);
@@ -898,6 +901,10 @@ async function handleDetailGameCommand(summonerInput: string, matchId: string, t
     win: r.win,
     role: r.role,
     isMe: r.isMe,
+    pentaKills: r.pentaKills,
+    soloKills: r.soloKills,
+    teamDamageShare: r.teamDamageShare,
+    gameMinutes: durationMin,
   }));
   const titles = assignMatchTitles(candidates);
   everyone.forEach((r, i) => {
