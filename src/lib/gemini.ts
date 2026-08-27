@@ -114,8 +114,9 @@ export interface BuildRecommendation {
  */
 const BUILD_MODEL_CHAIN = [
   "gemini-flash-latest",
+  "gemini-3.6-flash",
   "gemini-2.5-flash",
-  "gemini-2.0-flash",
+  "gemini-flash-lite-latest",
 ];
 
 const GROQ_MODEL_CHAIN = [
@@ -343,7 +344,8 @@ export interface MatchReviewInput {
 const REVIEW_MODEL_CHAIN = [
   "gemini-2.5-flash",
   "gemini-flash-latest",
-  "gemini-2.0-flash",
+  "gemini-3.6-flash",
+  "gemini-flash-lite-latest",
 ];
 
 async function callGeminiForText(
@@ -642,11 +644,12 @@ interface LiveTeamInput {
 
 const PREDICTION_MODEL_CHAIN = [
   "gemini-flash-latest",
-  "gemini-2.0-flash",
-  "gemini-1.5-flash",
+  "gemini-3.6-flash",
+  "gemini-2.5-flash",
+  "gemini-flash-lite-latest",
 ];
 
-async function callGeminiForPrediction(prompt: string): Promise<LiveGamePrediction> {
+async function callGeminiJson<T>(prompt: string): Promise<T> {
   const client = getGeminiClient();
   let lastErr: any = null;
   for (const modelName of PREDICTION_MODEL_CHAIN) {
@@ -662,10 +665,10 @@ async function callGeminiForPrediction(prompt: string): Promise<LiveGamePredicti
         .replace(/^```(?:json)?\s*/i, "")
         .replace(/\s*```\s*$/i, "")
         .trim();
-      return JSON.parse(cleaned) as LiveGamePrediction;
+      return JSON.parse(cleaned) as T;
     } catch (e: any) {
       lastErr = e;
-      console.warn(`[prediction/${modelName}] failed (status ${e?.status ?? "?"}): ${e?.message ?? e}`);
+      console.warn(`[gemini/${modelName}] failed (status ${e?.status ?? "?"}): ${e?.message ?? e}`);
       const overloaded = e?.status === 503 || e?.status === 429;
       if (!overloaded) await new Promise(r => setTimeout(r, 400));
     }
@@ -692,14 +695,14 @@ async function callGeminiForPrediction(prompt: string): Promise<LiveGamePredicti
       if (res.ok) {
         const data = await res.json();
         const content = data?.choices?.[0]?.message?.content;
-        if (content) return JSON.parse(content) as LiveGamePrediction;
+        if (content) return JSON.parse(content) as T;
       }
     } catch (e) {
-      console.warn("[prediction/groq] fallback failed:", e);
+      console.warn("[gemini/groq] fallback failed:", e);
     }
   }
 
-  throw lastErr ?? new Error("Prediction failed across all models");
+  throw lastErr ?? new Error("Gemini failed across all models");
 }
 
 export async function getAiLiveGamePrediction(
@@ -730,7 +733,7 @@ export async function getAiLiveGamePrediction(
   - All Thai text. Win chances must be integers summing to 100.
   `;
 
-  return await callGeminiForPrediction(prompt);
+  return await callGeminiJson<LiveGamePrediction>(prompt);
 }
 
 /**
@@ -795,4 +798,99 @@ export async function getAiMatchupBuildRecommendation(
     console.error("Failed to generate matchup build recommendation:", error);
     throw new Error("Failed to get matchup build from Gemini AI.");
   }
+}
+
+// ---------------------------------------------------------------------------
+// Trash-talk features. These roast a player's *gameplay* for laughs among
+// friends; the prompts keep it to in-game performance only.
+// ---------------------------------------------------------------------------
+
+const ROAST_GUARDRAIL = `
+  Rules for tone:
+  - Roast the GAMEPLAY only: deaths, farming, vision, damage, champion choice, win rate.
+  - Never mention appearance, family, gender, nationality, religion, or anything about the person outside the game.
+  - No slurs and no sexual content. Keep it to the kind of ribbing friends give each other in a Discord voice chat.
+  - Thai, casual gamer register, punchy. Every jab must reference a real number from the data.
+`;
+
+export interface RoastResult {
+  nickname: string;
+  verdict: string;
+  burns: string[];
+  cringeScore: number;
+}
+
+/** Savage-but-friendly Thai roast built from the player's real recent stats. */
+export async function getAiRoast(summonerName: string, matches: MatchSummary[]): Promise<RoastResult> {
+  const lines = matches
+    .map(
+      (m, i) =>
+        `${i + 1}. ${m.championName} (${m.role}) ${m.win ? "WIN" : "LOSS"} ${m.kills}/${m.deaths}/${m.assists} ` +
+        `KDA ${m.kda} | ${m.cs} CS (${m.csPerMin.toFixed(1)}/min) | vision ${m.visionScore} | ` +
+        `dmg ${m.damageDealt} | gold ${m.goldEarned} | ${Math.round(m.gameDurationMinutes)} min`
+    )
+    .join("\n");
+
+  const prompt = `
+  You are a merciless but good-natured Thai League of Legends commentator roasting a friend's recent games.
+
+  Player: ${summonerName}
+  Last ${matches.length} games:
+  ${lines}
+
+  Respond with VALID JSON only, schema:
+  {
+    "nickname": "<a short mocking Thai nickname for this player, max 24 characters, earned by the data>",
+    "burns": ["<Thai one-liner jab citing a specific number>", "...", "..."],
+    "verdict": "<2 Thai sentences: the overall diagnosis, still funny>",
+    "cringeScore": <integer 0-100, where 100 is maximally embarrassing play>
+  }
+
+  "burns" must contain exactly 3 entries, each under 90 Thai characters.
+  ${ROAST_GUARDRAIL}
+  `;
+
+  return await callGeminiJson<RoastResult>(prompt);
+}
+
+export interface VersusSide {
+  name: string;
+  winRate: number;
+  avgKda: string;
+  avgDeaths: number;
+  csPerMin: number;
+  visionScore: number;
+  topChampion: string;
+}
+
+export interface VersusVerdict {
+  winner: "a" | "b";
+  verdict: string;
+  loserTitle: string;
+}
+
+/** Decides who lost the stat duel and hands the loser a title. */
+export async function getAiVersusVerdict(a: VersusSide, b: VersusSide): Promise<VersusVerdict> {
+  const describe = (s: VersusSide) =>
+    `name: ${s.name} | winrate ${s.winRate}% | KDA ${s.avgKda} | deaths/game ${s.avgDeaths.toFixed(1)} | ` +
+    `CS/min ${s.csPerMin.toFixed(1)} | vision ${s.visionScore.toFixed(0)} | most played ${s.topChampion}`;
+
+  const prompt = `
+  Two friends are comparing their recent League of Legends stats. Call the duel.
+
+  Player A -> ${describe(a)}
+  Player B -> ${describe(b)}
+
+  Respond with VALID JSON only, schema:
+  {
+    "winner": "a" | "b",
+    "verdict": "<2 Thai sentences explaining who came out on top and why, citing numbers>",
+    "loserTitle": "<a short mocking Thai title for the loser, max 24 characters>"
+  }
+
+  Pick the winner from the numbers, weighting win rate and KDA most.
+  ${ROAST_GUARDRAIL}
+  `;
+
+  return await callGeminiJson<VersusVerdict>(prompt);
 }

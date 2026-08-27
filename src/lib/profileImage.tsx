@@ -9,10 +9,9 @@ import {
   getMasteryCrestUrl,
   rankedEmblemCrop,
   masteryCrestCrop,
-  ArtCropBox,
   LOL,
 } from "./imageCommon";
-import { GoldRule } from "./imageParts";
+import { GoldRule, ArtCrop } from "./imageParts";
 import { LeagueEntry } from "./riot";
 
 export interface ProfileImageInput {
@@ -39,30 +38,6 @@ function formatPoints(points: number): string {
   if (points >= 1000000) return (points / 1000000).toFixed(2).replace(/\.?0+$/, "") + "M";
   if (points >= 1000) return Math.round(points / 1000) + "K";
   return `${points}`;
-}
-
-/** Draws Riot art cropped to its real bounds instead of its padded canvas. */
-function ArtCrop({ url, box }: { url: string; box: ArtCropBox }) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        position: "relative",
-        width: box.width,
-        height: box.height,
-        overflow: "hidden",
-      }}
-    >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={url}
-        width={box.imgWidth}
-        height={box.imgHeight}
-        alt=""
-        style={{ position: "absolute", left: box.left, top: box.top }}
-      />
-    </div>
-  );
 }
 
 function SectionLabel({ title, subtitle }: { title: string; subtitle: string }) {

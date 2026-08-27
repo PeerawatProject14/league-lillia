@@ -129,6 +129,48 @@ const commands = [
       },
     ],
   },
+  {
+    name: "roast",
+    description: "ให้ AI ด่าจากสถิติ 10 เกมล่าสุดแบบไม่ไว้หน้า (ขำๆ)",
+    options: [
+      {
+        type: 3, // STRING
+        name: "summoner",
+        description: "ชื่อในเกม#แท็กสั้น เช่น Name#Tag",
+        required: true,
+      },
+    ],
+  },
+  {
+    name: "hall",
+    description: "หอเกียรติยศความห่วย — รวมเกมที่พังที่สุดใน 20 เกมล่าสุด",
+    options: [
+      {
+        type: 3, // STRING
+        name: "summoner",
+        description: "ชื่อในเกม#แท็กสั้น เช่น Name#Tag",
+        required: true,
+      },
+    ],
+  },
+  {
+    name: "versus",
+    description: "ดวลสถิติ 1v1 ว่าใครกากกว่ากัน",
+    options: [
+      {
+        type: 3, // STRING
+        name: "summoner",
+        description: "ฝ่ายซ้าย — ชื่อในเกม#แท็กสั้น",
+        required: true,
+      },
+      {
+        type: 3, // STRING
+        name: "vs",
+        description: "ฝ่ายขวา — ชื่อในเกม#แท็กสั้น",
+        required: true,
+      },
+    ],
+  },
 ];
 
 async function registerCommands() {

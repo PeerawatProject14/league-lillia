@@ -12,7 +12,7 @@ import {
   LeagueEntry
 } from "@/lib/riot";
 import { getChampionName, getChampionInternalId } from "@/lib/champions";
-import { getAiCoachingReport, MatchSummary, getAiBuildRecommendation, getAiMatchupBuildRecommendation, getAiLiveGamePrediction, getAiMatchReview, MatchReviewInput } from "@/lib/gemini";
+import { getAiRoast, getAiVersusVerdict, getAiCoachingReport, MatchSummary, getAiBuildRecommendation, getAiMatchupBuildRecommendation, getAiLiveGamePrediction, getAiMatchReview, MatchReviewInput } from "@/lib/gemini";
 import { generateBuildImage } from "@/lib/imageGenerator";
 import { generateProfileImage } from "@/lib/profileImage";
 import { generateHistoryImage, HistoryMatchEntry } from "@/lib/historyImage";
@@ -21,6 +21,19 @@ import { generateLiveGameImage, LivePlayerEntry } from "@/lib/liveGameImage";
 import { getChampionSplashUrl, getItemNameById } from "@/lib/ddragon";
 import { fetchTierList, RoleKey } from "@/lib/tierList";
 import { generateTierListImage } from "@/lib/tierListImage";
+import { generateRoastImage } from "@/lib/roastImage";
+import { generateHallOfShameImage } from "@/lib/hallOfShameImage";
+import { generateVersusImage } from "@/lib/versusImage";
+import {
+  parseRiotId,
+  collectRecentForm,
+  kdaRatio,
+  averageKda,
+  mostPlayedChampion,
+  toMatchSummaries,
+  versusSide,
+  buildShameAwards,
+} from "@/lib/recentForm";
 
 const DISCORD_PUBLIC_KEY = process.env.DISCORD_PUBLIC_KEY || "";
 const DISCORD_APP_ID = process.env.DISCORD_APP_ID || "";
@@ -110,19 +123,6 @@ async function updateInteractionResponse(token: string, body: any, fileBuffer?: 
   }
 }
 
-// Helper to parse Name#Tag
-function parseRiotId(input: string): { gameName: string; tagLine: string } {
-  const parts = input.split("#");
-  if (parts.length < 2) {
-    // Default tag for TH server if not provided
-    return { gameName: parts[0].trim(), tagLine: "TH2" };
-  }
-  return {
-    gameName: parts[0].trim(),
-    tagLine: parts[1].trim(),
-  };
-}
-
 export async function POST(req: NextRequest) {
   // 1. Verify incoming request signature
   const body = await req.text();
@@ -165,6 +165,11 @@ export async function POST(req: NextRequest) {
         const vsOption = interaction.data.options?.find((opt: any) => opt.name === "vs");
         summonerInput = champOption?.value || "";
         vsInput = vsOption?.value || "";
+      } else if (commandName === "versus") {
+        const meOption = interaction.data.options?.find((opt: any) => opt.name === "summoner");
+        const rivalOption = interaction.data.options?.find((opt: any) => opt.name === "vs");
+        summonerInput = meOption?.value || "";
+        vsInput = rivalOption?.value || "";
       } else if (commandName === "tier") {
         const roleOption = interaction.data.options?.find((opt: any) => opt.name === "role");
         summonerInput = roleOption?.value || "";
@@ -192,6 +197,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: { content: errMsg },
+      });
+    }
+
+    if (commandName === "versus" && !vsInput) {
+      return NextResponse.json({
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: { content: "❌ ใส่ชื่อคู่ต่อสู้ด้วย (ตัวอย่าง: /versus summoner:A#TH2 vs:B#TH2)" },
       });
     }
 
@@ -240,6 +252,12 @@ export async function POST(req: NextRequest) {
           } else if (commandName === "detailgame") {
             const selectedMatchId = interaction.data.values?.[0] || "";
             await handleDetailGameCommand(summonerInput, selectedMatchId, interactionToken);
+          } else if (commandName === "roast") {
+            await handleRoastCommand(summonerInput, interactionToken);
+          } else if (commandName === "hall") {
+            await handleHallOfShameCommand(summonerInput, interactionToken);
+          } else if (commandName === "versus") {
+            await handleVersusCommand(summonerInput, vsInput, interactionToken);
           } else if (commandName === "build") {
             await handleBuildCommand(summonerInput, interactionToken);
           } else if (commandName === "buildvs") {
@@ -271,6 +289,7 @@ export async function POST(req: NextRequest) {
 
   return new NextResponse("Unknown interaction type", { status: 400 });
 }
+
 
 // Handler for `/profile`
 async function handleProfileCommand(summonerInput: string, token: string) {
@@ -1127,3 +1146,159 @@ async function handleTierCommand(role: RoleKey, token: string) {
   await updateInteractionResponse(token, { embeds: [embed] }, imageBuffer, "tier.png");
 }
 
+
+// ---------------------------------------------------------------------------
+// Trash-talk commands
+// ---------------------------------------------------------------------------
+
+const ROAST_SAMPLE = 10;
+const SHAME_SAMPLE = 20;
+
+// Handler for `/roast`
+async function handleRoastCommand(summonerInput: string, token: string) {
+  const form = await collectRecentForm(summonerInput, ROAST_SAMPLE);
+  if (form.games.length === 0) {
+    await updateInteractionResponse(token, {
+      content: `❌ ไม่พบประวัติการเล่นของ ${form.gameName}#${form.tagLine} เลยด่าไม่ได้`,
+    });
+    return;
+  }
+
+  const roast = await getAiRoast(`${form.gameName}#${form.tagLine}`, toMatchSummaries(form.games));
+
+  const imageBuffer = await generateRoastImage({
+    gameName: form.gameName,
+    tagLine: form.tagLine,
+    nickname: roast.nickname,
+    burns: roast.burns,
+    verdict: roast.verdict,
+    cringeScore: roast.cringeScore,
+    topChampion: mostPlayedChampion(form.games),
+    games: form.games.length,
+    wins: form.games.filter(g => g.win).length,
+    totalDeaths: form.games.reduce((sum, g) => sum + g.deaths, 0),
+    avgKda: averageKda(form.games),
+  });
+
+  await updateInteractionResponse(
+    token,
+    {
+      embeds: [
+        {
+          title: `🔥 โดนด่า: ${form.gameName}#${form.tagLine}`,
+          color: 0xC6443E,
+          image: { url: "attachment://roast.png" },
+          footer: { text: "ขำๆ นะครับ อย่าถือสา" },
+          timestamp: new Date().toISOString(),
+        },
+      ],
+      attachments: [{ id: 0, filename: "roast.png" }],
+    },
+    imageBuffer,
+    "roast.png"
+  );
+}
+
+// Handler for `/hall`
+async function handleHallOfShameCommand(summonerInput: string, token: string) {
+  const form = await collectRecentForm(summonerInput, SHAME_SAMPLE);
+  if (form.games.length === 0) {
+    await updateInteractionResponse(token, {
+      content: `❌ ไม่พบประวัติการเล่นของ ${form.gameName}#${form.tagLine}`,
+    });
+    return;
+  }
+
+  const imageBuffer = await generateHallOfShameImage({
+    gameName: form.gameName,
+    tagLine: form.tagLine,
+    games: form.games.length,
+    awards: buildShameAwards(form.games),
+  });
+
+  await updateInteractionResponse(
+    token,
+    {
+      embeds: [
+        {
+          title: `🏆 หอเกียรติยศความห่วย: ${form.gameName}#${form.tagLine}`,
+          color: 0xC6443E,
+          image: { url: "attachment://hall.png" },
+          footer: { text: `คัดจาก ${form.games.length} เกมล่าสุด` },
+          timestamp: new Date().toISOString(),
+        },
+      ],
+      attachments: [{ id: 0, filename: "hall.png" }],
+    },
+    imageBuffer,
+    "hall.png"
+  );
+}
+
+// Handler for `/versus`
+async function handleVersusCommand(inputA: string, inputB: string, token: string) {
+  const [formA, formB] = await Promise.all([
+    collectRecentForm(inputA, ROAST_SAMPLE),
+    collectRecentForm(inputB, ROAST_SAMPLE),
+  ]);
+
+  if (formA.games.length === 0 || formB.games.length === 0) {
+    const empty = formA.games.length === 0 ? formA : formB;
+    await updateInteractionResponse(token, {
+      content: `❌ ไม่พบประวัติการเล่นของ ${empty.gameName}#${empty.tagLine} เลยดวลไม่ได้`,
+    });
+    return;
+  }
+
+  const sideA = versusSide(formA);
+  const sideB = versusSide(formB);
+
+  const verdict = await getAiVersusVerdict(
+    {
+      name: `${sideA.gameName}#${sideA.tagLine}`,
+      winRate: sideA.games ? Math.round((sideA.wins / sideA.games) * 100) : 0,
+      avgKda: sideA.avgKda,
+      avgDeaths: sideA.avgDeaths,
+      csPerMin: sideA.csPerMin,
+      visionScore: sideA.visionScore,
+      topChampion: sideA.topChampion,
+    },
+    {
+      name: `${sideB.gameName}#${sideB.tagLine}`,
+      winRate: sideB.games ? Math.round((sideB.wins / sideB.games) * 100) : 0,
+      avgKda: sideB.avgKda,
+      avgDeaths: sideB.avgDeaths,
+      csPerMin: sideB.csPerMin,
+      visionScore: sideB.visionScore,
+      topChampion: sideB.topChampion,
+    }
+  );
+
+  const winner: "a" | "b" = verdict.winner === "b" ? "b" : "a";
+
+  const imageBuffer = await generateVersusImage({
+    a: sideA,
+    b: sideB,
+    winner,
+    verdict: verdict.verdict,
+    loserTitle: verdict.loserTitle,
+  });
+
+  await updateInteractionResponse(
+    token,
+    {
+      embeds: [
+        {
+          title: `⚔️ ดวลสถิติ: ${sideA.gameName} vs ${sideB.gameName}`,
+          color: 0xC8AA6E,
+          image: { url: "attachment://versus.png" },
+          footer: { text: "เทียบจาก 10 เกมล่าสุดของแต่ละคน" },
+          timestamp: new Date().toISOString(),
+        },
+      ],
+      attachments: [{ id: 0, filename: "versus.png" }],
+    },
+    imageBuffer,
+    "versus.png"
+  );
+}

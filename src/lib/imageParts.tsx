@@ -1,4 +1,4 @@
-import { LOL } from "./imageCommon";
+import { LOL, ArtCropBox } from "./imageCommon";
 
 const DIAMOND_SIZE = 9;
 
@@ -42,6 +42,30 @@ export function GoldRule({ width, color = LOL.gold }: { width: number; color?: s
           top: 0,
           left: Math.round(width / 2 - DIAMOND_SIZE / 2),
         }}
+      />
+    </div>
+  );
+}
+
+/** Draws Riot art cropped to its real bounds instead of its padded canvas. */
+export function ArtCrop({ url, box }: { url: string; box: ArtCropBox }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        position: "relative",
+        width: box.width,
+        height: box.height,
+        overflow: "hidden",
+      }}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={url}
+        width={box.imgWidth}
+        height={box.imgHeight}
+        alt=""
+        style={{ position: "absolute", left: box.left, top: box.top }}
       />
     </div>
   );
